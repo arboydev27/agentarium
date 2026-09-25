@@ -1,0 +1,38 @@
+{
+  "name": "agent-grove",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5173 --strictPort",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 4173",
+    "test": "vitest run src/state.test.ts && node --test bridge/bridge.test.mjs",
+    "bridge": "node bridge/server.mjs",
+    "bridge:demo": "node bridge/demo-events.mjs",
+    "codex:proxy": "node bridge/codex-proxy.mjs"
+  },
+  "dependencies": {
+    "@react-three/drei": "^10.0.0",
+    "@react-three/fiber": "^9.0.0",
+    "lucide-react": "^0.468.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "three": "^0.180.0",
+    "zustand": "^5.0.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/three": "^0.180.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "typescript": "^5.7.0",
+    "vite": "^6.1.0",
+    "vitest": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  }
+}
