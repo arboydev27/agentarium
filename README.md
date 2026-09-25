@@ -1,6 +1,10 @@
-# Agent Grove
+# Agentarium
 
-A runnable 3D world for AI agent activity. Built with React, TypeScript, React Three Fiber, Three.js, Zustand, and a local Node.js bridge.
+The Agentarium repository contains **Agent Grove**, a runnable 3D world for AI agent activity. Built with React, TypeScript, React Three Fiber, Three.js, Zustand, and a local Node.js bridge.
+
+## Documentation
+
+See the [detailed documentation](docs/README.md) for setup, architecture, agent lifecycle, bridge protocol, provider integrations, 3D world internals, development, troubleshooting, and the proposed roadmap.
 
 ## What works
 
@@ -21,7 +25,8 @@ This is the first playable implementation, not a finished film-quality animation
 Requires Node.js 22.13 or later. Node 22 may print an experimental notice for its built-in SQLite module.
 
 ```sh
-npm install
+cd /Users/arboy/dev/personal-projects/agentarium
+npm ci
 npm run dev
 ```
 
@@ -41,7 +46,7 @@ The source build is a static web application. The local bridge is a separate pro
 3. Set `GROVE_TOKEN` to that same token in the environment that launches your agent and its hook commands. Do not commit it or paste it into a prompt.
 4. Configure an adapter below, preserving all existing hooks.
 
-The bridge binds only to `127.0.0.1`. It checks browser origins and authenticates both event ingestion and WebSocket subscriptions. Browser authentication travels in the first WebSocket message, not in the URL. Tokens stay in memory. SQLite data is in ignored `bridge/data/` and is not uploaded with the site. On a bridge restart, saved agents are restored as disconnected until fresh events arrive. Silence alone does not mean an agent stopped working.
+The bridge binds only to `127.0.0.1`. It checks browser origins and authenticates both event ingestion and WebSocket subscriptions. Browser authentication travels in the first WebSocket message, not in the URL. Tokens stay in memory. SQLite data is in this checkout’s ignored `bridge/data/` directory (resolved relative to the bridge module even when launched from another working directory) and is not uploaded with the site. On a bridge restart, saved agents are restored as disconnected until fresh events arrive. Silence alone does not mean an agent stopped working.
 
 Use the local application for live connections. An HTTPS-hosted page may not be allowed to reach a plain local WebSocket, and its origin is not permitted by the bridge by default. Do not disable browser security to bypass this.
 
@@ -74,7 +79,7 @@ Reference: https://geminicli.com/docs/hooks/reference/
 The proxy is intended for a client that already speaks the Codex App Server protocol over stdio. Configure that client's server launch command to be:
 
 ```sh
-node /absolute/path/to/agent-grove/bridge/codex-proxy.mjs
+node /absolute/path/to/agentarium/bridge/codex-proxy.mjs
 ```
 
 It launches `codex app-server`, forwards stdin/stdout protocol bytes, and mirrors supported notifications to the bridge. Set `GROVE_TOKEN` in the client's launch environment. Optionally set `CODEX_BINARY` to an exact executable path. Extra command-line arguments are forwarded to `codex app-server`.
@@ -115,6 +120,14 @@ POST JSON to `http://127.0.0.1:4318/events` with `Authorization: Bearer <session
 Use the current Unix time in milliseconds. Increment `sequence` for each agent within a session. Allowed states: idle, working, tool, waiting, completed, failed, disconnected. Provider: Codex, Claude, Gemini, or Custom. Parent IDs are scoped to the same session. Unknown fields are dropped. IDs and names are limited to 200 characters; task labels to 300. Duplicate IDs and older sequences are ignored. Up to 256 agents are retained; the first eight receive 3D seats, with overflow explicitly displayed in the list.
 
 Configuration: `GROVE_PORT`, `GROVE_TOKEN`, `GROVE_DB`, and comma-separated `GROVE_ORIGINS` for the server; `GROVE_URL` and `GROVE_TOKEN` for adapters. Defaults permit only the local Vite dev/preview origins. Do not put provider API keys in the frontend.
+
+## Repository location and hosting
+
+The primary development checkout is `/Users/arboy/dev/personal-projects/agentarium`. The npm package is named `agentarium`; the current in-app branding remains Agent Grove. Other machines can clone or copy the project to any directory and run the same npm scripts from that directory.
+
+The `origin` remote and `.openai/hosting.json` still identify the existing private Agent Grove Site. Those are deployment identities, not local filesystem paths, so moving or renaming the checkout does not require changing them. The configured static output is the project-relative `dist` directory, recreated by `npm run build`.
+
+If you previously installed generated Claude or Gemini hook settings, regenerate them from this checkout with `node bridge/print-hook-config.mjs claude` or `gemini` and update the corresponding commands. Generated hook settings intentionally contain an absolute script path; an already-installed copy cannot follow a folder move automatically. A configured Codex client must likewise point to this checkout’s `bridge/codex-proxy.mjs`.
 
 ## Architecture
 

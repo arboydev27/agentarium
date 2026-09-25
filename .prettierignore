@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.sites-runtime/
+bridge/data/
+*.tsbuildinfo
+package-lock.json
+public/models/

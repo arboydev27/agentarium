@@ -1,5 +1,5 @@
 {
-  "name": "agent-grove",
+  "name": "agentarium",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -10,7 +10,9 @@
     "test": "vitest run src/state.test.ts && node --test bridge/bridge.test.mjs",
     "bridge": "node bridge/server.mjs",
     "bridge:demo": "node bridge/demo-events.mjs",
-    "codex:proxy": "node bridge/codex-proxy.mjs"
+    "codex:proxy": "node bridge/codex-proxy.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@react-three/drei": "^10.0.0",
@@ -19,8 +21,8 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "three": "^0.180.0",
-    "zustand": "^5.0.0",
-    "ws": "^8.18.0"
+    "ws": "^8.18.0",
+    "zustand": "^5.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
@@ -28,9 +30,10 @@
     "@types/react-dom": "^19.0.0",
     "@types/three": "^0.180.0",
     "@vitejs/plugin-react": "^4.3.0",
+    "prettier": "3.9.9",
     "typescript": "^5.7.0",
     "vite": "^6.1.0",
-    "vitest": "^3.0.0"
+    "vitest": "~4.1.11"
   },
   "engines": {
     "node": ">=22.13.0"
