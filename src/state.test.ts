@@ -66,3 +66,35 @@ describe('simulation isolation', () => {
     expect(a?.status).toBe('working');
   });
 });
+
+describe('live connection diagnostics', () => {
+  beforeEach(() => useWorld.getState().switchMode('live'));
+  it('does not count restored snapshots as newly received events', () => {
+    useWorld.getState().hydrate(reduceAgentEvent([], event()));
+    expect(useWorld.getState().bridgeStatus).toBe('connected');
+    expect(useWorld.getState().receivedEvents).toBe(0);
+    expect(useWorld.getState().lastReceivedAt).toBeNull();
+    expect(useWorld.getState().receivedProviders).toEqual([]);
+  });
+  it('counts only accepted new events and records local receipt time', () => {
+    const before = Date.now();
+    useWorld.getState().ingest(event());
+    useWorld.getState().ingest(event());
+    useWorld.getState().ingest(event({ id: 'stale', sequence: 0 }));
+    expect(useWorld.getState().receivedEvents).toBe(1);
+    expect(useWorld.getState().lastReceivedAt).toBeGreaterThanOrEqual(before);
+    expect(useWorld.getState().receivedProviders).toEqual(['Codex']);
+    useWorld.getState().ingest(event({ id: 'next', sequence: 2, provider: 'Claude' }));
+    expect(useWorld.getState().receivedEvents).toBe(2);
+    expect(useWorld.getState().receivedProviders).toEqual(['Codex', 'Claude']);
+  });
+  it('starts fresh diagnostics on reconnect and returning to simulation', () => {
+    useWorld.getState().ingest(event());
+    useWorld.getState().set({ bridgeError: 'old failure' });
+    useWorld.getState().hydrate(useWorld.getState().agents);
+    expect(useWorld.getState().receivedEvents).toBe(0);
+    expect(useWorld.getState().bridgeError).toBeNull();
+    useWorld.getState().switchMode('demo');
+    expect(useWorld.getState().lastReceivedAt).toBeNull();
+  });
+});

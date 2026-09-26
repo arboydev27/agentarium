@@ -18,7 +18,7 @@ A typical sequence is `idle → working → tool → working → completed`. Wai
 
 ## Identity and ordering
 
-The stable agent key is `${sessionId}:${agentId}`. Use stable IDs within a session and a new session ID for independent runs. Avoid colons in either component to prevent ambiguous composite keys. A parent ID is interpreted within the child's session.
+The stable agent key is `${sessionId}:${agentId}`. New snapshots also retain an explicit `sessionId` for session filtering. Older snapshots fall back to the composite ID until a fresh event supplies the explicit field. Use stable IDs within a session and a new session ID for independent runs. Avoid colons in either component to prevent ambiguous composite keys. A parent ID is interpreted within the child's session.
 
 An event for an existing agent must have a strictly greater `sequence` than the last accepted event. An equal or lower sequence is stale, regardless of its timestamp. Use a monotonic per-agent counter in custom producers and preserve its continuity across producer restarts for an existing session.
 

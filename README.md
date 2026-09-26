@@ -12,6 +12,7 @@ See the [detailed documentation](docs/README.md) for setup, architecture, agent 
 - Eight expressive CC0 robot residents with skeletal sitting, idle, celebration, and failure animations. Working residents open their laptops; idle residents close them.
 - Orbit and zoom controls, four camera presets, slow camera orbit, ambient audio, reduced motion, and rendering-quality controls.
 - A clearly labeled simulator with tasks, delegation, waiting, completion, failure, pause, speed, reset, an activity feed, and an inspector.
+- Guided local connection setup, fresh-event diagnostics, and a session filter for live residents.
 - An authenticated loopback event bridge with SQLite state, ordering, deduplication, WebSocket delivery, reconnect snapshots, and disconnect indicators.
 - Claude Code and Gemini CLI telemetry hooks, a Codex App Server stdio proxy, and a generic event endpoint.
 - Optional WebMCP controls using the same application state as the visible UI.

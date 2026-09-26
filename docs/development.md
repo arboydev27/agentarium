@@ -10,7 +10,7 @@ Run commands from the repository root:
 | `npm run dev`          | Vite on loopback port 5173, strict port                      |
 | `npm run build`        | TypeScript project check followed by Vite production output  |
 | `npm run preview`      | Serve the production output on loopback port 4173 by default |
-| `npm test`             | Vitest state tests, followed by Node bridge tests            |
+| `npm test`             | Vitest frontend tests, followed by Node bridge tests         |
 | `npm run bridge`       | Local SQLite-backed telemetry server                         |
 | `npm run bridge:demo`  | Synthetic events sent through the bridge                     |
 | `npm run codex:proxy`  | Start the Codex App Server stdio proxy                       |
@@ -27,7 +27,7 @@ There is no dedicated lint command or CI workflow currently. TypeScript checks `
 
 ## Verification
 
-[state.test.ts](../src/state.test.ts) covers browser state/protocol behavior. [bridge.test.mjs](../bridge/bridge.test.mjs) covers bridge behavior, adapter fixtures, and portability. These tests do not replace real provider end-to-end checks or browser rendering checks.
+[state.test.ts](../src/state.test.ts) covers browser state, event diagnostics, and protocol behavior. [bridge.test.ts](../src/bridge.test.ts) exercises browser connection/authentication/retry behavior with a fake socket; [sessions.test.ts](../src/sessions.test.ts) covers grouping and older snapshot compatibility. [bridge.test.mjs](../bridge/bridge.test.mjs) covers bridge behavior, adapter fixtures, and portability. These tests do not replace real provider end-to-end checks or browser rendering checks.
 
 For a behavior change, run the relevant tests and `npm run build`. For UI/scene changes, also inspect the browser at desktop and narrow widths, with reduced motion, both quality settings, day/evening lighting, and relevant agent statuses. For documentation-only edits, formatting and local-link validation are sufficient unless examples or configuration changes introduce executable behavior.
 

@@ -6,6 +6,7 @@ export type Status =
 export type Provider = 'Codex' | 'Claude' | 'Gemini' | 'Custom';
 export type Agent = {
   id: string;
+  sessionId?: string;
   name: string;
   provider: Provider;
   color: string;
@@ -94,6 +95,10 @@ type State = {
   cameraVersion: number;
   cinematic: boolean;
   bridgeStatus: 'offline' | 'connecting' | 'connected';
+  bridgeError: string | null;
+  receivedEvents: number;
+  lastReceivedAt: number | null;
+  receivedProviders: Provider[];
   seen: Set<string>;
   select: (id: string | null) => void;
   set: (s: Partial<State>) => void;
@@ -129,6 +134,10 @@ export const useWorld = create<State>((set, get) => ({
   cameraVersion: 0,
   cinematic: false,
   bridgeStatus: 'offline',
+  bridgeError: null,
+  receivedEvents: 0,
+  lastReceivedAt: null,
+  receivedProviders: [],
   seen: new Set(),
   set: (s) => set(s),
   select: (id) => set({ selected: id }),
@@ -203,6 +212,10 @@ export const useWorld = create<State>((set, get) => ({
       events: [],
       mode: 'demo',
       playing: true,
+      bridgeError: null,
+      receivedEvents: 0,
+      lastReceivedAt: null,
+      receivedProviders: [],
       seen: new Set(),
     }),
   tick: () => {
@@ -241,6 +254,14 @@ export const useWorld = create<State>((set, get) => ({
     if (seen.size > 3000) seen.delete(seen.values().next().value!);
     set({
       agents: next,
+      receivedEvents: s.receivedEvents + 1,
+      lastReceivedAt: Date.now(),
+      receivedProviders: [
+        ...new Set([
+          ...s.receivedProviders,
+          next.find((a) => a.id === e.sessionId + ':' + e.agentId)!.provider,
+        ]),
+      ],
       seen,
       events: [
         {
@@ -254,13 +275,25 @@ export const useWorld = create<State>((set, get) => ({
       ].slice(0, 40),
     });
   },
-  hydrate: (agents) => set({ agents, bridgeStatus: 'connected' }),
+  hydrate: (agents) =>
+    set({
+      agents,
+      bridgeStatus: 'connected',
+      bridgeError: null,
+      receivedEvents: 0,
+      lastReceivedAt: null,
+      receivedProviders: [],
+    }),
   switchMode: (mode) =>
     set({
       mode,
       agents: mode === 'demo' ? initialAgents() : [],
       selected: null,
       events: [],
+      bridgeError: null,
+      receivedEvents: 0,
+      lastReceivedAt: null,
+      receivedProviders: [],
       seen: new Set(),
       bridgeStatus: 'offline',
       playing: mode === 'demo',

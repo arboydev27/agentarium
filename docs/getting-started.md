@@ -50,3 +50,11 @@ Preview normally runs at `http://127.0.0.1:4173`, which is included in the bridg
 Use Ctrl+C in the development and bridge terminals. Browser connection details and UI preferences are held in memory; reload starts in simulation mode and requires an explicit live reconnection. The bridge retains agent snapshots in `bridge/data/grove.sqlite`. After a bridge restart, recovered residents are disconnected until they receive new events.
 
 Use **Simulation** in the connection controls to return to demo activity. For isolated experiments, start the bridge with a different `GROVE_DB` path instead of deleting an existing database. See [Bridge protocol](bridge-protocol.md#configuration).
+
+## Understand connection diagnostics
+
+The header says **Bridge connected** after authentication. The connection dialog separately shows the count of newly accepted events, their local receipt time, and the providers observed since the latest successful connection. A saved snapshot can contain residents while the new-event count remains zero. Neither a snapshot nor an open socket confirms that a provider is currently working.
+
+The dialog includes a synthetic transport test and separate Claude, Gemini, and Codex setup guidance. Ordinary Codex desktop chats are not observed automatically. Authentication failures require correcting the token and reconnecting; other connection losses retry automatically.
+
+In live mode, use the **Session** selector above the resident list to focus on one session and see its attention count. This filters only the list; the scene retains its original eight seats. Selecting a resident displays its session ID. Session filtering does not delete database records or free seats.

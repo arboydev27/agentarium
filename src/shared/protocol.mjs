@@ -70,6 +70,7 @@ export function reduceAgentEvent(agents, event) {
       ...agents,
       {
         id: key,
+        sessionId: event.sessionId,
         name: event.name || 'Agent ' + (agents.length + 1),
         provider: event.provider || 'Custom',
         color: COLORS[seat % 8],
@@ -89,6 +90,7 @@ export function reduceAgentEvent(agents, event) {
     a.id === key
       ? {
           ...a,
+          sessionId: event.sessionId,
           status: event.type,
           task: event.task ?? a.task,
           provider: event.provider ?? a.provider,

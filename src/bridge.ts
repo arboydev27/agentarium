@@ -9,7 +9,7 @@ export function disconnectBridge() {
   const old = socket;
   socket = null;
   old?.close();
-  useWorld.setState({ bridgeStatus: 'offline' });
+  useWorld.setState({ bridgeStatus: 'offline', bridgeError: null });
 }
 export function connectBridge(url: string, token: string) {
   const parsed = new URL(url);
@@ -26,7 +26,7 @@ export function connectBridge(url: string, token: string) {
 }
 function open() {
   if (!current) return;
-  useWorld.setState({ bridgeStatus: 'connecting' });
+  useWorld.setState({ bridgeStatus: 'connecting', bridgeError: null });
   const ws = new WebSocket(current.url);
   socket = ws;
   ws.onopen = () => {
@@ -54,6 +54,10 @@ function open() {
     if (socket !== ws) return;
     useWorld.setState((s) => ({
       bridgeStatus: 'offline',
+      bridgeError:
+        e.code === 4003
+          ? 'Authentication failed. Paste the token from the current bridge process and reconnect.'
+          : 'Connection lost. Retrying automatically. Check the bridge process, address, and allowed browser origin.',
       agents: s.agents.map((a) => ({ ...a, status: 'disconnected' })),
     }));
     if (current && e.code !== 4003) {

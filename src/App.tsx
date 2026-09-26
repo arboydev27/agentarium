@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { useWorld, STATUS_LABEL } from './state';
 import { registerWorldTools } from './webmcp';
+import { agentSessionId, summarizeSessions } from './sessions';
 import type { Agent, Status } from './state';
 const World = lazy(() => import('./World'));
 function ProviderIcon({ provider }: { provider: string }) {
@@ -150,6 +151,13 @@ export default function App() {
     camera = useWorld((s) => s.camera),
     cinematic = useWorld((s) => s.cinematic),
     bridgeStatus = useWorld((s) => s.bridgeStatus);
+  const receivedEvents = useWorld((s) => s.receivedEvents);
+  const [sessionFilter, setSessionFilter] = useState('');
+  const sessions = mode === 'live' ? summarizeSessions(agents) : [];
+  const activeSession = sessions.some((s) => s.id === sessionFilter) ? sessionFilter : '';
+  const listedAgents = activeSession
+    ? agents.filter((a) => agentSessionId(a) === activeSession)
+    : agents;
   const [tab, setTab] = useState<'residents' | 'activity'>('residents');
   const [modal, setModal] = useState<'settings' | 'connections' | 'help' | null>(null);
   const [collapsed, setCollapsed] = useState(() => window.innerWidth < 801);
@@ -278,7 +286,7 @@ export default function App() {
             {mode === 'demo'
               ? 'Simulation'
               : bridgeStatus === 'connected'
-                ? 'Live connection'
+                ? 'Bridge connected'
                 : bridgeStatus === 'connecting'
                   ? 'Connecting…'
                   : 'Not connected'}
@@ -313,7 +321,9 @@ export default function App() {
           {mode === 'demo'
             ? 'A living world of simulated agents.'
             : bridgeStatus === 'connected'
-              ? 'Your connected agents, at home in the grove.'
+              ? receivedEvents > 0
+                ? 'Agent events received. Your grove is listening.'
+                : 'Bridge connected. Waiting for new agent events.'
               : 'Connect an agent to bring the grove to life.'}
         </p>
         <div className="world-stats">
@@ -404,6 +414,28 @@ export default function App() {
             <div className="panel-content">
               {tab === 'residents' ? (
                 <>
+                  {mode === 'live' && sessions.length > 0 && (
+                    <label className="session-filter">
+                      Session · {sessions.length} total
+                      <select
+                        value={activeSession}
+                        onChange={(e) => {
+                          setSessionFilter(e.target.value);
+                          useWorld.getState().select(null);
+                        }}
+                      >
+                        <option value="">All sessions</option>
+                        {sessions.map((session) => (
+                          <option key={session.id} value={session.id}>
+                            {session.id} · {session.count}{' '}
+                            {session.count === 1 ? 'resident' : 'residents'}
+                            {session.needsAttention ? ` · ${session.needsAttention} need you` : ''}
+                          </option>
+                        ))}
+                      </select>
+                      <small>Filters the list. The world keeps its eight assigned seats.</small>
+                    </label>
+                  )}
                   <div className="list-caption">
                     <span>NAME / PROVIDER</span>
                     <span>STATUS</span>
@@ -412,13 +444,17 @@ export default function App() {
                     <div className="empty-state">
                       <Coffee size={28} />
                       <h3>It’s quiet here</h3>
-                      <p>Connect the local bridge to welcome your agents.</p>
+                      <p>
+                        {bridgeStatus === 'connected'
+                          ? 'The bridge is connected. Configure a provider adapter or send a test event to welcome your first resident.'
+                          : 'Connect the local bridge to welcome your agents.'}
+                      </p>
                       <button className="text-button" onClick={() => setModal('connections')}>
                         Connect agents <ArrowUpRight size={14} />
                       </button>
                     </div>
                   ) : (
-                    agents.map((agent) => (
+                    listedAgents.map((agent) => (
                       <button
                         key={agent.id}
                         className={'resident-row ' + (selected === agent.id ? 'selected' : '')}
@@ -506,6 +542,9 @@ export default function App() {
                     <Elapsed agent={chosen} />
                   </span>
                 </div>
+                {mode === 'live' && (
+                  <p className="parent-note session-id">Session: {agentSessionId(chosen)}</p>
+                )}
                 {chosen.parentId && (
                   <p className="parent-note">
                     Helping {agents.find((a) => a.id === chosen.parentId)?.name || 'another agent'}
@@ -646,7 +685,9 @@ export default function App() {
             <span className="toolbar-title">
               <Radio size={16} />
               {bridgeStatus === 'connected'
-                ? 'Listening for agent activity'
+                ? receivedEvents > 0
+                  ? `${receivedEvents} events received · Listening`
+                  : 'Bridge connected · Awaiting events'
                 : 'Waiting for a connection'}
             </span>
           )}
@@ -776,6 +817,12 @@ function Settings() {
 function Connections({ notify }: { notify: (s: string) => void }) {
   const mode = useWorld((s) => s.mode);
   const status = useWorld((s) => s.bridgeStatus);
+  const bridgeError = useWorld((s) => s.bridgeError);
+  const receivedEvents = useWorld((s) => s.receivedEvents);
+  const lastReceivedAt = useWorld((s) => s.lastReceivedAt);
+  const receivedProviders = useWorld((s) => s.receivedProviders);
+  const residentCount = useWorld((s) => s.agents.length);
+  const [provider, setProvider] = useState<'Claude' | 'Gemini' | 'Codex'>('Claude');
   const [token, setToken] = useState('');
   const [url, setUrl] = useState('ws://127.0.0.1:4318');
   const [error, setError] = useState('');
@@ -794,24 +841,47 @@ function Connections({ notify }: { notify: (s: string) => void }) {
       <p className="modal-intro">
         The demo is a simulation. Connect the local bridge to visualize events from your own agents.
       </p>
-      <div className="provider-cards">
-        {['Codex', 'Claude', 'Gemini'].map((p) => (
-          <div key={p}>
-            <ProviderIcon provider={p} />
-            <strong>{p}</strong>
-            <span>{p === 'Codex' ? 'App Server adapter' : 'Hook adapter'}</span>
-          </div>
-        ))}
-      </div>
-      <div className="connection-steps">
-        <h3>Connect from the local app</h3>
+      <section
+        className="connection-diagnostics"
+        aria-label="Connection diagnostics"
+        aria-live="polite"
+      >
+        <strong>
+          {status === 'connected'
+            ? 'Bridge connected'
+            : status === 'connecting'
+              ? 'Connecting to bridge…'
+              : 'Bridge not connected'}
+        </strong>
         <p>
-          Start the included bridge with <code>npm run bridge</code>. Open the local app and paste
-          the token printed in your terminal. Hook setup is in the project’s README.
+          {status === 'connected'
+            ? receivedEvents > 0
+              ? `${receivedEvents} new events received since this connection.`
+              : 'No new events received since this connection. A connected bridge does not automatically connect your providers.'
+            : 'Connect the bridge first, then configure an event source below.'}
         </p>
+        {mode === 'live' && (
+          <p>
+            {residentCount} residents in the current snapshot. Saved residents do not confirm fresh
+            activity.
+          </p>
+        )}
+        {lastReceivedAt !== null && (
+          <p>
+            Last event received:{' '}
+            <time dateTime={new Date(lastReceivedAt).toISOString()}>
+              {new Date(lastReceivedAt).toLocaleString()}
+            </time>
+            <br />
+            Event sources: {receivedProviders.join(', ')}
+          </p>
+        )}
+      </section>
+      <div className="connection-steps">
+        <h3>1. Connect your local bridge</h3>
         <p>
-          The private hosted version is ready for simulation; browsers may block its connection to a
-          local bridge.
+          From the repository, run <code>npm run bridge</code>. Paste its token below. Use the
+          locally served app; a hosted page may not be able to connect to your computer.
         </p>
       </div>
       <label className="field-label">
@@ -835,7 +905,8 @@ function Connections({ notify }: { notify: (s: string) => void }) {
       )}
       {mode === 'live' && status === 'offline' && (
         <p className="inline-error">
-          The bridge is offline. Check the address and token, or return to the simulation.
+          {bridgeError ||
+            'The bridge is offline. Check the address and token, or return to the simulation.'}
         </p>
       )}
       <div className="connection-actions">
@@ -849,10 +920,71 @@ function Connections({ notify }: { notify: (s: string) => void }) {
         >
           Use simulation
         </button>
-        <button className="primary" onClick={() => void connect()}>
+        <button
+          className="primary"
+          disabled={status === 'connecting'}
+          onClick={() => void connect()}
+        >
           <Radio size={16} />
-          {status === 'connected' ? 'Reconnect' : 'Connect bridge'}
+          {status === 'connected'
+            ? 'Reconnect bridge'
+            : status === 'connecting'
+              ? 'Connecting…'
+              : 'Connect bridge'}
         </button>
+      </div>
+      <div className="connection-steps">
+        <h3>2. Verify event delivery</h3>
+        <p>
+          In another terminal at the repository root, export the same token and run the test below.
+          This creates a synthetic Custom resident; it does not start an AI task.
+        </p>
+        <pre>
+          <code>{"export GROVE_TOKEN='paste-your-bridge-token-here'\nnpm run bridge:demo"}</code>
+        </pre>
+        <p>
+          The variable applies to commands launched in that terminal. A .env file is not loaded
+          automatically.
+        </p>
+        <h3>3. Connect a provider</h3>
+        <label className="field-label">
+          Provider
+          <select value={provider} onChange={(e) => setProvider(e.target.value as typeof provider)}>
+            <option>Claude</option>
+            <option>Gemini</option>
+            <option>Codex</option>
+          </select>
+        </label>
+        {provider === 'Codex' ? (
+          <>
+            <p>
+              <strong>Ordinary Codex desktop chats are not observed by this adapter.</strong> A
+              compatible App Server client must launch the included proxy and inherit GROVE_TOKEN.
+            </p>
+            <pre>
+              <code>node /absolute/path/to/agentarium/bridge/codex-proxy.mjs</code>
+            </pre>
+            <p>
+              Running the proxy alone does not start a task. See docs/provider-integrations.md for
+              client setup and current limitations.
+            </p>
+          </>
+        ) : (
+          <>
+            <p>
+              Generate a {provider} hook configuration fragment, then merge its hooks into your
+              provider settings while preserving existing hooks.
+            </p>
+            <pre>
+              <code>{`node bridge/print-hook-config.mjs ${provider.toLowerCase()}`}</code>
+            </pre>
+            <p>
+              Launch {provider === 'Claude' ? 'Claude Code' : 'Gemini CLI'} from the terminal where
+              you exported GROVE_TOKEN, then start a task there. Configuration is manual; choosing a
+              provider here does not connect it.
+            </p>
+          </>
+        )}
       </div>
       <p className="privacy-note">
         Only agent metadata is displayed. No prompts or credentials are sent to this hosted site.

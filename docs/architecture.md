@@ -33,6 +33,7 @@ Simulation and live activity are separate modes. Changing mode replaces the brow
 | [App.tsx](../src/App.tsx)                      | Layout, controls, dialogs, inspector, audio, and world loading boundary |
 | [World.tsx](../src/World.tsx)                  | Scene, residents, animation, labels, lighting, and camera               |
 | [state.ts](../src/state.ts)                    | Zustand state, simulator, live ingestion, and UI settings               |
+| [sessions.ts](../src/sessions.ts)              | Session grouping and compatibility with older snapshots                 |
 | [bridge.ts](../src/bridge.ts)                  | Browser connection, authentication, snapshots, and reconnection         |
 | [protocol.mjs](../src/shared/protocol.mjs)     | Runtime event validation and deterministic agent reduction              |
 | [protocol.d.mts](../src/shared/protocol.d.mts) | Type declarations for the shared JavaScript module                      |
