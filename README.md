@@ -9,6 +9,7 @@ See the [detailed documentation](docs/README.md) for setup, architecture, agent 
 ## What works
 
 - A 29.25 × 22.2 island with an expanded café and terrace, communal table, espresso counter, studio, garden pergola, courtyard, landscaping, and day/evening lighting.
+- Gentle tree sway, drifting leaves, courtyard water ripples, and evening lamp glows, with reduced-motion and low-quality alternatives.
 - Eight expressive CC0 robot residents with skeletal sitting, idle, celebration, and failure animations. Working residents open their laptops; idle residents close them.
 - Orbit and zoom controls, five camera presets, slow camera orbit, ambient audio, reduced motion, and rendering-quality controls.
 - A clearly labeled simulator with tasks, delegation, waiting, completion, failure, pause, speed, reset, an activity feed, and an inspector.

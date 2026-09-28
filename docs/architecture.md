@@ -81,3 +81,5 @@ Authenticated viewers enable discovery on the bridge. Bounded scans run approxim
 ## World rendering boundary
 
 The expanded island has four zones and eight seats. Only decorative children belong to camera-aware detail layers; residents, bridge ingestion, session selection, and freshness handling stay outside them. Panning or zooming never pauses agent tracking. The finite world loads together, with individual offscreen meshes culled by Three.js and fine decorations conditionally mounted. There is no chunk loader or background terrain generation. See [World layout and rendering](world-layout.md).
+
+Ambient effects in `world/Ambience.tsx` use mutable Three.js objects and do not subscribe to session activity. `world/ambient.ts` contains bounded animation stepping, leaf positions, and frame-statistic calculations. `world/RenderStats.tsx` is opt-in via `?renderStats=1` and publishes only a local diagnostic overlay, with no bridge or analytics transmission.

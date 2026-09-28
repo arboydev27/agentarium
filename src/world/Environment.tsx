@@ -1,3 +1,4 @@
+import { BasinWater, DriftingLeaves, WarmGlow } from './Ambience';
 import { memo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -252,6 +253,7 @@ function Cafe({ surfaces }: { surfaces: ReturnType<typeof useSurfaceTextures> })
         <group key={x}>
           <Cylinder pos={[x, 4.09, -6.3]} r={0.015} h={0.75} color="#554b37" />
           <Cylinder pos={[x, 3.7, -6.3]} r={0.22} top={0.08} h={0.2} color="#d0a46d" />
+          <WarmGlow position={[x, 3.57, -6.3]} size={0.5} />
           <mesh position={[x, 3.57, -6.3]}>
             <sphereGeometry args={[0.09, 8, 6]} />
             <meshStandardMaterial
@@ -278,10 +280,10 @@ function Cafe({ surfaces }: { surfaces: ReturnType<typeof useSurfaceTextures> })
   );
 }
 
-function Studio() {
+function Studio({ woodMap }: { woodMap: THREE.Texture }) {
   return (
     <group name="studio">
-      <Floor zone="studio" color="#cfb38b" />
+      <Floor zone="studio" color="#cfb38b" map={woodMap} />
       <Box pos={[7, 2.65, -8.65]} size={[9.6, 3.1, 0.2]} color="#608573" />
       <Box pos={[11.7, 2.65, -6.65]} size={[0.2, 3.1, 4]} color="#608573" />
       <Box pos={[6.5, 2.9, -8.49]} size={[5.1, 1.8, 0.12]} color="#f0e5cc" />
@@ -330,11 +332,11 @@ function Studio() {
   );
 }
 
-function Garden() {
+function Garden({ stoneMap }: { stoneMap: THREE.Texture }) {
   const night = useWorld((s) => s.night);
   return (
     <group name="garden">
-      <Floor zone="garden" color="#bfb88f" />
+      <Floor zone="garden" color="#bfb88f" map={stoneMap} />
       {[2.5, 11.5].flatMap((x) =>
         [1.4, 8.6].map((z) => (
           <Cylinder key={`${x},${z}`} pos={[x, 2.6, z]} r={0.095} h={4.1} color="#9e855f" />
@@ -406,7 +408,7 @@ function Courtyard() {
         ))}
       </group>
       <Cylinder pos={[-2.2, 0.65, 8]} r={0.92} h={0.3} color="#c5c4a7" />
-      <Cylinder pos={[-2.2, 0.82, 8]} r={0.76} h={0.05} color="#80a6a0" />
+      <BasinWater />
       <Cylinder pos={[-2.2, 1.1, 8]} r={0.18} h={0.6} color="#b7bda0" />
       <Cylinder pos={[-2.2, 1.41, 8]} r={0.4} h={0.08} color="#d5d3b6" />
       <DetailLayer zone="courtyard">
@@ -436,8 +438,22 @@ export const Environment = memo(function Environment() {
         radius={0.5}
       />
       <Box pos={[0, 0.2, 0]} size={[WORLD.width, 0.4, WORLD.depth]} color="#9fb482" radius={0.18} />
-      <Box pos={[0, 0.43, 0.85]} size={[27.4, 0.06, 1.7]} color="#e0d2b0" radius={0.025} />
-      <Box pos={[0.1, 0.43, 0]} size={[1.8, 0.06, 20.5]} color="#e0d2b0" radius={0.025} />
+      <Box
+        pos={[0, 0.43, 0.85]}
+        size={[27.4, 0.06, 1.7]}
+        color="#e0d2b0"
+        map={surfaces.stone}
+        roughness={0.95}
+        radius={0.025}
+      />
+      <Box
+        pos={[0.1, 0.43, 0]}
+        size={[1.8, 0.06, 20.5]}
+        color="#e0d2b0"
+        map={surfaces.stone}
+        roughness={0.95}
+        radius={0.025}
+      />
       {Array.from({ length: 18 }, (_, i) => (
         <Box
           key={i}
@@ -448,9 +464,10 @@ export const Environment = memo(function Environment() {
         />
       ))}
       <Cafe surfaces={surfaces} />
-      <Studio />
-      <Garden />
+      <Studio woodMap={surfaces.wood} />
+      <Garden stoneMap={surfaces.stone} />
       <Courtyard />
+      <DriftingLeaves />
       {[
         [-13.6, 0.4, -8.5],
         [-13.7, 0.4, 2.5],

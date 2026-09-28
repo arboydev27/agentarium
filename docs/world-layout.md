@@ -21,7 +21,7 @@ Each seat anchors its desk, laptop, chair, and a reversible local character rout
 
 The café is the main landmark: warm plaster, sage trim, subtle wood grain, a shallow cutaway roof, communal table, espresso counter, bakery display, menu boards, and terrace seating. Additional chairs and tables are scenery, not extra agent slots. Evening mode adds warm pendant light and window color. Steam is decorative and independent of task activity; reduced motion hides it.
 
-The studio retains its warmer roof and raised deck. The garden has a larger pergola, string bulbs, and vine detail. The courtyard adds a resting bench, planting, and a decorative basin. Perimeter trees frame the island without putting trunks in the resident routes.
+The studio retains its warmer roof and raised deck. The garden has a larger pergola, string bulbs, and vine detail. The courtyard adds a resting bench, planting, and a decorative basin with animated ripples. Trees sway slightly and twelve instanced leaves drift along the perimeter at high quality. Reduced motion keeps the world still. Perimeter trees frame the island without putting trunks in the resident routes.
 
 Overview frames the whole island. Café, Garden, Studio, and Courtyard presets use viewport-aware orthographic zoom. Follow resident still tracks the moving character. Watch mode provides an unobstructed scene. Camera movement respects reduced motion. Large roofs are intentionally shallow so users can see working residents and the interior.
 
@@ -36,7 +36,7 @@ Overview frames the whole island. Café, Garden, Studio, and Courtyard presets u
 
 Fine layers include floor seams, counter fluting, espresso/bakery props, small signs, books, vines, flowers, and steam. Their scene objects and frame callbacks unmount with the layer. Base architecture, major furniture, trees, desks, and residents remain mounted. Three.js additionally skips drawing individual meshes outside the view. Shared surface textures remain loaded for the base scene; this is not whole-zone memory eviction.
 
-Low quality also uses DPR 1 and 512-pixel shadows; high quality allows DPR up to 1.6 and 2048-pixel shadows. No device frame-rate target has been established. Screen-space detail selection reduces optional geometry but does not eliminate the costs of the base scene, resident animation, shadows, or the existing Three.js bundle.
+Low quality also uses DPR 1 and 512-pixel shadows; high quality allows DPR up to 1.6 and 2048-pixel shadows. A local diagnostic overlay is available with `?renderStats=1`; see [Rendering performance](rendering-performance.md). No device frame-rate guarantee has been established. Screen-space detail selection reduces optional geometry but does not eliminate the costs of the base scene, resident animation, shadows, or the existing Three.js bundle.
 
 ## Agent state is independent
 

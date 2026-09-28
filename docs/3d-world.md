@@ -6,7 +6,7 @@ The scene is assembled in [World.tsx](../src/World.tsx), with scenery in [world/
 
 The island is 29.25 × 22.2 world units, 1.5× wider and deeper than the original (2.25× its area). Four explicit zones share layout data in `src/world/layout.ts`. The café has a cutaway roof, framed windows, a fluted espresso counter, bakery display, shared table, terrace tables/chairs, umbrella, planters, pendant lights, and subtle steam. Studio, garden/pergola, and courtyard have expanded floors and landscaping. The courtyard includes a bench and decorative basin.
 
-Reusable primitives construct scenery. Original deterministic canvas textures add wood grain and plaster variation; signage uses canvas text. Owned textures are disposed on unmount. The environment component is memoized. See [World layout and rendering](world-layout.md) for coordinates, detail levels, and extension boundaries.
+Reusable primitives construct scenery. Original deterministic canvas textures add wood grain, stone speckling, and plaster variation; signage uses canvas text. Owned textures are disposed on unmount. The environment component is memoized. See [World layout and rendering](world-layout.md) for coordinates, detail levels, and extension boundaries.
 
 Eight fixed seat positions in the shared layout define placement. In live mode, up to eight non-hidden sessions receive stable seat assignments, prioritizing pins then recency; older sessions remain in the list. Each resident's assigned seat also determines its desk; status drives the laptop lid. Working, tool, waiting, and failed residents have open laptops. Parent-child relationships are drawn as decorative raised lines when both agents are visible.
 
@@ -68,3 +68,13 @@ The world is lazy-loaded, and Vite groups Three.js, React Three Fiber, and Drei 
 The 3D dependency chunk currently exceeds Vite's default 500 kB warning threshold. This is a known bundle-size issue, not evidence of a broken build. There is no established device performance budget or measured frame-rate guarantee yet. Profile representative devices before increasing geometry, lights, effects, or resident count.
 
 The robot is a CC0 asset credited to Tomás Laulhé (Quaternius), with changes credited in its license file. Interface icons use Lucide. Fonts are loaded from Google Fonts, so the current app is not completely self-contained for offline use.
+
+## Ambient life and visual finish
+
+`src/world/Ambience.tsx` adds gentle tree sway, twelve instanced falling leaves along the planted perimeter, three expanding water rings in the courtyard basin, and small evening halos around existing lamps and café pendants. Leaves shrink to zero at the cycle boundary rather than visibly jumping back to the top. The water surface remains visible without animation. These effects are decorative: they neither read nor change agent activity.
+
+High quality enables these effects. Low quality returns trees to their neutral pose and removes leaves, water rings, and halos. Reduced motion also returns trees to neutral and removes leaves/rings; steady lighting and static water remain. The existing café steam disappears under reduced motion or when its detail layer is absent. Simulation pause stops resident activity but does not stop environmental ambience; use Reduced motion for a still world. Ambient deltas are capped at 50 ms after a suspended tab.
+
+Daylight uses a more restrained ambient/key-light balance; evening retains enough sky fill to read residents and status colors. Wood grain extends onto the studio floor, and subtle stone texture distinguishes paths and garden paving. Water uses a smoother material than stone or wood. Halos are small depth-tested sprites, not full-screen bloom; this pass adds no extra point lights or shadow maps. Canvas textures are original, local, and disposed with their owners.
+
+See [Rendering performance](rendering-performance.md) for the opt-in diagnostic overlay and the limits of the measurements.

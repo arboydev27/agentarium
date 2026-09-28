@@ -994,7 +994,7 @@ function Settings() {
       <label>
         <span>
           <strong>Reduced motion</strong>
-          <small>Still poses, immediate placement, and instant camera changes</small>
+          <small>Still residents and scenery, with instant camera changes</small>
         </span>
         <input
           type="checkbox"

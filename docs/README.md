@@ -16,6 +16,7 @@ These documents describe the implementation as of September 28, 2026. Source fil
 | [Provider integrations](provider-integrations.md) | Claude, Gemini, Codex, and custom telemetry                                   |
 | [3D world](3d-world.md)                           | Scene construction, character animation, cameras, and performance             |
 | [World layout and rendering](world-layout.md)     | Zone dimensions, seat placement, detail levels, and expansion guidance        |
+| [Rendering performance](rendering-performance.md) | Local frame timing, scene cost, quality checks, and measurement limits        |
 | [Development](development.md)                     | Commands, formatting, tests, extension workflow, and deployment boundaries    |
 | [Troubleshooting](troubleshooting.md)             | Common startup, connection, attribution, and rendering problems               |
 | [Roadmap](roadmap.md)                             | Current limitations and proposed next milestones                              |

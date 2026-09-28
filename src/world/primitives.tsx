@@ -1,3 +1,4 @@
+import { Breeze, WarmGlow } from './Ambience';
 import { useEffect, useMemo } from 'react';
 import { RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
@@ -8,6 +9,7 @@ export function Box({
   color = '#ffffff',
   radius = 0.04,
   map,
+  roughness = 0.78,
   rotation = [0, 0, 0],
   ...props
 }: {
@@ -16,6 +18,7 @@ export function Box({
   color?: string;
   radius?: number;
   map?: THREE.Texture;
+  roughness?: number;
   rotation?: [number, number, number];
   [key: string]: unknown;
 }) {
@@ -23,7 +26,7 @@ export function Box({
     return (
       <mesh position={pos} rotation={rotation} castShadow receiveShadow {...props}>
         <boxGeometry args={size} />
-        <meshStandardMaterial color={color} map={map} roughness={0.78} />
+        <meshStandardMaterial color={color} map={map} roughness={roughness} />
       </mesh>
     );
   return (
@@ -37,7 +40,7 @@ export function Box({
       receiveShadow
       {...props}
     >
-      <meshStandardMaterial color={color} map={map} roughness={0.78} />
+      <meshStandardMaterial color={color} map={map} roughness={roughness} />
     </RoundedBox>
   );
 }
@@ -125,24 +128,28 @@ export function Tree({
 }) {
   return (
     <group position={position} scale={scale}>
-      <Cylinder pos={[0, 1.5, 0]} r={0.17} top={0.11} h={3} color="#705340" />
-      <Cylinder pos={[0.36, 2.4, 0]} r={0.09} h={1.4} rotation={[0, 0, -0.55]} />
-      {[
-        [0, 3, 0],
-        [0.7, 3.3, 0.1],
-        [-0.65, 3.5, 0.2],
-        [0.12, 4, 0.1],
-        [0.05, 3.2, -0.65],
-      ].map((p, i) => (
-        <Sphere
-          key={i}
-          pos={p as [number, number, number]}
-          scale={[0.92, 0.87, 0.85]}
-          color={
-            (variant ? ['#8b9e63', '#adba78', '#839759'] : ['#5a8656', '#709860', '#86a568'])[i % 3]
-          }
-        />
-      ))}
+      <Breeze phase={position[0] + position[2]}>
+        <Cylinder pos={[0, 1.5, 0]} r={0.17} top={0.11} h={3} color="#705340" />
+        <Cylinder pos={[0.36, 2.4, 0]} r={0.09} h={1.4} rotation={[0, 0, -0.55]} />
+        {[
+          [0, 3, 0],
+          [0.7, 3.3, 0.1],
+          [-0.65, 3.5, 0.2],
+          [0.12, 4, 0.1],
+          [0.05, 3.2, -0.65],
+        ].map((p, i) => (
+          <Sphere
+            key={i}
+            pos={p as [number, number, number]}
+            scale={[0.92, 0.87, 0.85]}
+            color={
+              (variant ? ['#8b9e63', '#adba78', '#839759'] : ['#5a8656', '#709860', '#86a568'])[
+                i % 3
+              ]
+            }
+          />
+        ))}
+      </Breeze>
       <Cylinder pos={[0, 0.05, 0]} r={0.65} h={0.1} color="#739861" />
     </group>
   );
@@ -183,6 +190,7 @@ export function Lamp({ pos }: { pos: [number, number, number] }) {
           emissiveIntensity={night ? 3 : 1}
         />
       </mesh>
+      <WarmGlow position={[0, 2.73, 0]} />
       {night && <pointLight position={[0, 2.6, 0]} intensity={6} distance={6} color="#ffd291" />}
     </group>
   );

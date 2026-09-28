@@ -28,6 +28,8 @@ Acceptance: characters transition without snapping or furniture intersections, r
 
 The first spatial expansion is implemented: a 29.25 × 22.2 island, four explicit zones, a richer café/terrace, five camera presets, and camera-aware fine-detail layers. The visible capacity remains eight. Actual chunk streaming, infinite terrain, and asset streaming are not implemented.
 
+The ambient-life pass adds tree sway, instanced perimeter leaves, basin ripples, evening halos, and surface refinements. An opt-in diagnostic overlay now exposes local frame intervals and renderer counters; initial observations are in [Rendering performance](rendering-performance.md).
+
 Next, profile representative devices and establish a draw-call, triangle, and frame-time budget. Then design additional spaces and a stable assignment policy for more than eight visible agents. Consider grouping by session/provider, focusing active work, and showing overflow intentionally. Profile geometry, animation mixers, DOM labels, and shadows before raising counts.
 
 Acceptance: capacity behavior is understandable, selection works across groups, and expansion does not hide relevant waiting or failed tasks.

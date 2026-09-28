@@ -1,3 +1,4 @@
+import { RenderStats } from './world/RenderStats';
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, useGLTF, Line } from '@react-three/drei';
@@ -460,11 +461,11 @@ function Lighting() {
   return (
     <>
       <fog attach="fog" args={[night ? '#263a43' : '#d8dfd0', 45, 100]} />
-      <ambientLight intensity={night ? 0.5 : 1.15} color={night ? '#a2b6ed' : '#fff8e7'} />
-      <hemisphereLight args={[night ? '#849ccf' : '#e8f0e0', '#849970', night ? 0.6 : 1.4]} />
+      <ambientLight intensity={night ? 0.55 : 0.85} color={night ? '#a2b6ed' : '#fff8e7'} />
+      <hemisphereLight args={[night ? '#849ccf' : '#e8f0e0', '#849970', night ? 0.7 : 1.25]} />
       <directionalLight
         position={[-10, 20, 12]}
-        intensity={night ? 0.7 : 3.2}
+        intensity={night ? 0.7 : 2.8}
         color={night ? '#b2bff0' : '#ffe6b0'}
         castShadow
         shadow-mapSize={quality === 'low' ? [512, 512] : [2048, 2048]}
@@ -473,7 +474,8 @@ function Lighting() {
         shadow-camera-top={22}
         shadow-camera-bottom={-22}
         shadow-bias={-0.0003}
-        shadow-normalBias={0.025}
+        shadow-normalBias={0.015}
+        shadow-radius={2}
       />
       <directionalLight position={[10, 8, -8]} intensity={night ? 0.55 : 1} color="#b2d5d0" />
     </>
@@ -498,6 +500,7 @@ export default function World() {
         <Residents key={mode} positions={positions} />
       </Suspense>
       <Camera positions={positions} />
+      {new URLSearchParams(window.location.search).get('renderStats') === '1' && <RenderStats />}
     </Canvas>
   );
 }
