@@ -1,6 +1,6 @@
-import { Suspense, useEffect, useMemo, useRef, useState, memo } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, RoundedBox, useGLTF, Line } from '@react-three/drei';
+import { OrbitControls, useGLTF, Line } from '@react-three/drei';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import * as THREE from 'three';
 import type { ComponentRef } from 'react';
@@ -9,6 +9,9 @@ import { useWorld } from './state';
 import type { Agent, Status } from './state';
 import { SEATS, ResidentMotion, routeForSeat } from './world/motion';
 import { createCharacterClips, ROBOT_SCALE } from './world/rig';
+import { Box, Cylinder, Pot } from './world/primitives';
+import { Environment } from './world/Environment';
+import { CAMERA_VIEWS } from './world/layout';
 export { SEATS } from './world/motion';
 const statusColors = {
   idle: '#98aaa0',
@@ -20,182 +23,6 @@ const statusColors = {
   disconnected: '#9f9ca7',
   unknown: '#8a9784',
 };
-function Box({
-  pos = [0, 0, 0],
-  size = [1, 1, 1],
-  color = '#ffffff',
-  radius = 0.04,
-  rotation = [0, 0, 0],
-  ...props
-}: {
-  pos?: [number, number, number];
-  size?: [number, number, number];
-  color?: string;
-  radius?: number;
-  rotation?: [number, number, number];
-  [key: string]: unknown;
-}) {
-  return (
-    <RoundedBox
-      args={size}
-      radius={radius}
-      smoothness={2}
-      position={pos}
-      rotation={rotation}
-      castShadow
-      receiveShadow
-      {...props}
-    >
-      <meshStandardMaterial color={color} roughness={0.78} />
-    </RoundedBox>
-  );
-}
-function Cylinder({
-  pos = [0, 0, 0],
-  r = 0.1,
-  top,
-  h = 1,
-  color = '#624c39',
-  rotation = [0, 0, 0],
-}: {
-  pos?: [number, number, number];
-  r?: number;
-  top?: number;
-  h?: number;
-  color?: string;
-  rotation?: [number, number, number];
-}) {
-  return (
-    <mesh position={pos} rotation={rotation} castShadow receiveShadow>
-      <cylinderGeometry args={[top ?? r, r, h, 12]} />
-      <meshStandardMaterial color={color} roughness={0.85} />
-    </mesh>
-  );
-}
-function Sphere({
-  pos,
-  scale,
-  color,
-}: {
-  pos: [number, number, number];
-  scale: [number, number, number];
-  color: string;
-}) {
-  return (
-    <mesh position={pos} scale={scale} castShadow receiveShadow>
-      <sphereGeometry args={[1, 12, 10]} />
-      <meshStandardMaterial color={color} roughness={0.9} />
-    </mesh>
-  );
-}
-function Sign({
-  text,
-  pos,
-  size = [2, 0.7],
-  color = '#e8efd2',
-  background = '#244b3b',
-}: {
-  text: string;
-  pos: [number, number, number];
-  size?: [number, number];
-  color?: string;
-  background?: string;
-}) {
-  const tex = useMemo(() => {
-    const c = document.createElement('canvas');
-    c.width = 768;
-    c.height = 192;
-    const ctx = c.getContext('2d')!;
-    ctx.fillStyle = background;
-    ctx.fillRect(0, 0, 768, 192);
-    ctx.fillStyle = color;
-    ctx.font = '500 70px Georgia';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(text, 384, 96);
-    return new THREE.CanvasTexture(c);
-  }, [text, color, background]);
-  useEffect(() => () => tex.dispose(), [tex]);
-  return (
-    <mesh position={pos}>
-      <planeGeometry args={size} />
-      <meshStandardMaterial map={tex} roughness={0.8} />
-    </mesh>
-  );
-}
-function Tree({
-  position,
-  scale = 1,
-  variant = 0,
-}: {
-  position: [number, number, number];
-  scale?: number;
-  variant?: number;
-}) {
-  return (
-    <group position={position} scale={scale}>
-      <Cylinder pos={[0, 1.5, 0]} r={0.17} top={0.11} h={3} color="#705340" />
-      <Cylinder pos={[0.36, 2.4, 0]} r={0.09} h={1.4} rotation={[0, 0, -0.55]} />
-      {[
-        [0, 3, 0],
-        [0.7, 3.3, 0.1],
-        [-0.65, 3.5, 0.2],
-        [0.12, 4, 0.1],
-        [0.05, 3.2, -0.65],
-      ].map((p, i) => (
-        <Sphere
-          key={i}
-          pos={p as [number, number, number]}
-          scale={[0.92, 0.87, 0.85]}
-          color={
-            (variant ? ['#8b9e63', '#adba78', '#839759'] : ['#5a8656', '#709860', '#86a568'])[i % 3]
-          }
-        />
-      ))}
-      <Cylinder pos={[0, 0.05, 0]} r={0.65} h={0.1} color="#739861" />
-    </group>
-  );
-}
-function Pot({ pos, scale = 1 }: { pos: [number, number, number]; scale?: number }) {
-  return (
-    <group position={pos} scale={scale}>
-      <Cylinder pos={[0, 0.19, 0]} r={0.19} top={0.26} h={0.38} color="#c5896a" />
-      <Cylinder pos={[0, 0.39, 0]} r={0.25} h={0.025} color="#4c4f35" />
-      {[0, 1, 2, 3, 4].map((i) => (
-        <group key={i} rotation={[0, i * 1.25, 0]}>
-          <mesh
-            position={[0.13, 0.62, 0]}
-            rotation={[0, 0, -0.42]}
-            scale={[0.12, 0.3, 0.08]}
-            castShadow
-          >
-            <sphereGeometry args={[1, 8, 6]} />
-            <meshStandardMaterial color={i % 2 ? '#86a461' : '#4d8156'} />
-          </mesh>
-        </group>
-      ))}
-    </group>
-  );
-}
-function Lamp({ pos }: { pos: [number, number, number] }) {
-  const night = useWorld((s) => s.night);
-  return (
-    <group position={pos}>
-      <Cylinder pos={[0, 1.5, 0]} r={0.055} h={3} color="#354d3d" />
-      <Cylinder pos={[0, 0.08, 0]} r={0.24} h={0.16} color="#354d3d" />
-      <Cylinder pos={[0, 2.92, 0]} r={0.29} top={0.18} h={0.24} color="#264737" />
-      <mesh position={[0, 2.73, 0]}>
-        <sphereGeometry args={[0.15, 12, 12]} />
-        <meshStandardMaterial
-          color="#ffedb5"
-          emissive="#ffcd79"
-          emissiveIntensity={night ? 3 : 1}
-        />
-      </mesh>
-      {night && <pointLight position={[0, 2.6, 0]} intensity={6} distance={6} color="#ffd291" />}
-    </group>
-  );
-}
 function Laptop({ status }: { status?: Status }) {
   const active = !!status && ['working', 'tool', 'waiting', 'failed'].includes(status);
   const screenColor =
@@ -278,209 +105,6 @@ function Desk({ seat, status }: { seat: number; status?: Status }) {
     </group>
   );
 }
-const Environment = memo(function Environment() {
-  return (
-    <group>
-      <Box pos={[0, -0.28, 0]} size={[19.5, 1.1, 14.8]} color="#668065" radius={0.7} />
-      <Box pos={[0, 0.2, 0]} size={[19.5, 0.4, 14.8]} color="#9fb482" radius={0.55} />
-      <Box pos={[0, 0.41, 1.1]} size={[17, 0.06, 1.55]} color="#ddd1ae" radius={0.3} />
-      <Box pos={[0.1, 0.41, 0.2]} size={[1.7, 0.065, 12.7]} color="#ddd1ae" radius={0.3} />
-      {Array.from({ length: 14 }, (_, i) => (
-        <Box
-          key={i}
-          pos={[-8 + i * 1.25, 0.456, 1.1]}
-          size={[0.035, 0.006, 1.3]}
-          color="#bcb897"
-          radius={0}
-        />
-      ))}
-      <Box pos={[-4.2, 0.48, -3.7]} size={[7.8, 0.3, 5.9]} color="#b89772" radius={0.14} />
-      {Array.from({ length: 26 }, (_, i) => (
-        <Box
-          key={i}
-          pos={[-7.94 + i * 0.3, 0.645, -3.7]}
-          size={[0.013, 0.006, 5.65]}
-          color="#8f7456"
-          radius={0}
-        />
-      ))}
-      <Box pos={[-4.2, 2.48, -6.45]} size={[7.7, 3.7, 0.22]} color="#e8dec0" />
-      <Box pos={[-7.97, 2.38, -4.4]} size={[0.18, 3.5, 4.25]} color="#e8dec0" />
-      <Box pos={[-4.2, 1, -6.28]} size={[7.5, 0.65, 0.1]} color="#416b54" />
-      {[-6.3, -3.65].map((x) => (
-        <group key={x}>
-          <Box pos={[x, 2.67, -6.29]} size={[2.15, 2.1, 0.12]} color="#4d7055" radius={0.02} />
-          <Box pos={[x, 2.67, -6.2]} size={[1.94, 1.88, 0.06]} color="#a6c4b2" radius={0.015} />
-          <Box pos={[x, 2.67, -6.14]} size={[0.07, 1.89, 0.04]} color="#e2d1ad" />
-          <Box pos={[x, 2.67, -6.14]} size={[1.94, 0.07, 0.04]} color="#e2d1ad" />
-        </group>
-      ))}
-      <Box pos={[-4.2, 4.39, -5.42]} size={[8.25, 0.27, 2.72]} color="#315f49" radius={0.12} />
-      {Array.from({ length: 18 }, (_, i) => (
-        <Box
-          key={i}
-          pos={[-8.12 + i * 0.46, 4.56, -5.42]}
-          size={[0.09, 0.08, 2.64]}
-          color="#46765a"
-          radius={0.025}
-        />
-      ))}
-      <Box pos={[-4.2, 4.13, -4.03]} size={[8.2, 0.55, 0.15]} color="#315f49" radius={0.03} />
-      <Sign text="the little café" pos={[-4.2, 4.15, -3.944]} size={[3.25, 0.5]} />
-      <Box pos={[-6.8, 1.25, -4.35]} size={[1.55, 1.2, 1.8]} color="#365944" radius={0.06} />
-      <Box pos={[-6.8, 1.91, -4.35]} size={[1.65, 0.12, 1.93]} color="#d5b486" />
-      <Box pos={[-6.8, 2.23, -4.67]} size={[0.9, 0.57, 0.67]} color="#e5dfc9" radius={0.08} />
-      <Box pos={[-6.8, 2.19, -4.3]} size={[0.62, 0.3, 0.025]} color="#344b43" radius={0.03} />
-      <Cylinder pos={[-6.8, 2.62, -4.64]} r={0.15} h={0.25} color="#655344" />
-      <Box pos={[-2, 2.95, -6.2]} size={[0.8, 1.05, 0.1]} color="#bf9367" />
-      <Sign
-        text="slow brew"
-        pos={[-2, 2.95, -6.139]}
-        size={[0.72, 0.55]}
-        color="#eee4bf"
-        background="#577554"
-      />
-      <Pot pos={[-7.2, 0.65, -1.7]} scale={1.4} />
-      <Box pos={[4.4, 0.7, -4]} size={[7.4, 0.67, 5.3]} color="#af9877" radius={0.2} />
-      <Box pos={[4.4, 1.03, -4]} size={[7.4, 0.1, 5.3]} color="#d5bb8d" radius={0.1} />
-      {Array.from({ length: 23 }, (_, i) => (
-        <Box
-          key={i}
-          pos={[0.86 + i * 0.32, 1.09, -4]}
-          size={[0.012, 0.008, 5.15]}
-          color="#ab946e"
-          radius={0}
-        />
-      ))}
-      <Box pos={[4.4, 2.57, -6.53]} size={[7.4, 3, 0.2]} color="#56816b" />
-      <Box pos={[7.98, 2.57, -4.1]} size={[0.17, 3, 4.9]} color="#56816b" />
-      <Box pos={[4.45, 2.8, -6.4]} size={[4.1, 1.75, 0.12]} color="#f0e4c9" />
-      <Box pos={[4.45, 2.8, -6.32]} size={[3.83, 1.51, 0.04]} color="#acc8ba" />
-      <Box pos={[4.45, 2.8, -6.26]} size={[0.09, 1.55, 0.08]} color="#f0e4c9" />
-      <Box pos={[4.5, 4.15, -5.4]} size={[7.7, 0.23, 2.8]} color="#c18c62" radius={0.1} />
-      <Sign
-        text="THE STUDIO"
-        pos={[4.4, 3.91, -3.94]}
-        size={[2.4, 0.35]}
-        background="#c18c62"
-        color="#fff0cc"
-      />
-      {[-0.6, -0.3, 0].map((z, i) => (
-        <Box
-          key={i}
-          pos={[1.2, 0.54 + i * 0.17, -1.6 + z]}
-          size={[1.4, 0.18, 0.45]}
-          color="#b89b74"
-        />
-      ))}
-      <Box pos={[6.5, 1.7, -5.85]} size={[1.25, 1.25, 0.6]} color="#d4b181" />
-      {[0, 1, 2, 3, 4].map((i) => (
-        <Box
-          key={i}
-          pos={[6.04 + i * 0.21, 1.92, -5.49]}
-          size={[0.16, 0.53 - (i % 2) * 0.1, 0.25]}
-          color={['#698a77', '#c28564', '#e7cf98'][i % 3]}
-        />
-      ))}
-      <Pot pos={[1.15, 1.1, -5.65]} scale={1.3} />
-      <Box pos={[4.7, 0.47, 3.8]} size={[6.3, 0.15, 4.6]} color="#b9ae84" radius={0.2} />
-      {[2, 7.6].map((x) =>
-        [1.8, 5.8].map((z) => (
-          <Cylinder key={x + ',' + z} pos={[x, 2.3, z]} r={0.085} h={3.7} color="#8a7651" />
-        )),
-      )}
-      <Box pos={[4.8, 4.17, 1.8]} size={[6.1, 0.17, 0.2]} color="#a9946b" />
-      <Box pos={[4.8, 4.17, 5.8]} size={[6.1, 0.17, 0.2]} color="#a9946b" />
-      {Array.from({ length: 9 }, (_, i) => (
-        <Box key={i} pos={[2 + i * 0.7, 4.32, 3.8]} size={[0.16, 0.18, 4.4]} color="#ac976e" />
-      ))}
-      {[2, 7.6].map((x) => (
-        <group key={x}>
-          <Cylinder
-            pos={[x, 4.13, 3.8]}
-            r={0.015}
-            h={3.8}
-            rotation={[Math.PI / 2, 0, 0]}
-            color="#53694c"
-          />
-          {[2.1, 3, 3.9, 4.8, 5.6].map((z) => (
-            <mesh key={z} position={[x, 3.95, z]}>
-              <sphereGeometry args={[0.065, 8, 8]} />
-              <meshStandardMaterial color="#fff1bc" emissive="#ffe29a" emissiveIntensity={1.6} />
-            </mesh>
-          ))}
-        </group>
-      ))}
-      <Box pos={[-3.6, 0.44, 4.2]} size={[6.2, 0.08, 3.4]} color="#b2bf8f" radius={0.5} />
-      <group position={[-7.6, 0.43, 3.1]}>
-        <Box pos={[0, 0.5, 0]} size={[0.8, 0.16, 2]} color="#b0845e" />
-        <Box pos={[-0.3, 0.8, 0]} size={[0.12, 0.6, 2]} color="#b0845e" />
-        {[-0.7, 0.7].map((z) => (
-          <Box key={z} pos={[0, 0.25, z]} size={[0.6, 0.5, 0.15]} color="#506c50" />
-        ))}
-      </group>
-      {[
-        [9, 0.4, -5.5],
-        [-9, 0.4, -5.1],
-        [-9, 0.4, 0.2],
-        [8.8, 0.4, 5.7],
-        [-8.3, 0.4, 6.2],
-        [0.1, 0.4, 6.3],
-      ].map((p, i) => (
-        <Tree
-          key={i}
-          position={p as [number, number, number]}
-          scale={i === 5 ? 0.65 : 0.9 + (i % 2) * 0.15}
-          variant={i % 2}
-        />
-      ))}
-      {[
-        [8.7, 0.4, -0.5],
-        [-8.8, 0.4, -2],
-        [8.8, 0.4, 2],
-        [-7, 0.4, 6.4],
-        [5.7, 0.4, 6.5],
-        [2.9, 0.4, 6.4],
-        [-3.5, 0.4, -7],
-      ].map((p, i) => (
-        <group position={p as [number, number, number]} key={i}>
-          <Sphere
-            pos={[0, 0.35, 0]}
-            scale={[0.8, 0.5, 0.55]}
-            color={i % 2 ? '#789857' : '#53784a'}
-          />
-          <Sphere pos={[0.6, 0.23, 0.1]} scale={[0.55, 0.35, 0.45]} color="#86a360" />
-        </group>
-      ))}
-      <Lamp pos={[-0.9, 0.4, 1]} />
-      <Lamp pos={[8.4, 0.4, 1]} />
-      <Lamp pos={[-6.7, 0.4, 1]} />
-      <Pot pos={[7.3, 0.5, 5.3]} scale={1.4} />
-      <Pot pos={[2.3, 0.5, 5.3]} />
-      {Array.from({ length: 10 }, (_, i) => (
-        <group key={i} position={[-8.1 + i * 1.8, 0.43, 6.7]}>
-          <Cylinder pos={[0, 0.12, 0]} r={0.025} h={0.24} color="#6c8e50" />
-          <Sphere
-            pos={[0, 0.26, 0]}
-            scale={[0.1, 0.07, 0.1]}
-            color={i % 2 ? '#e5be72' : '#d79483'}
-          />
-        </group>
-      ))}
-      <Sign
-        text="G R O V E"
-        pos={[-0.1, -0.15, 7.417]}
-        size={[2.15, 0.4]}
-        color="#e0e8ce"
-        background="#668065"
-      />
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.87, 0]} receiveShadow>
-        <planeGeometry args={[200, 200]} />
-        <shadowMaterial transparent opacity={0.16} />
-      </mesh>
-    </group>
-  );
-});
 type Positions = Map<string, THREE.Vector3>;
 function Resident({
   agent,
@@ -783,15 +407,10 @@ function Camera({ positions }: { positions: Positions }) {
   const targetLook = useRef(new THREE.Vector3());
   const zoom = useRef(30);
   useEffect(() => {
-    const views = {
-      overview: { pos: [18, 19, 24], look: [0, 3.1, 0], factor: 1 },
-      café: { pos: [-1, 8, 11], look: [-4.5, 1.8, -3], factor: 2.3 },
-      garden: { pos: [12, 10, 15], look: [4.5, 1.4, 3.3], factor: 2.3 },
-      studio: { pos: [11, 9, 12], look: [4.1, 2.1, -3.4], factor: 2.3 },
-    };
-    targetPos.current.fromArray(views[view].pos);
-    targetLook.current.fromArray(views[view].look);
-    zoom.current = Math.min(size.width / 27, size.height / 23) * views[view].factor;
+    const preset = CAMERA_VIEWS[view];
+    targetPos.current.fromArray(preset.pos);
+    targetLook.current.fromArray(preset.look);
+    zoom.current = Math.min(size.width / preset.span[0], size.height / preset.span[1]);
     moving.current = true;
   }, [view, version, size.width, size.height, follow]);
   useFrame((_, d) => {
@@ -824,7 +443,7 @@ function Camera({ positions }: { positions: Positions }) {
       dampingFactor={0.07}
       maxPolarAngle={Math.PI / 2.12}
       minPolarAngle={0.2}
-      minZoom={10}
+      minZoom={5}
       maxZoom={150}
       autoRotate={cinematic && !reduced && !follow}
       autoRotateSpeed={0.35}
@@ -844,15 +463,15 @@ function Lighting() {
       <ambientLight intensity={night ? 0.5 : 1.15} color={night ? '#a2b6ed' : '#fff8e7'} />
       <hemisphereLight args={[night ? '#849ccf' : '#e8f0e0', '#849970', night ? 0.6 : 1.4]} />
       <directionalLight
-        position={[-7, 14, 8]}
+        position={[-10, 20, 12]}
         intensity={night ? 0.7 : 3.2}
         color={night ? '#b2bff0' : '#ffe6b0'}
         castShadow
         shadow-mapSize={quality === 'low' ? [512, 512] : [2048, 2048]}
-        shadow-camera-left={-16}
-        shadow-camera-right={16}
-        shadow-camera-top={15}
-        shadow-camera-bottom={-15}
+        shadow-camera-left={-23}
+        shadow-camera-right={23}
+        shadow-camera-top={22}
+        shadow-camera-bottom={-22}
         shadow-bias={-0.0003}
         shadow-normalBias={0.025}
       />
@@ -869,7 +488,7 @@ export default function World() {
       orthographic
       shadows
       dpr={quality === 'low' ? 1 : [1, 1.6]}
-      camera={{ position: [18, 19, 24], zoom: 30, near: 0.1, far: 180 }}
+      camera={{ position: [27, 26, 35], zoom: 30, near: 0.1, far: 180 }}
       gl={{ antialias: true, powerPreference: 'high-performance' }}
       onPointerMissed={() => useWorld.getState().select(null)}
     >

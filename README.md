@@ -8,9 +8,9 @@ See the [detailed documentation](docs/README.md) for setup, architecture, agent 
 
 ## What works
 
-- A fully modeled café island, studio, garden pergola, furniture, laptops, foliage, and day/evening lighting.
+- A 29.25 × 22.2 island with an expanded café and terrace, communal table, espresso counter, studio, garden pergola, courtyard, landscaping, and day/evening lighting.
 - Eight expressive CC0 robot residents with skeletal sitting, idle, celebration, and failure animations. Working residents open their laptops; idle residents close them.
-- Orbit and zoom controls, four camera presets, slow camera orbit, ambient audio, reduced motion, and rendering-quality controls.
+- Orbit and zoom controls, five camera presets, slow camera orbit, ambient audio, reduced motion, and rendering-quality controls.
 - A clearly labeled simulator with tasks, delegation, waiting, completion, failure, pause, speed, reset, an activity feed, and an inspector.
 - Opt-in local session discovery for Codex, Claude Code CLI, and Gemini CLI; up to eight sessions occupy stable seats, with pinned sessions first.
 - Guided local connection setup, fresh-event diagnostics, and a session filter for live residents.
@@ -18,7 +18,7 @@ See the [detailed documentation](docs/README.md) for setup, architecture, agent 
 - Claude Code and Gemini CLI telemetry hooks, a Codex App Server stdio proxy, and a generic event endpoint.
 - Optional WebMCP controls using the same application state as the visible UI.
 
-This is the first playable implementation, not a finished film-quality animation production. It uses one reusable character rig with color variants. The full city, custom human characters, walking/pathfinding, authored typing clips, and desktop packaging are future milestones. Current working hand movement is a small procedural overlay on the sitting animation.
+This is the first playable implementation, not a finished film-quality animation production. It uses one reusable character rig with color variants. Residents now use authored keyboard/attention clips and short reversible walking routes. A full city, custom human characters, island-wide pathfinding, and desktop packaging remain future milestones. Fine scenery details mount when close enough to see and disappear on low quality; this is a finite island, not an infinite streamed world. See [World layout and rendering](docs/world-layout.md).
 
 **The initial world is simulated. No live provider is connected automatically, no provider settings are modified, and no AI task is launched by the simulator.** The adapters have automated protocol/fixture coverage. They still need end-to-end validation against the specific installed provider versions and sessions you choose to connect.
 

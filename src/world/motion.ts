@@ -1,15 +1,7 @@
 import type { Agent } from '../state';
 export type Point = [number, number, number];
-export const SEATS: Point[] = [
-  [-5.4, 0.64, -1.8],
-  [-2.2, 0.64, -1.8],
-  [3.2, 0.55, 2.8],
-  [6.1, 0.55, 2.8],
-  [2.5, 1.1, -3.5],
-  [5.5, 1.1, -3.5],
-  [-5, 0.49, 3.3],
-  [-2, 0.49, 3.3],
-];
+import { SEATS } from './layout';
+export { SEATS } from './layout';
 export const DESK_Z = -0.42;
 export const SIT_LIFT = 0.13;
 export function deskBound(status: Agent['status']) {
@@ -19,10 +11,9 @@ export function deskBound(status: Agent['status']) {
 // Progress is reversible, so interruptions retrace the route rather than cut through a desk.
 export function routeForSeat(seat: number): Point[] {
   const [x, y, z] = SEATS[seat];
-  // The right studio seat has a shorter back route to clear its bookcase.
-  const back = seat === 5 ? 1.05 : 1.55;
+  const back = 1.55;
   return [
-    [x + 1.1, y, z - back - (seat === 5 ? 0.25 : 0.55)],
+    [x + 1.1, y, z - back - 0.55],
     [x + 1.1, y, z - back],
     [x + 1.1, y, z + DESK_Z],
     [x, y, z + DESK_Z],

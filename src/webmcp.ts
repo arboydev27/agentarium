@@ -98,14 +98,16 @@ export function registerWorldTools() {
       description: 'Move the camera to an overview or a named part of the grove.',
       inputSchema: {
         type: 'object',
-        properties: { view: { type: 'string', enum: ['overview', 'café', 'garden', 'studio'] } },
+        properties: {
+          view: { type: 'string', enum: ['overview', 'café', 'garden', 'studio', 'courtyard'] },
+        },
         required: ['view'],
         additionalProperties: false,
       },
       annotations: { readOnlyHint: false },
       execute: (input) => {
         const p = object(input);
-        if (!['overview', 'café', 'garden', 'studio'].includes(p.view as string))
+        if (!['overview', 'café', 'garden', 'studio', 'courtyard'].includes(p.view as string))
           throw new Error('Unknown view');
         useWorld.setState((s) => ({
           camera: p.view as typeof s.camera,

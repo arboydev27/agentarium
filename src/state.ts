@@ -111,7 +111,7 @@ type State = {
   reducedMotion: boolean;
   quality: 'high' | 'low';
   labels: boolean;
-  camera: 'overview' | 'café' | 'garden' | 'studio';
+  camera: 'overview' | 'café' | 'garden' | 'studio' | 'courtyard';
   cameraVersion: number;
   cinematic: boolean;
   watchMode: boolean;

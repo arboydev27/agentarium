@@ -1,12 +1,14 @@
 # The 3D world
 
-The scene is implemented in [World.tsx](../src/World.tsx). It combines procedural scenery with an animated GLB character. It is an eight-seat presentation of agent state, not a physical simulation or navigation system.
+The scene is assembled in [World.tsx](../src/World.tsx), with scenery in [world/Environment.tsx](../src/world/Environment.tsx). It combines procedural scenery with an animated GLB character. It is an eight-seat presentation of agent state, not a physical simulation or navigation system.
 
 ## Scene composition
 
-The environment contains a café, garden/pergola, studio, courtyard, desks, laptops, plants, trees, lamps, and signage. Reusable box, cylinder, and sphere helpers construct most scenery. Sign text is drawn into canvas textures. The environment component is memoized to reduce unnecessary React work.
+The island is 29.25 × 22.2 world units, 1.5× wider and deeper than the original (2.25× its area). Four explicit zones share layout data in `src/world/layout.ts`. The café has a cutaway roof, framed windows, a fluted espresso counter, bakery display, shared table, terrace tables/chairs, umbrella, planters, pendant lights, and subtle steam. Studio, garden/pergola, and courtyard have expanded floors and landscaping. The courtyard includes a bench and decorative basin.
 
-Eight fixed seat positions define placement. In live mode, up to eight non-hidden sessions receive stable seat assignments, prioritizing pins then recency; older sessions remain in the list. Each resident's assigned seat also determines its desk; status drives the laptop lid. Working, tool, and waiting residents have open laptops. Parent-child relationships are drawn as decorative raised lines when both agents are visible.
+Reusable primitives construct scenery. Original deterministic canvas textures add wood grain and plaster variation; signage uses canvas text. Owned textures are disposed on unmount. The environment component is memoized. See [World layout and rendering](world-layout.md) for coordinates, detail levels, and extension boundaries.
+
+Eight fixed seat positions in the shared layout define placement. In live mode, up to eight non-hidden sessions receive stable seat assignments, prioritizing pins then recency; older sessions remain in the list. Each resident's assigned seat also determines its desk; status drives the laptop lid. Working, tool, waiting, and failed residents have open laptops. Parent-child relationships are drawn as decorative raised lines when both agents are visible.
 
 Changing world capacity requires coordinated changes to seat coordinates, desk placement, zone/color assignment, and the visible-resident filter. Increasing the server's 256-agent cap alone does not add visual seats.
 
@@ -25,7 +27,7 @@ The bundled [robot.glb](../public/models/robot.glb) is loaded with `useGLTF` and
 
 `src/world/rig.ts` authors desk clips against the actual bundled skeleton. A one-time CCD solve places the hands over the keyboard for sampled keyframes; no IK runs per frame. The asset contract test samples hand placement throughout typing/review loops. These are generated clips for the existing robot, not new external animation assets. The laptop is moved nearer the seated character, and seating height/root offsets align the body with its chair.
 
-`src/world/motion.ts` holds a reversible path controller. Each seat has an entry point, resting spot, side approach, and desk destination on its own floor. The right studio route is shortened to clear the bookcase. This is local authored routing, not island-wide navigation or collision avoidance. Body pose blends over roughly 0.45 seconds; sitting height settles over 0.6 seconds. Work starts and interruptions reverse the same route without jumping directly through furniture. Resting spots have small ground markers.
+`src/world/motion.ts` holds a reversible path controller. Each seat has an entry point, resting spot, side approach, and desk destination on its own floor. The expanded layout gives all seats the same route offsets, with furniture placed outside those routes. This is local authored routing, not island-wide navigation or collision avoidance. Body pose blends over roughly 0.45 seconds; sitting height settles over 0.6 seconds. Work starts and interruptions reverse the same route without jumping directly through furniture. Resting spots have small ground markers.
 
 When a visible session leaves, its character walks out and fades. Its seat admits the latest replacement only after departure, so the scene never mounts more than eight rigs. Rapid changes replace the pending arrival; hidden/departing residents are no longer selectable. Their cosmetic exit does not indicate task completion. Returning to a session before departure finishes cancels its exit.
 
@@ -45,7 +47,7 @@ The list and inspector provide a text-based way to inspect activity without inte
 
 ## Cameras and lighting
 
-The orthographic camera has overview, café, garden, and studio presets. Preset zoom is calculated from viewport dimensions. OrbitControls support manual orbit/zoom with constrained polar angles. Manual control cancels an active preset movement, following, and cinematic rotation.
+The orthographic camera has overview, café, garden, studio, and courtyard presets. Preset targets and framing spans come from the shared layout; zoom is calculated from viewport dimensions. OrbitControls support manual orbit/zoom with constrained polar angles. Manual control cancels an active preset movement, following, and cinematic rotation.
 
 Preset transitions interpolate in the render loop; reduced motion makes them immediate. Cinematic mode slowly rotates the view. Day/evening settings change lighting and fog colors and enable lamp lighting. The main directional light uses a 2048 shadow map at high quality and 512 at low quality.
 
@@ -55,11 +57,13 @@ Select a resident occupying a seat and choose **Follow resident**. The camera fo
 
 The eye button in the header enters **Watch mode**: the world fills the viewport, panels are hidden, and only the selected resident retains its label. A compact overlay keeps simulation/live connection context, attention access, and an exit button visible. Watching does not automatically start camera orbit or follow an agent. It respects the existing camera choice. Escape exits watch mode; outside watch mode it stops following, then clears selection. Dialogs retain their own Escape handling.
 
-Watch and follow choices are temporary. Reduced motion makes camera placement immediate, and low quality lowers resolution/shadow cost. No frame-rate claim is made without device profiling.
+Watch and follow choices are temporary. Reduced motion makes camera placement immediate, and low quality lowers resolution/shadow cost and removes fine decorative layers. No frame-rate claim is made without device profiling.
 
 ## Performance and assets
 
-Low quality uses device pixel ratio 1; high quality uses a range of 1–1.6. The canvas uses antialiasing, shadows, and a high-performance context preference. The world is lazy-loaded, and Vite groups Three.js, React Three Fiber, and Drei in a dedicated chunk.
+Low quality uses device pixel ratio 1; high quality uses a range of 1–1.6. The canvas uses antialiasing, shadows, and a high-performance context preference. Each zone has a fine-detail layer. High quality admits it when the zone intersects the camera frustum and the orthographic zoom reaches 26 CSS pixels per world unit; it remains until zoom falls below 22. Visibility is sampled every 0.2 seconds and React state only changes at a detail boundary. Low quality omits these layers. Core buildings, furniture, all eight residents, and tracking remain active. Reduced motion hides café steam. This is detail selection within one loaded island, not chunk streaming.
+
+The world is lazy-loaded, and Vite groups Three.js, React Three Fiber, and Drei in a dedicated chunk.
 
 The 3D dependency chunk currently exceeds Vite's default 500 kB warning threshold. This is a known bundle-size issue, not evidence of a broken build. There is no established device performance budget or measured frame-rate guarantee yet. Profile representative devices before increasing geometry, lights, effects, or resident count.
 

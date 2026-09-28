@@ -764,7 +764,7 @@ export default function App() {
         )}
       </aside>
       <div className="camera-presets" aria-label="Camera views">
-        {(['overview', 'café', 'garden', 'studio'] as const).map((view, i) => (
+        {(['overview', 'café', 'garden', 'studio', 'courtyard'] as const).map((view, i) => (
           <button
             className={camera === view && !followAgent ? 'active' : ''}
             key={view}
@@ -776,8 +776,10 @@ export default function App() {
               <Coffee size={15} />
             ) : i === 2 ? (
               <Leaf size={15} />
-            ) : (
+            ) : i === 3 ? (
               <Laptop size={15} />
+            ) : (
+              <Sprout size={15} />
             )}
             <span>{view === 'overview' ? 'Overview' : view[0].toUpperCase() + view.slice(1)}</span>
           </button>
@@ -1003,7 +1005,7 @@ function Settings() {
       <label>
         <span>
           <strong>Rendering quality</strong>
-          <small>Lower quality uses fewer pixels</small>
+          <small>Lower quality simplifies scenery, pixels, and shadows</small>
         </span>
         <select
           value={s.quality}

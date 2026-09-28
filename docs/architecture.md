@@ -27,24 +27,29 @@ Simulation and live activity are separate modes. Changing mode replaces the brow
 
 ## Source ownership
 
-| Source                                         | Responsibility                                                          |
-| ---------------------------------------------- | ----------------------------------------------------------------------- |
-| [main.tsx](../src/main.tsx)                    | Browser entry point                                                     |
-| [App.tsx](../src/App.tsx)                      | Layout, controls, dialogs, inspector, audio, and world loading boundary |
-| [World.tsx](../src/World.tsx)                  | Scene, residents, animation, labels, lighting, and camera               |
-| [state.ts](../src/state.ts)                    | Zustand state, simulator, live ingestion, and UI settings               |
-| [sessions.ts](../src/sessions.ts)              | Session grouping and compatibility with older snapshots                 |
-| [bridge.ts](../src/bridge.ts)                  | Browser connection, authentication, snapshots, and reconnection         |
-| [protocol.mjs](../src/shared/protocol.mjs)     | Runtime event validation and deterministic agent reduction              |
-| [protocol.d.mts](../src/shared/protocol.d.mts) | Type declarations for the shared JavaScript module                      |
-| [webmcp.ts](../src/webmcp.ts)                  | Optional browser tool registration                                      |
-| [discovery.mjs](../bridge/discovery.mjs)       | Opt-in read-only local provider history readers                         |
-| [live.mjs](../src/shared/live.mjs)             | Merge telemetry/history and assign stable latest-eight seats            |
-| [server.mjs](../bridge/server.mjs)             | Loopback HTTP/WebSocket service and SQLite persistence                  |
-| [adapters.mjs](../bridge/adapters.mjs)         | Provider normalization and HTTP delivery                                |
-| [hook.mjs](../bridge/hook.mjs)                 | Provider hook stdin/stdout wrapper                                      |
-| [codex-proxy.mjs](../bridge/codex-proxy.mjs)   | Transparent App Server stdio forwarding and telemetry                   |
-| [style.css](../src/style.css)                  | Application layout and responsive styling                               |
+| Source                                                | Responsibility                                                          |
+| ----------------------------------------------------- | ----------------------------------------------------------------------- |
+| [main.tsx](../src/main.tsx)                           | Browser entry point                                                     |
+| [App.tsx](../src/App.tsx)                             | Layout, controls, dialogs, inspector, audio, and world loading boundary |
+| [World.tsx](../src/World.tsx)                         | Scene, residents, animation, labels, lighting, and camera               |
+| [world/layout.ts](../src/world/layout.ts)             | Island/zone bounds, seat positions, and camera presets                  |
+| [world/Environment.tsx](../src/world/Environment.tsx) | Modular zone scenery and café art                                       |
+| [world/DetailLayer.tsx](../src/world/DetailLayer.tsx) | Camera/quality-based decorative detail mounting                         |
+| [world/motion.ts](../src/world/motion.ts)             | Reversible resident routes and lifecycle motion                         |
+| [world/rig.ts](../src/world/rig.ts)                   | Authored character poses and keyboard alignment                         |
+| [state.ts](../src/state.ts)                           | Zustand state, simulator, live ingestion, and UI settings               |
+| [sessions.ts](../src/sessions.ts)                     | Session grouping and compatibility with older snapshots                 |
+| [bridge.ts](../src/bridge.ts)                         | Browser connection, authentication, snapshots, and reconnection         |
+| [protocol.mjs](../src/shared/protocol.mjs)            | Runtime event validation and deterministic agent reduction              |
+| [protocol.d.mts](../src/shared/protocol.d.mts)        | Type declarations for the shared JavaScript module                      |
+| [webmcp.ts](../src/webmcp.ts)                         | Optional browser tool registration                                      |
+| [discovery.mjs](../bridge/discovery.mjs)              | Opt-in read-only local provider history readers                         |
+| [live.mjs](../src/shared/live.mjs)                    | Merge telemetry/history and assign stable latest-eight seats            |
+| [server.mjs](../bridge/server.mjs)                    | Loopback HTTP/WebSocket service and SQLite persistence                  |
+| [adapters.mjs](../bridge/adapters.mjs)                | Provider normalization and HTTP delivery                                |
+| [hook.mjs](../bridge/hook.mjs)                        | Provider hook stdin/stdout wrapper                                      |
+| [codex-proxy.mjs](../bridge/codex-proxy.mjs)          | Transparent App Server stdio forwarding and telemetry                   |
+| [style.css](../src/style.css)                         | Application layout and responsive styling                               |
 
 React owns the interface; React Three Fiber connects React components to Three.js. Drei supplies scene helpers and animation utilities. Zustand is the browser state store. The bridge uses Node HTTP, `ws`, and built-in SQLite. There is no separate application backend for provider task execution.
 
@@ -72,3 +77,7 @@ SQLite stores live agent snapshots and a bounded event log. UI preferences, sele
 ## Local-history path
 
 Authenticated viewers enable discovery on the bridge. Bounded scans run approximately every five seconds while viewers are connected. Discovered metadata is merged with persisted telemetry, then broadcast as a `sessions` snapshot. Discovery does not write provider storage, launch models, or synthesize hook events. The browser projects the collection into eight stable session seats. See [Local session discovery](local-discovery.md).
+
+## World rendering boundary
+
+The expanded island has four zones and eight seats. Only decorative children belong to camera-aware detail layers; residents, bridge ingestion, session selection, and freshness handling stay outside them. Panning or zooming never pauses agent tracking. The finite world loads together, with individual offscreen meshes culled by Three.js and fine decorations conditionally mounted. There is no chunk loader or background terrain generation. See [World layout and rendering](world-layout.md).
