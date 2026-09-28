@@ -6,7 +6,7 @@ The scene is implemented in [World.tsx](../src/World.tsx). It combines procedura
 
 The environment contains a café, garden/pergola, studio, courtyard, desks, laptops, plants, trees, lamps, and signage. Reusable box, cylinder, and sphere helpers construct most scenery. Sign text is drawn into canvas textures. The environment component is memoized to reduce unnecessary React work.
 
-Eight fixed seat positions define placement. In live mode, the newest eight sessions receive stable seat assignments; older sessions remain in the list. Each resident's assigned seat also determines its desk; status drives the laptop lid. Working, tool, and waiting residents have open laptops. Parent-child relationships are drawn as decorative raised lines when both agents are visible.
+Eight fixed seat positions define placement. In live mode, up to eight non-hidden sessions receive stable seat assignments, prioritizing pins then recency; older sessions remain in the list. Each resident's assigned seat also determines its desk; status drives the laptop lid. Working, tool, and waiting residents have open laptops. Parent-child relationships are drawn as decorative raised lines when both agents are visible.
 
 Changing world capacity requires coordinated changes to seat coordinates, desk placement, zone/color assignment, and the visible-resident filter. Increasing the server's 256-agent cap alone does not add visual seats.
 

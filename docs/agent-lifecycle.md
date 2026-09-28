@@ -26,7 +26,7 @@ An event for an existing agent must have a strictly greater `sequence` than the 
 
 The bridge also deduplicates event IDs against retained SQLite event rows. The browser maintains a bounded set of 3,000 recently accepted event IDs. A unique event ID does not bypass sequence checks.
 
-Live presentation selects the eight most recently active provider-qualified sessions and preserves seats for surviving sessions. New eligible sessions replace the least recent visible sessions. Subagents share their session's capacity rather than taking extra seats when a main resident is known. Older residents remain in the list. The bridge retains up to 256 telemetry agents; discovery separately keeps up to 64 recent sessions per provider in memory. See [Local session discovery](local-discovery.md).
+Live presentation selects up to eight non-hidden provider-qualified sessions, prioritizing pins then recency and preserves seats for surviving sessions. New eligible sessions replace the least recent visible sessions. Subagents share their session's capacity rather than taking extra seats when a main resident is known. Older residents remain in the list. The bridge retains up to 256 telemetry agents; discovery separately keeps up to 64 recent sessions per provider in memory. See [Local session discovery](local-discovery.md).
 
 ## Metadata updates
 
@@ -51,6 +51,8 @@ Reset restores demo agents and clears selection/activity. It does not reset ever
 
 ## Disconnection
 
-When the browser socket closes, its resident statuses become disconnected locally. On reconnection, the server snapshot replaces that state. When the bridge itself restarts, recovered agents are marked disconnected until fresh events arrive. A socket heartbeat checks connection health, not whether an individual external task is alive.
+When the browser socket closes, last reported statuses remain intact and the UI labels updates as paused. On reconnection, the server snapshot replaces that state. When the bridge restarts, recovered agents retain their status with `telemetryStale: true` until a newer accepted event or newer history evidence arrives. A socket heartbeat checks connection health, not whether an individual external task is alive.
 
 See [state.ts](../src/state.ts) and the [shared reducer](../src/shared/protocol.mjs) for exact behavior.
+
+See [Managing live sessions](session-management.md) for local presentation choices and attention handling.

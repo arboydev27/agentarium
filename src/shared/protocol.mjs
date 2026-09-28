@@ -118,6 +118,7 @@ export function reduceAgentEvent(agents, event) {
           sessionId: event.sessionId,
           status: event.type,
           evidence: 'event',
+          telemetryStale: false,
           observedAt: event.timestamp,
           task: event.task ?? a.task,
           provider: event.provider ?? a.provider,

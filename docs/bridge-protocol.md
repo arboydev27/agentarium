@@ -120,3 +120,5 @@ New servers include `discoverySupported: true` and a `providers` diagnostics arr
 Scanning emits `{"type":"sessions","agents":[...],"providers":[...]}`. This is an authoritative merged resident snapshot, not a new lifecycle event. Browsers preserve event counters and stable latest-eight seating when applying it. A hook event is also followed by this merged snapshot. Provider diagnostics include enabled/state/count/detail/checkedAt.
 
 Identities use the JSON-encoded tuple `[provider, sessionId, agentId]`; omitted event providers mean Custom. Existing bridge-owned keys are upgraded transactionally at startup. Discovered records are memory-only and have `evidence: "history"`, optional `observedAt`, and sequence -1 when no telemetry exists. Submitted events still require a nonnegative sequence. See [Local session discovery](local-discovery.md).
+
+Restored telemetry records preserve their last status and include `telemetryStale: true` after a bridge restart. A newer accepted event clears the flag. Browser transport disconnection does not rewrite task statuses. Pin/hide preferences are local browser presentation choices and introduce no bridge commands.

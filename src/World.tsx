@@ -507,7 +507,10 @@ function Resident({ agent }: { agent: Agent }) {
   const select = useWorld((s) => s.select);
   const labels = useWorld((s) => s.labels);
   const reduced = useWorld((s) => s.reducedMotion);
-  const playing = useWorld((s) => s.playing || s.mode === 'live');
+  const playback = useWorld((s) =>
+    s.mode === 'live' ? s.bridgeStatus === 'connected' : s.playing,
+  );
+  const playing = playback && !agent.telemetryStale;
   const seat = SEATS[agent.seat % 8];
   const isSeated = ['working', 'tool', 'waiting'].includes(agent.status);
   const historicalCompletion =

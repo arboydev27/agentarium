@@ -12,7 +12,7 @@ See the [detailed documentation](docs/README.md) for setup, architecture, agent 
 - Eight expressive CC0 robot residents with skeletal sitting, idle, celebration, and failure animations. Working residents open their laptops; idle residents close them.
 - Orbit and zoom controls, four camera presets, slow camera orbit, ambient audio, reduced motion, and rendering-quality controls.
 - A clearly labeled simulator with tasks, delegation, waiting, completion, failure, pause, speed, reset, an activity feed, and an inspector.
-- Opt-in local session discovery for Codex, Claude Code CLI, and Gemini CLI; eight recent sessions occupy stable seats.
+- Opt-in local session discovery for Codex, Claude Code CLI, and Gemini CLI; up to eight sessions occupy stable seats, with pinned sessions first.
 - Guided local connection setup, fresh-event diagnostics, and a session filter for live residents.
 - An authenticated loopback event bridge with SQLite state, ordering, deduplication, WebSocket delivery, reconnect snapshots, and disconnect indicators.
 - Claude Code and Gemini CLI telemetry hooks, a Codex App Server stdio proxy, and a generic event endpoint.
@@ -43,7 +43,7 @@ The source build is a static web application. The local bridge is a separate pro
 
 ## Discover existing local sessions
 
-After connecting the local bridge, enable provider readers in **Discover existing sessions**. The world shows the eight most recently active sessions across providers; older sessions remain in the list. The demo stays unchanged. Restart the bridge after updating to load this feature.
+After connecting the local bridge, enable provider readers in **Discover existing sessions**. The world shows up to eight non-hidden sessions across providers, prioritizing pins then recency; older sessions remain in the list. The demo stays unchanged. Restart the bridge after updating to load this feature.
 
 Codex local history can reveal saved desktop sessions and recorded lifecycle activity. Claude Code CLI and Gemini CLI discovery identifies sessions; their hooks provide detailed activity. These read-only readers are experimental and local-only. Unknown activity is shown explicitly. See [Local session discovery](docs/local-discovery.md) for setup, privacy, compatibility, and limits.
 
@@ -54,7 +54,7 @@ Codex local history can reveal saved desktop sessions and recorded lifecycle act
 3. Set `GROVE_TOKEN` to that same token in the environment that launches your agent and its hook commands. Do not commit it or paste it into a prompt.
 4. Configure an adapter below, preserving all existing hooks.
 
-The bridge binds only to `127.0.0.1`. It checks browser origins and authenticates both event ingestion and WebSocket subscriptions. Browser authentication travels in the first WebSocket message, not in the URL. Tokens stay in memory. SQLite data is in this checkout’s ignored `bridge/data/` directory (resolved relative to the bridge module even when launched from another working directory) and is not uploaded with the site. On a bridge restart, saved agents are restored as disconnected until fresh events arrive. Silence alone does not mean an agent stopped working.
+The bridge binds only to `127.0.0.1`. It checks browser origins and authenticates both event ingestion and WebSocket subscriptions. Browser authentication travels in the first WebSocket message, not in the URL. Tokens stay in memory. SQLite data is in this checkout’s ignored `bridge/data/` directory (resolved relative to the bridge module even when launched from another working directory) and is not uploaded with the site. On a bridge restart, saved agents retain their last status with a stale-evidence marker until fresh evidence arrives. Silence alone does not mean an agent stopped working.
 
 Use the local application for live connections. An HTTPS-hosted page may not be allowed to reach a plain local WebSocket, and its origin is not permitted by the bridge by default. Do not disable browser security to bypass this.
 
@@ -125,7 +125,7 @@ POST JSON to `http://127.0.0.1:4318/events` with `Authorization: Bearer <session
 }
 ```
 
-Use the current Unix time in milliseconds. Increment `sequence` for each agent within a session. Allowed states: idle, working, tool, waiting, completed, failed, disconnected, unknown. Provider: Codex, Claude, Gemini, or Custom. Parent IDs are scoped to the same session. Unknown fields are dropped. IDs and names are limited to 200 characters; task labels to 300. Duplicate IDs and older sequences are ignored. Up to 256 telemetry agents are retained. Discovery adds up to 64 recent sessions per provider in memory. The eight most recently active provider-qualified sessions receive stable 3D seats; overflow remains in the list. Always send a consistent provider (omission means Custom).
+Use the current Unix time in milliseconds. Increment `sequence` for each agent within a session. Allowed states: idle, working, tool, waiting, completed, failed, disconnected, unknown. Provider: Codex, Claude, Gemini, or Custom. Parent IDs are scoped to the same session. Unknown fields are dropped. IDs and names are limited to 200 characters; task labels to 300. Duplicate IDs and older sequences are ignored. Up to 256 telemetry agents are retained. Discovery adds up to 64 recent sessions per provider in memory. Up to eight non-hidden provider-qualified sessions receive stable 3D seats, with pins before recency; overflow remains in the list. Always send a consistent provider (omission means Custom).
 
 Configuration: `GROVE_PORT`, `GROVE_TOKEN`, `GROVE_DB`, and comma-separated `GROVE_ORIGINS` for the server; `GROVE_URL` and `GROVE_TOKEN` for adapters. Defaults permit only the local Vite dev/preview origins. Do not put provider API keys in the frontend.
 
@@ -163,3 +163,7 @@ Animation is illustrative, not a view into a model's reasoning. Tool labels come
 RobotExpressive: Tomás Laulhé (Quaternius), CC0 1.0; glTF modifications by Don McCurdy. Vendored from the official Three.js example. See `public/models/LICENSE.md`.
 
 Environment and application code were authored for Agent Grove. Icons: Lucide (ISC). Fonts: DM Sans and Manrope (Google Fonts, SIL Open Font License). Three.js: MIT. React: MIT.
+
+### Manage your live world
+
+Select a resident to pin or hide its session. **Manage sessions** restores hidden choices and removes pins, even for sessions absent from the current snapshot. Choices survive refreshes in the same browser/app address. **Needs attention** includes waiting and failed residents outside the world and in hidden sessions. Connection loss preserves their last reported states. See [Managing live sessions](docs/session-management.md) for details.

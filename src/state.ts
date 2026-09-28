@@ -1,5 +1,7 @@
 import { create } from 'zustand';
-import { seatLatestSessions } from './shared/live.mjs';
+import { loadPreferences, savePreferences, validSessionKey } from './preferences';
+import type { SessionPreferences } from './preferences';
+import { sessionKey, seatLatestSessions } from './shared/live.mjs';
 import { reduceAgentEvent, validateEvent, agentKey, normalizeAgent } from './shared/protocol.mjs';
 export { reduceAgentEvent } from './shared/protocol.mjs';
 export type Status =
@@ -11,6 +13,7 @@ export type Agent = {
   agentId?: string;
   evidence?: 'history' | 'event';
   observedAt?: number;
+  telemetryStale?: boolean;
   name: string;
   provider: Provider;
   color: string;
@@ -93,7 +96,11 @@ export type DiscoveryProvider = {
   detail: string;
   checkedAt?: number;
 };
+const saved = loadPreferences();
 type State = {
+  sessionPreferences: SessionPreferences;
+  preferenceError: string | null;
+  changeSession: (key: string, action: 'pin' | 'unpin' | 'hide' | 'restore') => string | null;
   agents: Agent[];
   selected: string | null;
   events: Activity[];
@@ -127,6 +134,40 @@ type State = {
   switchMode: (m: 'demo' | 'live') => void;
 };
 export const useWorld = create<State>((set, get) => ({
+  sessionPreferences: saved.preferences,
+  preferenceError: saved.error,
+  changeSession: (key, action) => {
+    const s = get();
+    if (s.mode !== 'live' || !validSessionKey(key)) return 'Choose a live session first.';
+    const { pinned, hidden } = s.sessionPreferences;
+    if (action === 'pin' && !pinned.includes(key) && pinned.length >= 8)
+      return 'All eight pins are in use. Unpin a session in Manage sessions first.';
+    const preferences: SessionPreferences = {
+      version: 1,
+      pinned:
+        action === 'pin'
+          ? [...new Set([...pinned, key])]
+          : action === 'unpin' || action === 'hide'
+            ? pinned.filter((id) => id !== key)
+            : pinned,
+      hidden:
+        action === 'hide'
+          ? [...new Set([...hidden, key])]
+          : action === 'restore' || action === 'pin'
+            ? hidden.filter((id) => id !== key)
+            : hidden,
+    };
+    set({
+      sessionPreferences: preferences,
+      preferenceError: savePreferences(preferences),
+      agents: seatLatestSessions(s.agents, s.agents, preferences),
+      selected:
+        action === 'hide' && s.agents.some((a) => a.id === s.selected && sessionKey(a) === key)
+          ? null
+          : s.selected,
+    });
+    return null;
+  },
   agents: initialAgents(),
   selected: null,
   events: [
@@ -273,7 +314,7 @@ export const useWorld = create<State>((set, get) => ({
     seen.add(e.id);
     if (seen.size > 3000) seen.delete(seen.values().next().value!);
     set({
-      agents: seatLatestSessions(next, s.agents),
+      agents: seatLatestSessions(next, s.agents, s.sessionPreferences),
       receivedEvents: s.receivedEvents + 1,
       lastReceivedAt: Date.now(),
       receivedProviders: [
@@ -300,7 +341,11 @@ export const useWorld = create<State>((set, get) => ({
   },
   hydrate: (agents) =>
     set({
-      agents: seatLatestSessions(agents.map(normalizeAgent), get().agents),
+      agents: seatLatestSessions(
+        agents.map(normalizeAgent),
+        get().agents,
+        get().sessionPreferences,
+      ),
       bridgeStatus: 'connected',
       bridgeError: null,
       receivedEvents: 0,
@@ -312,7 +357,7 @@ export const useWorld = create<State>((set, get) => ({
   syncSessions: (agents) => {
     const s = get();
     if (s.mode !== 'live') return;
-    const next = seatLatestSessions(agents.map(normalizeAgent), s.agents);
+    const next = seatLatestSessions(agents.map(normalizeAgent), s.agents, s.sessionPreferences);
     set({ agents: next, selected: next.some((a) => a.id === s.selected) ? s.selected : null });
   },
   switchMode: (mode) =>

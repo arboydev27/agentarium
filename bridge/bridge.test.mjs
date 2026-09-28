@@ -286,6 +286,8 @@ test('legacy bridge snapshots migrate without losing sequence protection', async
     const snapshot = await next;
     assert.equal(snapshot.agents[0].id, agentKey('Codex', 'old', 'main'));
     assert.equal(snapshot.agents[0].sequence, 20);
+    assert.equal(snapshot.agents[0].status, 'working');
+    assert.equal(snapshot.agents[0].telemetryStale, true);
     const response = await fetch(`http://127.0.0.1:${port}/events`, {
       method: 'POST',
       headers: { Authorization: 'Bearer test-token', 'Content-Type': 'application/json' },
@@ -300,6 +302,24 @@ test('legacy bridge snapshots migrate without losing sequence protection', async
       }),
     });
     assert.equal((await response.json()).reason, 'stale');
+    const fresh = waitMessage(ws, (m) => m.type === 'sessions');
+    await fetch(`http://127.0.0.1:${port}/events`, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer test-token', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: 'fresh',
+        sessionId: 'old',
+        agentId: 'main',
+        provider: 'Codex',
+        sequence: 21,
+        timestamp: Date.now(),
+        type: 'waiting',
+      }),
+    });
+    const updated = await fresh;
+    assert.equal(updated.agents[0].status, 'waiting');
+    assert.equal(updated.agents[0].telemetryStale, false);
+
     ws.close();
   } finally {
     await b.close();

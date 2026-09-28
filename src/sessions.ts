@@ -28,3 +28,13 @@ export function summarizeSessions(agents: Agent[]) {
   }
   return [...sessions.values()];
 }
+
+export type SessionView = 'visible' | 'attention' | 'hidden';
+export function filterResidents(agents: Agent[], hidden: string[], view: SessionView, filter = '') {
+  const hiddenKeys = new Set(hidden);
+  return agents.filter((agent) => {
+    if (filter && sessionKey(agent) !== filter) return false;
+    if (view === 'attention') return agent.status === 'waiting' || agent.status === 'failed';
+    return hiddenKeys.has(sessionKey(agent)) === (view === 'hidden');
+  });
+}

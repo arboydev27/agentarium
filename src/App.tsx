@@ -35,6 +35,9 @@ import {
 import { useWorld, STATUS_LABEL } from './state';
 import { registerWorldTools } from './webmcp';
 import { agentSessionId, summarizeSessions, sessionKey } from './sessions';
+import { SessionActions, SessionManager } from './SessionControls';
+import { filterResidents } from './sessions';
+import type { SessionView } from './sessions';
 import type { Agent, Status } from './state';
 const World = lazy(() => import('./World'));
 function ProviderIcon({ provider }: { provider: string }) {
@@ -120,11 +123,13 @@ function Modal({
   );
 }
 function Elapsed({ agent }: { agent: Agent }) {
+  const offline = useWorld((s) => s.mode === 'live' && s.bridgeStatus !== 'connected');
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
+  if (offline || agent.telemetryStale) return <span>Last known state</span>;
   if (agent.evidence === 'history' || agent.status === 'unknown')
     return (
       <span>{agent.status === 'unknown' ? 'Activity unknown' : 'Last recorded activity'}</span>
@@ -157,14 +162,18 @@ export default function App() {
     bridgeStatus = useWorld((s) => s.bridgeStatus);
   const receivedEvents = useWorld((s) => s.receivedEvents);
   const historyEnabled = useWorld((s) => s.discoveryProviders.some((p) => p.enabled));
+  const preferences = useWorld((s) => s.sessionPreferences);
+  const preferenceError = useWorld((s) => s.preferenceError);
+  const [sessionView, setSessionView] = useState<SessionView>('visible');
   const [sessionFilter, setSessionFilter] = useState('');
   const sessions = mode === 'live' ? summarizeSessions(agents) : [];
   const activeSession = sessions.some((s) => s.id === sessionFilter) ? sessionFilter : '';
-  const listedAgents = activeSession
-    ? agents.filter((a) => sessionKey(a) === activeSession)
-    : agents;
+  const listedAgents =
+    mode === 'live'
+      ? filterResidents(agents, preferences.hidden, sessionView, activeSession)
+      : agents;
   const [tab, setTab] = useState<'residents' | 'activity'>('residents');
-  const [modal, setModal] = useState<'settings' | 'connections' | 'help' | null>(null);
+  const [modal, setModal] = useState<'settings' | 'connections' | 'help' | 'sessions' | null>(null);
   const [collapsed, setCollapsed] = useState(() => window.innerWidth < 801);
   const [toast, setToast] = useState('');
   const [fullscreen, setFullscreen] = useState(false);
@@ -331,7 +340,9 @@ export default function App() {
                 : agents.length
                   ? 'Your recent sessions, at home in the grove.'
                   : 'Bridge connected. Discover your recent sessions.'
-              : 'Connect an agent to bring the grove to life.'}
+              : agents.length
+                ? 'Updates paused. Showing last known activity.'
+                : 'Connect an agent to bring the grove to life.'}
         </p>
         <div className="world-stats">
           <span>
@@ -383,7 +394,11 @@ export default function App() {
         </button>
       </div>
       <aside
-        className={'residents-panel ' + (collapsed ? 'collapsed' : '')}
+        className={
+          'residents-panel ' +
+          (mode === 'live' ? 'live-panel ' : '') +
+          (collapsed ? 'collapsed' : '')
+        }
         aria-label="Residents and activity"
       >
         <div className="panel-heading">
@@ -416,11 +431,63 @@ export default function App() {
             <ChevronRight size={18} className={collapsed ? '' : 'rotate-90'} />
           </button>
         </div>
+        {mode === 'live' && waiting > 0 && (
+          <button
+            className="attention-summary"
+            onClick={() => {
+              setTab('residents');
+              setCollapsed(false);
+              setSessionView('attention');
+              setSessionFilter('');
+            }}
+          >
+            <AlertCircle size={15} />
+            {waiting} need attention · View all
+          </button>
+        )}
         {!collapsed && (
           <>
+            {mode === 'live' && bridgeStatus !== 'connected' && agents.length > 0 && (
+              <p className="connection-notice" role="status">
+                Updates paused. Statuses below are last known; agent activity is unconfirmed.
+              </p>
+            )}
             <div className="panel-content">
               {tab === 'residents' ? (
                 <>
+                  {mode === 'live' && (
+                    <div className="session-tools">
+                      <label className="session-filter">
+                        Show residents
+                        <select
+                          value={sessionView}
+                          onChange={(e) => {
+                            setSessionView(e.target.value as SessionView);
+                            setSessionFilter('');
+                            useWorld.getState().select(null);
+                          }}
+                        >
+                          <option value="visible">Visible sessions</option>
+                          <option value="attention">Needs attention (includes hidden)</option>
+                          <option value="hidden">Hidden sessions</option>
+                        </select>
+                      </label>
+                      <button className="text-button" onClick={() => setModal('sessions')}>
+                        Manage sessions · {preferences.pinned.length}/8 pinned
+                      </button>
+                      {preferenceError && (
+                        <p className="inline-error" role="status">
+                          {preferenceError}
+                        </p>
+                      )}
+                      {sessionView === 'attention' && (
+                        <small>
+                          Waiting and failed residents across every session, including hidden
+                          sessions and those outside the grove.
+                        </small>
+                      )}
+                    </div>
+                  )}
                   {mode === 'live' && sessions.length > 0 && (
                     <label className="session-filter">
                       Session · {sessions.length} total
@@ -441,8 +508,8 @@ export default function App() {
                         ))}
                       </select>
                       <small>
-                        The world shows the eight most recently active sessions. This filters the
-                        list only.
+                        Pins take priority in the eight seats; recent sessions fill the rest. These
+                        filters change the list only.
                       </small>
                     </label>
                   )}
@@ -463,6 +530,14 @@ export default function App() {
                         Connect agents <ArrowUpRight size={14} />
                       </button>
                     </div>
+                  ) : listedAgents.length === 0 ? (
+                    <p className="empty-filter">
+                      {sessionView === 'attention'
+                        ? 'No waiting or failed residents in this view.'
+                        : sessionView === 'hidden'
+                          ? 'No hidden residents in this snapshot.'
+                          : 'No residents match this view. Restore hidden sessions in Manage sessions.'}
+                    </p>
                   ) : (
                     listedAgents.map((agent) => (
                       <button
@@ -481,6 +556,14 @@ export default function App() {
                           <span>
                             <ProviderIcon provider={agent.provider} />
                             {agent.provider}
+                            {mode === 'live' &&
+                              (preferences.hidden.includes(sessionKey(agent))
+                                ? ' · Hidden'
+                                : preferences.pinned.includes(sessionKey(agent))
+                                  ? ' · Pinned'
+                                  : agent.seat >= 8
+                                    ? ' · Outside grove'
+                                    : '')}
                           </span>
                         </span>
                         <span className={'status-tag ' + agent.status}>
@@ -534,6 +617,9 @@ export default function App() {
                 <div className="inspector-heading">
                   <span>
                     <i className={'dot ' + chosen.status} />
+                    {mode === 'live' && (bridgeStatus !== 'connected' || chosen.telemetryStale)
+                      ? 'Last known: '
+                      : ''}
                     {STATUS_LABEL[chosen.status]}
                   </span>
                   <button
@@ -544,6 +630,7 @@ export default function App() {
                     <X size={16} />
                   </button>
                 </div>
+                {mode === 'live' && <SessionActions agent={chosen} notify={setToast} />}
                 <h3>{chosen.task}</h3>
                 <div className="task-meta">
                   <span>
@@ -564,8 +651,9 @@ export default function App() {
                 )}
                 {chosen.seat >= 8 && (
                   <p className="parent-note">
-                    Listed here; the world reserves its eight seats for the most recently active
-                    sessions. Subagents share their session’s place.
+                    {preferences.hidden.includes(sessionKey(chosen))
+                      ? 'This session is hidden from the world.'
+                      : 'Outside the eight seats. Pin this session to keep a place. Subagents share their session’s place.'}
                   </p>
                 )}
                 {mode === 'demo' ? (
@@ -609,10 +697,13 @@ export default function App() {
                   </div>
                 ) : (
                   <div className="live-note">
+                    {chosen.telemetryStale && (
+                      <p>Saved before the bridge restarted. Waiting for fresh status evidence.</p>
+                    )}
                     <p>
                       {chosen.evidence === 'history'
                         ? 'Read-only local history observation. This may not reflect the current runtime state.'
-                        : 'Status reported by your connected agent.'}
+                        : 'Last status reported by your agent. A bridge connection alone does not confirm it is still running.'}
                     </p>
                     <p>Last activity: {new Date(chosen.updatedAt).toLocaleString()}</p>
                     {chosen.observedAt && (
@@ -734,6 +825,11 @@ export default function App() {
           <Sprout size={17} />
           {toast}
         </div>
+      )}
+      {modal === 'sessions' && mode === 'live' && (
+        <Modal title="Manage sessions" close={() => setModal(null)}>
+          <SessionManager notify={setToast} />
+        </Modal>
       )}
       {modal === 'settings' && (
         <Modal title="Make yourself at home" close={() => setModal(null)}>
@@ -980,8 +1076,8 @@ function Connections({ notify }: { notify: (s: string) => void }) {
       <div className="connection-steps">
         <h3>2. Discover existing sessions</h3>
         <p>
-          Choose which local histories to read. The eight most recently active sessions across
-          providers occupy the world. The demo stays separate.
+          Choose which local histories to read. Up to eight sessions occupy the world, with pinned
+          sessions first and recent sessions filling the remaining seats. The demo stays separate.
         </p>
         <p>
           Experimental readers scan every 5 seconds while a live viewer is connected. Session IDs,

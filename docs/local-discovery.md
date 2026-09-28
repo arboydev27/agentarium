@@ -8,7 +8,7 @@ The demo remains unchanged. In live setup, enable provider readers to discover e
 2. Open **Simulation**, connect using the current bridge token, and find **Discover existing sessions**.
 3. Enable Codex, Claude, or Gemini discovery individually.
 4. Check each card's availability, session count, last scan time, and limitations.
-5. Close setup. The eight most recently active sessions occupy the world; older records remain in the list.
+5. Close setup. Up to eight sessions occupy the world, with pinned sessions first and recent sessions filling the rest; older records remain in the list.
 
 Discovery runs inside the bridge, so it does not require exporting `GROVE_TOKEN` to another terminal. External hook/proxy producers still require that export. If the UI asks for a bridge restart, reloading the webpage alone will not update the Node process.
 
@@ -26,7 +26,7 @@ Readers are experimental and version-sensitive. Claude Desktop/web histories, Ge
 
 ## Identity and seats
 
-One character represents one provider-qualified session. Recency is the latest timestamp among its known members. The newest eight sessions receive seats; surviving sessions keep their seats and new eligible sessions take vacated ones. Older records remain in the list. Subagents do not take extra seats when the main resident is known. If only a child is known, it can represent that session until the main arrives.
+One character represents one provider-qualified session. Recency is the latest timestamp among its known members. Up to eight non-hidden sessions receive seats, with pins first and recency filling the rest; surviving sessions keep their seats and new eligible sessions take vacated ones. Older records remain in the list. Subagents do not take extra seats when the main resident is known. If only a child is known, it can represent that session until the main arrives.
 
 Filtering affects only the list. Completion does not delete a session or force it out of a seat. Use the inspector for the full title, session ID, evidence source, and timestamps.
 
@@ -62,3 +62,5 @@ Discovered records stay in bridge memory and are delivered to authenticated view
 Codex's supported `thread/list` API can list stored sessions, but a separate App Server is not automatically attached to the desktop process's runtime. This implementation explicitly labels its local-history observation rather than assuming that connection. See the [official App Server reference](https://learn.chatgpt.com/docs/app-server).
 
 Storage references: [Claude Code sessions](https://code.claude.com/docs/en/sessions), [Gemini session management](https://geminicli.com/docs/cli/session-management/), and [Gemini recording source](https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/services/chatRecordingService.ts).
+
+See [Managing live sessions](session-management.md) for pinning, hiding, restoring, and attention filters.

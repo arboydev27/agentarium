@@ -23,17 +23,25 @@ export function mergeSessions(telemetry, discovered) {
 }
 
 // One stable seat per top-level session, ordered by its newest member's activity.
-export function seatLatestSessions(agents, previous = []) {
+export function seatLatestSessions(agents, previous = [], preferences = {}) {
+  const hidden = new Set(preferences.hidden || []);
+  const pinned = new Set((preferences.pinned || []).slice(0, 8));
   const groups = new Map();
   for (const agent of agents) {
     const key = sessionKey(agent);
+    if (hidden.has(key)) continue;
     const group = groups.get(key) || { key, members: [], updatedAt: 0 };
     group.members.push(agent);
     group.updatedAt = Math.max(group.updatedAt, agent.updatedAt);
     groups.set(key, group);
   }
   const top = [...groups.values()]
-    .sort((a, b) => b.updatedAt - a.updatedAt || a.key.localeCompare(b.key))
+    .sort(
+      (a, b) =>
+        Number(pinned.has(b.key)) - Number(pinned.has(a.key)) ||
+        b.updatedAt - a.updatedAt ||
+        a.key.localeCompare(b.key),
+    )
     .slice(0, 8);
   const seats = new Map();
   const occupied = new Set();

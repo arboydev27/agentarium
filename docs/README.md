@@ -26,3 +26,5 @@ For a first run, start with Getting started. For a new provider, read Agent life
 The implementation includes an eight-seat 3D environment, a simulator, a live event bridge, SQLite snapshots, provider adapters, and optional browser automation tools. It observes external agents; it does not launch real AI work, manage provider credentials, or schedule tasks. A working resident indicates the latest reported status, not independent proof that a model is currently computing.
 
 The project currently uses a shared robot rig with color variants and procedural scenery. Custom human characters, walking navigation, a larger world, and film-quality animation remain future work. Provider adapters have fixture tests; compatibility with a particular installed provider must be verified in that environment.
+
+- [Managing live sessions](session-management.md): pins, hiding, restoration, saved choices, and attention.

@@ -2,7 +2,7 @@
 
 This is a proposed development sequence, not a list of shipped features or scheduled commitments. The current implementation is a playable prototype with a local telemetry path.
 
-The first local-discovery milestone is implemented: opt-in readers, provider diagnostics, provider-qualified identities, and stable latest-eight session seating. Broader integration hardening remains below.
+The first local-discovery milestone is implemented: opt-in readers, provider diagnostics, provider-qualified identities, and stable latest-eight session seating. The session-control milestone adds browser-local pins, hide/restore, attention across all sessions, and transport/task-state separation. Broader integration hardening remains below.
 
 ## 1. Validate real provider integrations
 
@@ -12,7 +12,7 @@ Acceptance: each supported integration has a documented setup tested end to end,
 
 ## 2. Strengthen session and delivery management
 
-Design resident/session cleanup, sequence continuity, bounded delivery queues, and retry semantics. Separate transport disconnection from confirmed provider/task state. Add deliberate SQLite schema/version migration handling before evolving persisted records.
+Design resident/session cleanup, sequence continuity, bounded delivery queues, and retry semantics. Transport disconnection now preserves last reported state; further provider-level freshness policies remain. Add deliberate SQLite schema/version migration handling before evolving persisted records.
 
 Acceptance: independent sessions cannot accidentally overwrite one another, abandoned residents can be managed without deleting a database, and downtime behavior is both testable and visible to users.
 
@@ -36,6 +36,6 @@ Acceptance: a new user can install, connect, diagnose, and update the app withou
 
 ## Current non-goals and gaps
 
-There is no real-task launcher, provider billing dashboard, multi-user authorization system, public bridge deployment, history API, automated settings installer, desktop package, or continuous-integration workflow. Browser preferences are not persisted. Asset and bundle performance have no formal budget yet.
+There is no real-task launcher, provider billing dashboard, multi-user authorization system, public bridge deployment, history API, automated settings installer, desktop package, or continuous-integration workflow. Session pin/hide preferences are persisted locally; visual preferences remain temporary. Asset and bundle performance have no formal budget yet.
 
 The original cinematic-world vision will require substantial art direction, assets, animation work, and profiling in addition to application code. The existing architecture provides a place to connect that work to observable agent state.

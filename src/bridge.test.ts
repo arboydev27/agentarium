@@ -40,6 +40,32 @@ describe('bridge connection lifecycle', () => {
     expect(useWorld.getState().bridgeStatus).toBe('connected');
     expect(useWorld.getState().receivedEvents).toBe(0);
   });
+  it('preserves reported task states and attention during disconnect and reconnect', () => {
+    connectBridge('ws://127.0.0.1:4318', 'token');
+    const ws = FakeSocket.instances[0];
+    ws.message({ type: 'snapshot', agents: [] });
+    for (const [i, type] of ['working', 'waiting', 'failed'].entries())
+      ws.message({
+        type: 'event',
+        event: {
+          id: `e${i}`,
+          sessionId: `s${i}`,
+          agentId: 'main',
+          provider: 'Codex',
+          sequence: 1,
+          timestamp: 1000,
+          type,
+        },
+      });
+    const before = useWorld.getState().agents;
+    ws.onclose({ code: 1006 });
+    expect(useWorld.getState().agents).toBe(before);
+    expect(useWorld.getState().bridgeStatus).toBe('offline');
+    vi.advanceTimersByTime(1000);
+    FakeSocket.instances[1].message({ type: 'snapshot', agents: before });
+    expect(useWorld.getState().agents.map((a) => a.status)).toEqual(before.map((a) => a.status));
+    expect(useWorld.getState().bridgeStatus).toBe('connected');
+  });
   it('explains rejected authentication and does not automatically retry it', () => {
     connectBridge('ws://127.0.0.1:4318', 'wrong');
     FakeSocket.instances[0].onclose({ code: 4003 });

@@ -35,7 +35,7 @@ export function createBridge({
   let agents = db
     .prepare('SELECT payload FROM agents')
     .all()
-    .map((r) => normalizeAgent({ ...JSON.parse(r.payload), status: 'disconnected' }));
+    .map((r) => normalizeAgent({ ...JSON.parse(r.payload), telemetryStale: true }));
   const saveAgent = db.prepare('INSERT OR REPLACE INTO agents(id,payload) VALUES (?,?)');
   const saveEvent = db.prepare('INSERT INTO events(id,agent_id,sequence,payload) VALUES (?,?,?,?)');
   const hasEvent = db.prepare('SELECT id FROM events WHERE id=?');

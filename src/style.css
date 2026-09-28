@@ -1499,3 +1499,92 @@ h1 span {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Live session controls stay usable when the inspector is open on small screens. */
+.session-tools {
+  padding: 8px 10px;
+}
+.session-tools .session-filter {
+  padding: 0;
+}
+.session-tools > small {
+  display: block;
+  margin-top: 8px;
+  color: #647252;
+  line-height: 1.5;
+}
+.attention-summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 10px;
+  background: #f8edcf;
+  color: #705118;
+  font-size: 12px;
+}
+.connection-notice {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 8px 15px;
+  background: #eeeadd;
+  color: #665b42;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.empty-filter {
+  padding: 12px;
+  color: #647252;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.session-manager .muted {
+  font-size: 12px;
+  line-height: 1.6;
+}
+.managed-session {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid #dce3d0;
+  padding: 12px 0;
+}
+.managed-session > div {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.managed-session strong {
+  font-size: 13px;
+}
+.managed-session small {
+  display: block;
+  margin-top: 5px;
+  font-size: 11px;
+  color: #647252;
+}
+.managed-session button {
+  flex-shrink: 0;
+}
+.live-panel .inspector {
+  overflow-y: auto;
+  max-height: min(38dvh, 340px);
+  min-height: 100px;
+  flex-shrink: 1;
+}
+.live-panel .panel-content {
+  flex: 1 1 auto;
+  min-height: 70px;
+}
+@media (max-width: 800px) {
+  .live-panel:not(.collapsed) {
+    left: 16px;
+    width: auto;
+    height: min(55dvh, 480px);
+    max-height: calc(100dvh - 230px);
+  }
+  .live-panel .inspector {
+    max-height: 22dvh;
+  }
+}

@@ -63,14 +63,13 @@ function open() {
   ws.onerror = () => {};
   ws.onclose = (e) => {
     if (socket !== ws) return;
-    useWorld.setState((s) => ({
+    useWorld.setState({
       bridgeStatus: 'offline',
       bridgeError:
         e.code === 4003
           ? 'Authentication failed. Paste the token from the current bridge process and reconnect.'
           : 'Connection lost. Retrying automatically. Check the bridge process, address, and allowed browser origin.',
-      agents: s.agents.map((a) => ({ ...a, status: 'disconnected' })),
-    }));
+    });
     if (current && e.code !== 4003) {
       retry = setTimeout(open, Math.min(30000, 1000 * 2 ** attempt++));
     }
