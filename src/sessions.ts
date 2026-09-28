@@ -1,3 +1,5 @@
+import { sessionKey } from './shared/live.mjs';
+export { sessionKey } from './shared/live.mjs';
 import type { Agent } from './state';
 
 // Older persisted snapshots predate the explicit sessionId field.
@@ -8,10 +10,18 @@ export function agentSessionId(agent: Agent): string {
 }
 
 export function summarizeSessions(agents: Agent[]) {
-  const sessions = new Map<string, { id: string; count: number; needsAttention: number }>();
+  const sessions = new Map<
+    string,
+    { id: string; count: number; needsAttention: number; label: string }
+  >();
   for (const agent of agents) {
-    const id = agentSessionId(agent);
-    const session = sessions.get(id) ?? { id, count: 0, needsAttention: 0 };
+    const id = sessionKey(agent);
+    const session = sessions.get(id) ?? {
+      id,
+      count: 0,
+      needsAttention: 0,
+      label: `${agent.provider} · ${agentSessionId(agent)}`,
+    };
     session.count++;
     if (agent.status === 'waiting' || agent.status === 'failed') session.needsAttention++;
     sessions.set(id, session);

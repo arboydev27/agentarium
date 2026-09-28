@@ -2,6 +2,8 @@
 
 This is a proposed development sequence, not a list of shipped features or scheduled commitments. The current implementation is a playable prototype with a local telemetry path.
 
+The first local-discovery milestone is implemented: opt-in readers, provider diagnostics, provider-qualified identities, and stable latest-eight session seating. Broader integration hardening remains below.
+
 ## 1. Validate real provider integrations
 
 Run controlled sessions against selected Claude Code, Gemini CLI, and Codex App Server versions. Record the version, emitted payload shapes, attribution behavior, and supported lifecycle events. Add regression fixtures from sanitized payloads.

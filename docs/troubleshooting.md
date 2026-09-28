@@ -40,7 +40,7 @@ Omitted task text preserves the previous task label. No event means no inferred 
 
 ## Residents are missing from the scene
 
-Only the first eight assigned seats render in 3D. Other residents remain in the list. Live completion does not free a seat, and there is no deletion API. The bridge rejects additions beyond 256 residents. Use a separate database for a fresh experiment while retaining previous data.
+Only the eight most recently active sessions render in 3D. Older residents and child agents remain in the list. Completion does not delete a session, and there is no deletion API. The bridge rejects additions beyond 256 residents. Use a separate database for a fresh experiment while retaining previous data.
 
 If residents become disconnected after restarting the bridge, that is expected recovery behavior. Fresh events restore their reported status.
 
@@ -53,3 +53,9 @@ For poor frame rate, use low quality, disable cinematic orbit, and check browser
 ## Useful evidence for a bug report
 
 Include Node version, browser, operating system, provider version when relevant, current mode, reproduction steps, and the relevant error/status code. Use redacted synthetic event examples. Exclude tokens, prompts, transcripts, and sensitive tool data.
+
+## Discovery reports no sessions or unknown activity
+
+Restart the bridge after upgrading, reconnect, and enable a reader. A connected bridge alone does not enable discovery. Cards distinguish missing history, empty storage, format/read errors, and successful scans. CLI histories are separate from Claude/Gemini web histories. Check the provider home directory in the bridge environment. See [Local session discovery](local-discovery.md).
+
+Claude/Gemini discovery supplies existence and recency; add hooks for activity. Codex working/tool observations expire after two minutes without supporting records. Hook/proxy event counters do not include history scans.

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { reduceAgentEvent, validateEvent } from './shared/protocol.mjs';
+import { reduceAgentEvent, validateEvent, agentKey } from './shared/protocol.mjs';
 import { useWorld } from './state';
 import type { AgentEvent } from './state';
 const event = (overrides: Partial<AgentEvent> = {}): AgentEvent => ({
@@ -16,7 +16,10 @@ describe('agent lifecycle', () => {
   it('keeps identities distinct across sessions and assigns unique seats', () => {
     let agents = reduceAgentEvent([], event());
     agents = reduceAgentEvent(agents, event({ sessionId: 'session-b' }));
-    expect(agents.map((a) => a.id)).toEqual(['session-a:agent-a', 'session-b:agent-a']);
+    expect(agents.map((a) => a.id)).toEqual([
+      agentKey('Codex', 'session-a', 'agent-a'),
+      agentKey('Codex', 'session-b', 'agent-a'),
+    ]);
     expect(new Set(agents.map((a) => a.seat)).size).toBe(2);
   });
   it('ignores stale events after completion', () => {
@@ -26,7 +29,7 @@ describe('agent lifecycle', () => {
   it('retains parent relationships through subsequent updates', () => {
     let agents = reduceAgentEvent([], event({ parentId: 'parent' }));
     agents = reduceAgentEvent(agents, event({ sequence: 2, type: 'tool' }));
-    expect(agents[0].parentId).toBe('session-a:parent');
+    expect(agents[0].parentId).toBe(agentKey('Codex', 'session-a', 'parent'));
   });
   it('starts a fresh task clock only at a new task', () => {
     let agents = reduceAgentEvent([], event());
@@ -48,7 +51,7 @@ describe('simulation isolation', () => {
     useWorld.getState().switchMode('live');
     useWorld.getState().ingest(event());
     const before = useWorld.getState().agents;
-    useWorld.getState().setStatus('session-a:agent-a', 'failed');
+    useWorld.getState().setStatus(agentKey('Codex', 'session-a', 'agent-a'), 'failed');
     useWorld.getState().spawn();
     expect(useWorld.getState().agents).toBe(before);
   });

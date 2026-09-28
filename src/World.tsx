@@ -25,6 +25,7 @@ const statusColors = {
   completed: '#82b76a',
   failed: '#d66c65',
   disconnected: '#9f9ca7',
+  unknown: '#8a9784',
 };
 function Box({
   pos = [0, 0, 0],
@@ -509,13 +510,19 @@ function Resident({ agent }: { agent: Agent }) {
   const playing = useWorld((s) => s.playing || s.mode === 'live');
   const seat = SEATS[agent.seat % 8];
   const isSeated = ['working', 'tool', 'waiting'].includes(agent.status);
-  const animation = isSeated
-    ? 'Sitting'
-    : agent.status === 'completed'
-      ? 'Dance'
-      : agent.status === 'failed'
-        ? 'No'
-        : 'Idle';
+  const historicalCompletion =
+    agent.evidence === 'history' &&
+    agent.status === 'completed' &&
+    Date.now() - (agent.observedAt || 0) > 30000;
+  const animation = historicalCompletion
+    ? 'Idle'
+    : isSeated
+      ? 'Sitting'
+      : agent.status === 'completed'
+        ? 'Dance'
+        : agent.status === 'failed'
+          ? 'No'
+          : 'Idle';
   useEffect(() => {
     const action = actions[animation];
     if (!action) return;
@@ -630,6 +637,7 @@ function WorldLabel({
     const button = element.current;
     if (!button) return;
     button.className = 'world-label ' + (selected ? 'is-selected' : '');
+    button.title = agent.name;
     button.replaceChildren();
     const dot = document.createElement('i');
     dot.style.background = statusColors[agent.status];

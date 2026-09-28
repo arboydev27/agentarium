@@ -6,7 +6,7 @@ The scene is implemented in [World.tsx](../src/World.tsx). It combines procedura
 
 The environment contains a café, garden/pergola, studio, courtyard, desks, laptops, plants, trees, lamps, and signage. Reusable box, cylinder, and sphere helpers construct most scenery. Sign text is drawn into canvas textures. The environment component is memoized to reduce unnecessary React work.
 
-Eight fixed seat positions define placement. Each resident's assigned seat also determines its desk; status drives the laptop lid. Working, tool, and waiting residents have open laptops. Parent-child relationships are drawn as decorative raised lines when both agents are visible.
+Eight fixed seat positions define placement. In live mode, the newest eight sessions receive stable seat assignments; older sessions remain in the list. Each resident's assigned seat also determines its desk; status drives the laptop lid. Working, tool, and waiting residents have open laptops. Parent-child relationships are drawn as decorative raised lines when both agents are visible.
 
 Changing world capacity requires coordinated changes to seat coordinates, desk placement, zone/color assignment, and the visible-resident filter. Increasing the server's 256-agent cap alone does not add visual seats.
 
@@ -14,14 +14,14 @@ Changing world capacity requires coordinated changes to seat coordinates, desk p
 
 The bundled [robot.glb](../public/models/robot.glb) is loaded with `useGLTF` and preloaded by the world module. Each resident uses a skeleton-aware clone so its animation mixer can run independently. Materials are cloned and recolored per resident; geometry is shared. Cloned materials are disposed when the resident unmounts.
 
-| State                  | Clip / behavior                                                            |
-| ---------------------- | -------------------------------------------------------------------------- |
-| Working, tool, waiting | `Sitting`; working/tool also receive a small procedural lower-arm movement |
-| Completed              | `Dance`                                                                    |
-| Failed                 | `No`                                                                       |
-| Idle, disconnected     | `Idle`                                                                     |
+| State                       | Clip / behavior                                                            |
+| --------------------------- | -------------------------------------------------------------------------- |
+| Working, tool, waiting      | `Sitting`; working/tool also receive a small procedural lower-arm movement |
+| Completed                   | `Dance`                                                                    |
+| Failed                      | `No`                                                                       |
+| Idle, disconnected, unknown | `Idle`                                                                     |
 
-Transitions fade over approximately 0.35 seconds. Sitting is clamped after a single playback. Characters shift a short distance between seated and standing positions; this is not walking or pathfinding. Procedural arm adjustments depend on the current rig's bone names.
+Historical completions older than 30 seconds use Idle instead of an ongoing celebration. Transitions fade over approximately 0.35 seconds. Sitting is clamped after a single playback. Characters shift a short distance between seated and standing positions; this is not walking or pathfinding. Procedural arm adjustments depend on the current rig's bone names.
 
 Reduced motion freezes character animation, uses a stable seated pose where appropriate, accelerates laptop-lid settling, and disables cinematic orbit. Simulation pause stops ordinary character animation. These controls do not turn the entire renderer into an on-demand static scene.
 

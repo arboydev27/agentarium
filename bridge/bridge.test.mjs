@@ -134,3 +134,175 @@ test('both hook configurations reference this checkout from any launch directory
         }
   }
 });
+
+function waitMessage(ws, predicate) {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      cleanup();
+      reject(new Error('Timed out waiting for bridge message'));
+    }, 3000);
+    function cleanup() {
+      clearTimeout(timeout);
+      ws.off('message', receive);
+    }
+    function receive(raw) {
+      const data = JSON.parse(raw.toString());
+      if (predicate(data)) {
+        cleanup();
+        resolve(data);
+      }
+    }
+    ws.on('message', receive);
+  });
+}
+
+test('local discovery requires authentication, pushes updates, and clears disabled providers', async () => {
+  let calls = 0;
+  const b = createBridge({
+    port: 0,
+    token: 'test-token',
+    dbPath: ':memory:',
+    discoveryInterval: 20,
+    discover: async (enabled) => {
+      calls++;
+      return {
+        agents: enabled.includes('Codex')
+          ? [{ id: 'observed', provider: 'Codex', sessionId: 'real', updatedAt: calls }]
+          : [],
+        providers: [
+          {
+            provider: 'Codex',
+            enabled: enabled.includes('Codex'),
+            state: enabled.length ? 'ready' : 'disabled',
+            count: enabled.length ? 1 : 0,
+          },
+        ],
+      };
+    },
+  });
+  const port = await b.start();
+  try {
+    const bad = new WebSocket(`ws://127.0.0.1:${port}`);
+    await once(bad, 'open');
+    const closed = once(bad, 'close');
+    bad.send(JSON.stringify({ type: 'discover', providers: ['Codex'] }));
+    assert.equal((await closed)[0], 4003);
+    assert.equal(calls, 0);
+    const ws = new WebSocket(`ws://127.0.0.1:${port}`);
+    await once(ws, 'open');
+    let next = waitMessage(ws, (m) => m.type === 'snapshot');
+    ws.send(JSON.stringify({ type: 'authenticate', token: 'test-token' }));
+    assert.equal((await next).discoverySupported, true);
+    assert.equal(calls, 0);
+    next = waitMessage(ws, (m) => m.type === 'sessions' && m.agents.length === 1);
+    ws.send(JSON.stringify({ type: 'discover', providers: ['Codex'] }));
+    const first = await next;
+    next = waitMessage(
+      ws,
+      (m) => m.type === 'sessions' && m.agents[0]?.updatedAt > first.agents[0].updatedAt,
+    );
+    await next;
+    next = waitMessage(
+      ws,
+      (m) => m.type === 'sessions' && m.agents.length === 0 && m.providers[0].state === 'disabled',
+    );
+    ws.send(JSON.stringify({ type: 'discover', providers: [] }));
+    await next;
+    ws.close();
+  } finally {
+    await b.close();
+  }
+});
+
+test('disabling a provider while a scan is in flight discards its late result', async () => {
+  let finish;
+  const b = createBridge({
+    port: 0,
+    token: 'test-token',
+    dbPath: ':memory:',
+    discover: (enabled) =>
+      enabled.length
+        ? new Promise((resolve) => {
+            finish = resolve;
+          })
+        : Promise.resolve({ agents: [], providers: [] }),
+  });
+  const port = await b.start();
+  try {
+    const ws = new WebSocket(`ws://127.0.0.1:${port}`);
+    await once(ws, 'open');
+    let next = waitMessage(ws, (m) => m.type === 'snapshot');
+    ws.send(JSON.stringify({ type: 'authenticate', token: 'test-token' }));
+    await next;
+    next = waitMessage(ws, (m) => m.type === 'sessions' && m.providers[0].state === 'scanning');
+    ws.send(JSON.stringify({ type: 'discover', providers: ['Codex'] }));
+    await next;
+    next = waitMessage(ws, (m) => m.type === 'sessions' && m.providers[0]?.state === 'disabled');
+    ws.send(JSON.stringify({ type: 'discover', providers: [] }));
+    await next;
+    const messages = [];
+    ws.on('message', (raw) => messages.push(JSON.parse(raw.toString())));
+    next = waitMessage(ws, (m) => m.type === 'sessions' && m.providers.length === 0);
+    finish({ agents: [{ id: 'must-not-appear' }], providers: [] });
+    await next;
+    assert.ok(messages.every((m) => m.agents?.length === 0));
+    ws.close();
+  } finally {
+    await b.close();
+  }
+});
+
+test('legacy bridge snapshots migrate without losing sequence protection', async () => {
+  const { mkdtemp, rm } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const { DatabaseSync } = await import('node:sqlite');
+  const { agentKey } = await import('../src/shared/protocol.mjs');
+  const dir = await mkdtemp(join(tmpdir(), 'agentarium-migration-'));
+  const file = join(dir, 'bridge.sqlite');
+  const db = new DatabaseSync(file);
+  db.exec('CREATE TABLE agents(id TEXT PRIMARY KEY, payload TEXT NOT NULL)');
+  db.prepare('INSERT INTO agents VALUES (?,?)').run(
+    'old:main',
+    JSON.stringify({
+      id: 'old:main',
+      sessionId: 'old',
+      provider: 'Codex',
+      source: 'live',
+      seat: 0,
+      sequence: 20,
+      status: 'working',
+      updatedAt: 1,
+    }),
+  );
+  db.close();
+  const b = createBridge({ port: 0, token: 'test-token', dbPath: file });
+  try {
+    const port = await b.start();
+    const ws = new WebSocket(`ws://127.0.0.1:${port}`);
+    await once(ws, 'open');
+    const next = waitMessage(ws, (m) => m.type === 'snapshot');
+    ws.send(JSON.stringify({ type: 'authenticate', token: 'test-token' }));
+    const snapshot = await next;
+    assert.equal(snapshot.agents[0].id, agentKey('Codex', 'old', 'main'));
+    assert.equal(snapshot.agents[0].sequence, 20);
+    const response = await fetch(`http://127.0.0.1:${port}/events`, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer test-token', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: 'stale',
+        sessionId: 'old',
+        agentId: 'main',
+        provider: 'Codex',
+        sequence: 1,
+        timestamp: Date.now(),
+        type: 'working',
+      }),
+    });
+    assert.equal((await response.json()).reason, 'stale');
+    ws.close();
+  } finally {
+    await b.close();
+    await rm(dir, { recursive: true, force: true });
+  }
+});

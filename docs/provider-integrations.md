@@ -1,6 +1,8 @@
 # Provider integrations
 
-All integrations send telemetry to an already running bridge. They do not start tasks on behalf of the browser. First complete [Getting started](getting-started.md), then export the bridge's `GROVE_TOKEN` in the process environment that will run the adapter.
+This page covers hook/proxy telemetry. For existing chats and desktop session observation, see [Local session discovery](local-discovery.md).
+
+All integrations below send telemetry to an already running bridge. They do not start tasks on behalf of the browser. First complete [Getting started](getting-started.md), then export the bridge's `GROVE_TOKEN` in the process environment that will run the adapter.
 
 The mappings below describe [adapters.mjs](../bridge/adapters.mjs), not a guarantee that every provider version emits every event. Automated coverage uses fixtures; verify the provider version and event payloads in a real session before relying on attribution.
 

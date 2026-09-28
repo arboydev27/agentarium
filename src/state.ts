@@ -1,12 +1,16 @@
 import { create } from 'zustand';
-import { reduceAgentEvent, validateEvent } from './shared/protocol.mjs';
+import { seatLatestSessions } from './shared/live.mjs';
+import { reduceAgentEvent, validateEvent, agentKey, normalizeAgent } from './shared/protocol.mjs';
 export { reduceAgentEvent } from './shared/protocol.mjs';
 export type Status =
-  'idle' | 'working' | 'tool' | 'waiting' | 'completed' | 'failed' | 'disconnected';
+  'idle' | 'working' | 'tool' | 'waiting' | 'completed' | 'failed' | 'disconnected' | 'unknown';
 export type Provider = 'Codex' | 'Claude' | 'Gemini' | 'Custom';
 export type Agent = {
   id: string;
   sessionId?: string;
+  agentId?: string;
+  evidence?: 'history' | 'event';
+  observedAt?: number;
   name: string;
   provider: Provider;
   color: string;
@@ -41,6 +45,7 @@ export const STATUS_LABEL: Record<Status, string> = {
   completed: 'Completed',
   failed: 'Needs attention',
   disconnected: 'Disconnected',
+  unknown: 'Activity unknown',
 };
 export const COLORS = [
   '#eeb960',
@@ -80,6 +85,14 @@ export function initialAgents(): Agent[] {
     source: 'demo',
   }));
 }
+export type DiscoveryProvider = {
+  provider: 'Codex' | 'Claude' | 'Gemini';
+  enabled: boolean;
+  state: 'disabled' | 'scanning' | 'ready' | 'empty' | 'unavailable' | 'error';
+  count: number;
+  detail: string;
+  checkedAt?: number;
+};
 type State = {
   agents: Agent[];
   selected: string | null;
@@ -99,6 +112,8 @@ type State = {
   receivedEvents: number;
   lastReceivedAt: number | null;
   receivedProviders: Provider[];
+  discoverySupported: boolean;
+  discoveryProviders: DiscoveryProvider[];
   seen: Set<string>;
   select: (id: string | null) => void;
   set: (s: Partial<State>) => void;
@@ -108,6 +123,7 @@ type State = {
   tick: () => void;
   ingest: (e: AgentEvent) => void;
   hydrate: (a: Agent[]) => void;
+  syncSessions: (a: Agent[]) => void;
   switchMode: (m: 'demo' | 'live') => void;
 };
 export const useWorld = create<State>((set, get) => ({
@@ -138,6 +154,8 @@ export const useWorld = create<State>((set, get) => ({
   receivedEvents: 0,
   lastReceivedAt: null,
   receivedProviders: [],
+  discoverySupported: false,
+  discoveryProviders: [],
   seen: new Set(),
   set: (s) => set(s),
   select: (id) => set({ selected: id }),
@@ -216,6 +234,8 @@ export const useWorld = create<State>((set, get) => ({
       receivedEvents: 0,
       lastReceivedAt: null,
       receivedProviders: [],
+      discoverySupported: false,
+      discoveryProviders: [],
       seen: new Set(),
     }),
   tick: () => {
@@ -253,20 +273,23 @@ export const useWorld = create<State>((set, get) => ({
     seen.add(e.id);
     if (seen.size > 3000) seen.delete(seen.values().next().value!);
     set({
-      agents: next,
+      agents: seatLatestSessions(next, s.agents),
       receivedEvents: s.receivedEvents + 1,
       lastReceivedAt: Date.now(),
       receivedProviders: [
         ...new Set([
           ...s.receivedProviders,
-          next.find((a) => a.id === e.sessionId + ':' + e.agentId)!.provider,
+          next.find((a) => a.id === agentKey(e.provider, e.sessionId, e.agentId))!.provider,
         ]),
       ],
       seen,
       events: [
         {
           id: e.id,
-          name: e.name || next.find((a) => a.id === e.sessionId + ':' + e.agentId)?.name || 'Agent',
+          name:
+            e.name ||
+            next.find((a) => a.id === agentKey(e.provider, e.sessionId, e.agentId))?.name ||
+            'Agent',
           message: STATUS_LABEL[e.type],
           time: e.timestamp,
           status: e.type,
@@ -277,13 +300,21 @@ export const useWorld = create<State>((set, get) => ({
   },
   hydrate: (agents) =>
     set({
-      agents,
+      agents: seatLatestSessions(agents.map(normalizeAgent), get().agents),
       bridgeStatus: 'connected',
       bridgeError: null,
       receivedEvents: 0,
       lastReceivedAt: null,
       receivedProviders: [],
+      discoverySupported: false,
+      discoveryProviders: [],
     }),
+  syncSessions: (agents) => {
+    const s = get();
+    if (s.mode !== 'live') return;
+    const next = seatLatestSessions(agents.map(normalizeAgent), s.agents);
+    set({ agents: next, selected: next.some((a) => a.id === s.selected) ? s.selected : null });
+  },
   switchMode: (mode) =>
     set({
       mode,
@@ -294,6 +325,8 @@ export const useWorld = create<State>((set, get) => ({
       receivedEvents: 0,
       lastReceivedAt: null,
       receivedProviders: [],
+      discoverySupported: false,
+      discoveryProviders: [],
       seen: new Set(),
       bridgeStatus: 'offline',
       playing: mode === 'demo',

@@ -17,15 +17,26 @@ describe('session summaries', () => {
     agents = reduceAgentEvent(agents, { ...event, agentId: 'child', type: 'waiting' });
     agents = reduceAgentEvent(agents, { ...event, sessionId: 'second', type: 'failed' });
     expect(summarizeSessions(agents)).toEqual([
-      { id: 'first', count: 2, needsAttention: 1 },
-      { id: 'second', count: 1, needsAttention: 1 },
+      {
+        id: JSON.stringify(['Custom', 'first']),
+        label: 'Custom · first',
+        count: 2,
+        needsAttention: 1,
+      },
+      {
+        id: JSON.stringify(['Custom', 'second']),
+        label: 'Custom · second',
+        count: 1,
+        needsAttention: 1,
+      },
     ]);
   });
   it('supports older snapshots and upgrades them on the next event', () => {
     const [agent] = reduceAgentEvent([], event);
     delete agent.sessionId;
+    agent.id = 'first:main';
     expect(agentSessionId(agent)).toBe('first');
-    expect(reduceAgentEvent([agent], { ...event, sequence: 2 })[0].sessionId).toBe('first');
+    expect(reduceAgentEvent([], { ...event, sequence: 2 })[0].sessionId).toBe('first');
   });
   it('does not invent a session for a legacy ID without a separator', () => {
     const [agent] = reduceAgentEvent([], event);

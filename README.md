@@ -12,6 +12,7 @@ See the [detailed documentation](docs/README.md) for setup, architecture, agent 
 - Eight expressive CC0 robot residents with skeletal sitting, idle, celebration, and failure animations. Working residents open their laptops; idle residents close them.
 - Orbit and zoom controls, four camera presets, slow camera orbit, ambient audio, reduced motion, and rendering-quality controls.
 - A clearly labeled simulator with tasks, delegation, waiting, completion, failure, pause, speed, reset, an activity feed, and an inspector.
+- Opt-in local session discovery for Codex, Claude Code CLI, and Gemini CLI; eight recent sessions occupy stable seats.
 - Guided local connection setup, fresh-event diagnostics, and a session filter for live residents.
 - An authenticated loopback event bridge with SQLite state, ordering, deduplication, WebSocket delivery, reconnect snapshots, and disconnect indicators.
 - Claude Code and Gemini CLI telemetry hooks, a Codex App Server stdio proxy, and a generic event endpoint.
@@ -39,6 +40,12 @@ npm run build
 ```
 
 The source build is a static web application. The local bridge is a separate process and is intentionally not included in the hosted static bundle.
+
+## Discover existing local sessions
+
+After connecting the local bridge, enable provider readers in **Discover existing sessions**. The world shows the eight most recently active sessions across providers; older sessions remain in the list. The demo stays unchanged. Restart the bridge after updating to load this feature.
+
+Codex local history can reveal saved desktop sessions and recorded lifecycle activity. Claude Code CLI and Gemini CLI discovery identifies sessions; their hooks provide detailed activity. These read-only readers are experimental and local-only. Unknown activity is shown explicitly. See [Local session discovery](docs/local-discovery.md) for setup, privacy, compatibility, and limits.
 
 ## Connect real events
 
@@ -118,7 +125,7 @@ POST JSON to `http://127.0.0.1:4318/events` with `Authorization: Bearer <session
 }
 ```
 
-Use the current Unix time in milliseconds. Increment `sequence` for each agent within a session. Allowed states: idle, working, tool, waiting, completed, failed, disconnected. Provider: Codex, Claude, Gemini, or Custom. Parent IDs are scoped to the same session. Unknown fields are dropped. IDs and names are limited to 200 characters; task labels to 300. Duplicate IDs and older sequences are ignored. Up to 256 agents are retained; the first eight receive 3D seats, with overflow explicitly displayed in the list.
+Use the current Unix time in milliseconds. Increment `sequence` for each agent within a session. Allowed states: idle, working, tool, waiting, completed, failed, disconnected, unknown. Provider: Codex, Claude, Gemini, or Custom. Parent IDs are scoped to the same session. Unknown fields are dropped. IDs and names are limited to 200 characters; task labels to 300. Duplicate IDs and older sequences are ignored. Up to 256 telemetry agents are retained. Discovery adds up to 64 recent sessions per provider in memory. The eight most recently active provider-qualified sessions receive stable 3D seats; overflow remains in the list. Always send a consistent provider (omission means Custom).
 
 Configuration: `GROVE_PORT`, `GROVE_TOKEN`, `GROVE_DB`, and comma-separated `GROVE_ORIGINS` for the server; `GROVE_URL` and `GROVE_TOKEN` for adapters. Defaults permit only the local Vite dev/preview origins. Do not put provider API keys in the frontend.
 

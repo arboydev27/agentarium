@@ -9,6 +9,7 @@ These documents describe the implementation as of September 25, 2026. Source fil
 | Document                                          | What it covers                                                                |
 | ------------------------------------------------- | ----------------------------------------------------------------------------- |
 | [Getting started](getting-started.md)             | Install, run, connect the bridge, and send a synthetic event                  |
+| [Local session discovery](local-discovery.md)     | Existing chats, latest-eight seating, provider coverage, and evidence limits  |
 | [Architecture](architecture.md)                   | System boundaries, data flow, and source ownership                            |
 | [Agent lifecycle](agent-lifecycle.md)             | Status meanings, simulation, identity, ordering, and visual capacity          |
 | [Bridge protocol](bridge-protocol.md)             | Event schema, HTTP, WebSocket, authentication, persistence, and configuration |

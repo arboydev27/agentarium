@@ -16,15 +16,17 @@ These statuses reflect telemetry. For example, a Claude tool failure maps to `fa
 
 A typical sequence is `idle → working → tool → working → completed`. Waiting, failure, and disconnection can occur between those steps. Silence does not trigger an agent timeout.
 
+**Activity unknown** is a separate live status for discovered sessions without sufficiently reliable activity evidence; it uses the idle pose without claiming the task is idle.
+
 ## Identity and ordering
 
-The stable agent key is `${sessionId}:${agentId}`. New snapshots also retain an explicit `sessionId` for session filtering. Older snapshots fall back to the composite ID until a fresh event supplies the explicit field. Use stable IDs within a session and a new session ID for independent runs. Avoid colons in either component to prevent ambiguous composite keys. A parent ID is interpreted within the child's session.
+The stable agent key is `JSON.stringify([provider, sessionId, agentId])`. Snapshots retain explicit session and agent IDs. Old bridge snapshot keys are upgraded at startup without resetting sequence values. Use stable IDs and a consistent provider on every event (omission means Custom); a parent ID is scoped to the same provider and session.
 
 An event for an existing agent must have a strictly greater `sequence` than the last accepted event. An equal or lower sequence is stale, regardless of its timestamp. Use a monotonic per-agent counter in custom producers and preserve its continuity across producer restarts for an existing session.
 
 The bridge also deduplicates event IDs against retained SQLite event rows. The browser maintains a bounded set of 3,000 recently accepted event IDs. A unique event ID does not bypass sequence checks.
 
-New agents receive the lowest unused seat. Their color and zone are assigned from eight presets. There is no current agent deletion or seat-reclamation API. The bridge retains up to 256 agents, while the world renders seats 0–7; overflow residents remain in the UI list. Completing a live task does not remove its resident.
+Live presentation selects the eight most recently active provider-qualified sessions and preserves seats for surviving sessions. New eligible sessions replace the least recent visible sessions. Subagents share their session's capacity rather than taking extra seats when a main resident is known. Older residents remain in the list. The bridge retains up to 256 telemetry agents; discovery separately keeps up to 64 recent sessions per provider in memory. See [Local session discovery](local-discovery.md).
 
 ## Metadata updates
 

@@ -7,7 +7,7 @@
     "dev": "vite --host 127.0.0.1 --port 5173 --strictPort",
     "build": "tsc -b && vite build",
     "preview": "vite preview --host 127.0.0.1 --port 4173",
-    "test": "vitest run src && node --test bridge/bridge.test.mjs",
+    "test": "vitest run src && node --test bridge/*.test.mjs",
     "bridge": "node bridge/server.mjs",
     "bridge:demo": "node bridge/demo-events.mjs",
     "codex:proxy": "node bridge/codex-proxy.mjs",

@@ -34,7 +34,7 @@ This creates a Custom resident that moves through working, tool, waiting, workin
 
 The token must also be available in the environment of any provider process that invokes a hook. Exporting it in one terminal does not modify another terminal or an already running desktop application. Do not commit tokens.
 
-For real activity, follow [Provider integrations](provider-integrations.md). Starting the bridge or connecting the UI alone does not connect a provider.
+To discover existing chats, enable a provider under **Discover existing sessions**; see [Local session discovery](local-discovery.md). For detailed lifecycle telemetry, follow [Provider integrations](provider-integrations.md). Starting the bridge or connecting the UI alone does not connect a provider.
 
 ## Run a production build locally
 
@@ -55,6 +55,6 @@ Use **Simulation** in the connection controls to return to demo activity. For is
 
 The header says **Bridge connected** after authentication. The connection dialog separately shows the count of newly accepted events, their local receipt time, and the providers observed since the latest successful connection. A saved snapshot can contain residents while the new-event count remains zero. Neither a snapshot nor an open socket confirms that a provider is currently working.
 
-The dialog includes a synthetic transport test and separate Claude, Gemini, and Codex setup guidance. Ordinary Codex desktop chats are not observed automatically. Authentication failures require correcting the token and reconnecting; other connection losses retry automatically.
+The dialog includes a synthetic transport test and separate Claude, Gemini, and Codex setup guidance. Codex local discovery can observe saved desktop sessions when explicitly enabled; the separate App Server proxy does not attach to desktop chats. Authentication failures require correcting the token and reconnecting; other connection losses retry automatically.
 
-In live mode, use the **Session** selector above the resident list to focus on one session and see its attention count. This filters only the list; the scene retains its original eight seats. Selecting a resident displays its session ID. Session filtering does not delete database records or free seats.
+In live mode, use the **Session** selector above the resident list to focus on one session and see its attention count. This filters only the list; the scene selects the eight most recently active sessions while preserving seats for survivors. Selecting a resident displays its session ID. Session filtering does not delete database records or free seats.

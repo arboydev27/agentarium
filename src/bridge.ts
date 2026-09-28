@@ -40,8 +40,19 @@ function open() {
       if (data.type === 'snapshot') {
         attempt = 0;
         useWorld.getState().hydrate(data.agents);
+        useWorld.setState({
+          discoverySupported: data.discoverySupported === true,
+          discoveryProviders: data.providers || [],
+        });
       } else if (data.type === 'event') {
         useWorld.getState().ingest(data.event);
+      } else if (data.type === 'sessions') {
+        useWorld.getState().syncSessions(data.agents);
+        useWorld.setState({ discoveryProviders: data.providers || [] });
+      } else if (data.type === 'discoveryError') {
+        useWorld.setState({
+          bridgeError: 'Local discovery request failed. Reconnect and try again.',
+        });
       } else if (data.type === 'error') {
         useWorld.setState({ bridgeStatus: 'offline' });
       }
@@ -64,4 +75,12 @@ function open() {
       retry = setTimeout(open, Math.min(30000, 1000 * 2 ** attempt++));
     }
   };
+}
+
+export function configureDiscovery(providers: string[]) {
+  if (!socket || useWorld.getState().bridgeStatus !== 'connected')
+    throw new Error('Connect the bridge first.');
+  if (!useWorld.getState().discoverySupported)
+    throw new Error('Restart npm run bridge to enable local discovery.');
+  socket.send(JSON.stringify({ type: 'discover', providers }));
 }

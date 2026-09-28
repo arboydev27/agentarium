@@ -38,6 +38,8 @@ Simulation and live activity are separate modes. Changing mode replaces the brow
 | [protocol.mjs](../src/shared/protocol.mjs)     | Runtime event validation and deterministic agent reduction              |
 | [protocol.d.mts](../src/shared/protocol.d.mts) | Type declarations for the shared JavaScript module                      |
 | [webmcp.ts](../src/webmcp.ts)                  | Optional browser tool registration                                      |
+| [discovery.mjs](../bridge/discovery.mjs)       | Opt-in read-only local provider history readers                         |
+| [live.mjs](../src/shared/live.mjs)             | Merge telemetry/history and assign stable latest-eight seats            |
 | [server.mjs](../bridge/server.mjs)             | Loopback HTTP/WebSocket service and SQLite persistence                  |
 | [adapters.mjs](../bridge/adapters.mjs)         | Provider normalization and HTTP delivery                                |
 | [hook.mjs](../bridge/hook.mjs)                 | Provider hook stdin/stdout wrapper                                      |
@@ -66,3 +68,7 @@ These tools operate on the same Zustand state as the UI. Demo mutation tools rej
 ## Persistence boundaries
 
 SQLite stores live agent snapshots and a bounded event log. UI preferences, selection, simulation state, connection credentials, and the browser activity feed are not persisted. The GLB character model ships as a static asset; interface fonts currently load from Google Fonts.
+
+## Local-history path
+
+Authenticated viewers enable discovery on the bridge. Bounded scans run approximately every five seconds while viewers are connected. Discovered metadata is merged with persisted telemetry, then broadcast as a `sessions` snapshot. Discovery does not write provider storage, launch models, or synthesize hook events. The browser projects the collection into eight stable session seats. See [Local session discovery](local-discovery.md).

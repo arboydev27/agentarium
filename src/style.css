@@ -375,6 +375,7 @@ h1 span {
   border-radius: 3px;
 }
 .resident-name {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -383,9 +384,7 @@ h1 span {
 .resident-name strong {
   font-weight: 600;
   font-size: 13px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
+  display: block;
 }
 .resident-name > span {
   display: flex;
@@ -1450,4 +1449,53 @@ h1 span {
 .primary:disabled {
   opacity: 0.65;
   cursor: wait;
+}
+
+.discovery-providers {
+  display: grid;
+  gap: 12px;
+}
+.discovery-card {
+  border: 1px solid #ccd9bd;
+  border-radius: 10px;
+  padding: 12px;
+  background: #f7f9f1;
+}
+.discovery-card p {
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+}
+.discovery-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
+}
+.discovery-heading button {
+  font-size: 11px;
+  padding: 8px;
+}
+.discovery-heading button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.status-tag.unknown {
+  background: #e9ece5;
+  color: #637260;
+}
+.dot.unknown {
+  background: #8a9784;
+}
+.resident-name strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.world-label {
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

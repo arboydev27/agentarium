@@ -5,12 +5,21 @@ import { fileURLToPath } from 'node:url';
 import { resolve, dirname } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { WebSocketServer, WebSocket } from 'ws';
-import { validateEvent, reduceAgentEvent } from '../src/shared/protocol.mjs';
+import { createDiscovery, DISCOVERY_PROVIDERS } from './discovery.mjs';
+import { mergeSessions } from '../src/shared/live.mjs';
+import {
+  validateEvent,
+  reduceAgentEvent,
+  agentKey,
+  normalizeAgent,
+} from '../src/shared/protocol.mjs';
 export const DEFAULT_DB_PATH = fileURLToPath(new URL('./data/grove.sqlite', import.meta.url));
 export function createBridge({
   port = 4318,
   token = randomBytes(24).toString('hex'),
   dbPath = DEFAULT_DB_PATH,
+  discover = createDiscovery(),
+  discoveryInterval = 5000,
   origins = [
     'http://127.0.0.1:5173',
     'http://localhost:5173',
@@ -26,10 +35,65 @@ export function createBridge({
   let agents = db
     .prepare('SELECT payload FROM agents')
     .all()
-    .map((r) => ({ ...JSON.parse(r.payload), status: 'disconnected' }));
+    .map((r) => normalizeAgent({ ...JSON.parse(r.payload), status: 'disconnected' }));
   const saveAgent = db.prepare('INSERT OR REPLACE INTO agents(id,payload) VALUES (?,?)');
   const saveEvent = db.prepare('INSERT INTO events(id,agent_id,sequence,payload) VALUES (?,?,?,?)');
   const hasEvent = db.prepare('SELECT id FROM events WHERE id=?');
+  // Upgrade only bridge-owned snapshot keys; provider databases are always read-only.
+  db.exec('BEGIN');
+  try {
+    db.exec('DELETE FROM agents');
+    for (const agent of agents) saveAgent.run(agent.id, JSON.stringify(agent));
+    db.exec('COMMIT');
+  } catch (e) {
+    db.exec('ROLLBACK');
+    throw e;
+  }
+  let discovered = [],
+    providers = DISCOVERY_PROVIDERS.map((provider) => ({
+      provider,
+      enabled: false,
+      state: 'disabled',
+      count: 0,
+      detail: 'Local discovery is off.',
+    }));
+  let enabled = [],
+    generation = 0,
+    scanning = false,
+    closed = false;
+  const combined = () => mergeSessions(agents, discovered);
+  function broadcast(message) {
+    const payload = JSON.stringify(message);
+    for (const ws of wss.clients)
+      if (ws.authenticated && ws.readyState === WebSocket.OPEN) ws.send(payload);
+  }
+  async function scan() {
+    if (scanning || closed) return;
+    scanning = true;
+    const version = generation;
+    try {
+      const result = await discover([...enabled]);
+      if (!closed && version === generation) {
+        discovered = result.agents;
+        providers = result.providers;
+        broadcast({ type: 'sessions', agents: combined(), providers });
+      }
+    } catch {
+      if (!closed && version === generation) {
+        discovered = [];
+        providers = providers.map((p) => ({
+          ...p,
+          state: p.enabled ? 'error' : 'disabled',
+          detail: 'Local scan failed; retrying on the next scan.',
+        }));
+        broadcast({ type: 'sessions', agents: combined(), providers });
+      }
+    } finally {
+      scanning = false;
+      if (!closed && version !== generation) void scan();
+    }
+  }
+
   function authenticated(value) {
     if (typeof value !== 'string') return false;
     const a = Buffer.from(value),
@@ -101,11 +165,13 @@ export function createBridge({
       try {
         saveEvent.run(
           event.id,
-          event.sessionId + ':' + event.agentId,
+          agentKey(event.provider, event.sessionId, event.agentId),
           event.sequence,
           JSON.stringify(event),
         );
-        const changed = next.find((a) => a.id === event.sessionId + ':' + event.agentId);
+        const changed = next.find(
+          (a) => a.id === agentKey(event.provider, event.sessionId, event.agentId),
+        );
         saveAgent.run(changed.id, JSON.stringify(changed));
         db.exec(
           'DELETE FROM events WHERE rowid NOT IN (SELECT rowid FROM events ORDER BY rowid DESC LIMIT 10000)',
@@ -116,9 +182,8 @@ export function createBridge({
         throw e;
       }
       agents = next;
-      const payload = JSON.stringify({ type: 'event', event });
-      for (const ws of wss.clients)
-        if (ws.authenticated && ws.readyState === WebSocket.OPEN) ws.send(payload);
+      broadcast({ type: 'event', event });
+      broadcast({ type: 'sessions', agents: combined(), providers });
       res.writeHead(202, { 'Content-Type': 'application/json' });
       res.end('{"accepted":true}');
     } catch (e) {
@@ -144,16 +209,54 @@ export function createBridge({
     });
     ws.on('close', () => clearTimeout(timer));
     ws.on('message', (raw) => {
-      if (ws.authenticated) return;
       try {
         const data = JSON.parse(raw.toString());
+        if (ws.authenticated) {
+          if (data.type !== 'discover') return;
+          if (
+            !Array.isArray(data.providers) ||
+            data.providers.length > 3 ||
+            data.providers.some((p) => !DISCOVERY_PROVIDERS.includes(p))
+          ) {
+            ws.send(
+              JSON.stringify({
+                type: 'discoveryError',
+                message: 'Choose Codex, Claude, or Gemini.',
+              }),
+            );
+            return;
+          }
+          enabled = [...new Set(data.providers)];
+          generation++;
+          discovered = discovered.filter((a) => enabled.includes(a.provider));
+          providers = providers.map((p) => ({
+            ...p,
+            enabled: enabled.includes(p.provider),
+            state: enabled.includes(p.provider) ? 'scanning' : 'disabled',
+            count: enabled.includes(p.provider) ? p.count : 0,
+            detail: enabled.includes(p.provider)
+              ? 'Reading local session metadata…'
+              : 'Local discovery is off.',
+          }));
+          broadcast({ type: 'sessions', agents: combined(), providers });
+          void scan();
+          return;
+        }
         if (data.type !== 'authenticate' || !authenticated(data.token)) {
           ws.close(4003, 'Invalid token');
           return;
         }
         ws.authenticated = true;
         clearTimeout(timer);
-        ws.send(JSON.stringify({ type: 'snapshot', agents }));
+        ws.send(
+          JSON.stringify({
+            type: 'snapshot',
+            agents: combined(),
+            providers,
+            discoverySupported: true,
+          }),
+        );
+        if (enabled.length) void scan();
       } catch {
         ws.close(4003, 'Invalid authentication');
       }
@@ -170,6 +273,10 @@ export function createBridge({
     }
   }, 15000);
   heartbeat.unref();
+  const discoveryTimer = setInterval(() => {
+    if (enabled.length && [...wss.clients].some((ws) => ws.authenticated)) void scan();
+  }, discoveryInterval);
+  discoveryTimer.unref();
   return {
     token,
     server,
@@ -181,6 +288,9 @@ export function createBridge({
       return server.address().port;
     },
     async close() {
+      closed = true;
+      generation++;
+      clearInterval(discoveryTimer);
       clearInterval(heartbeat);
       for (const ws of wss.clients) ws.terminate();
       await new Promise((r) => wss.close(r));

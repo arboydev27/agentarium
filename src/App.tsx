@@ -34,7 +34,7 @@ import {
 } from 'lucide-react';
 import { useWorld, STATUS_LABEL } from './state';
 import { registerWorldTools } from './webmcp';
-import { agentSessionId, summarizeSessions } from './sessions';
+import { agentSessionId, summarizeSessions, sessionKey } from './sessions';
 import type { Agent, Status } from './state';
 const World = lazy(() => import('./World'));
 function ProviderIcon({ provider }: { provider: string }) {
@@ -125,6 +125,10 @@ function Elapsed({ agent }: { agent: Agent }) {
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
+  if (agent.evidence === 'history' || agent.status === 'unknown')
+    return (
+      <span>{agent.status === 'unknown' ? 'Activity unknown' : 'Last recorded activity'}</span>
+    );
   const n = Math.max(
     0,
     Math.floor(
@@ -152,11 +156,12 @@ export default function App() {
     cinematic = useWorld((s) => s.cinematic),
     bridgeStatus = useWorld((s) => s.bridgeStatus);
   const receivedEvents = useWorld((s) => s.receivedEvents);
+  const historyEnabled = useWorld((s) => s.discoveryProviders.some((p) => p.enabled));
   const [sessionFilter, setSessionFilter] = useState('');
   const sessions = mode === 'live' ? summarizeSessions(agents) : [];
   const activeSession = sessions.some((s) => s.id === sessionFilter) ? sessionFilter : '';
   const listedAgents = activeSession
-    ? agents.filter((a) => agentSessionId(a) === activeSession)
+    ? agents.filter((a) => sessionKey(a) === activeSession)
     : agents;
   const [tab, setTab] = useState<'residents' | 'activity'>('residents');
   const [modal, setModal] = useState<'settings' | 'connections' | 'help' | null>(null);
@@ -323,7 +328,9 @@ export default function App() {
             : bridgeStatus === 'connected'
               ? receivedEvents > 0
                 ? 'Agent events received. Your grove is listening.'
-                : 'Bridge connected. Waiting for new agent events.'
+                : agents.length
+                  ? 'Your recent sessions, at home in the grove.'
+                  : 'Bridge connected. Discover your recent sessions.'
               : 'Connect an agent to bring the grove to life.'}
         </p>
         <div className="world-stats">
@@ -427,13 +434,16 @@ export default function App() {
                         <option value="">All sessions</option>
                         {sessions.map((session) => (
                           <option key={session.id} value={session.id}>
-                            {session.id} · {session.count}{' '}
+                            {session.label} · {session.count}{' '}
                             {session.count === 1 ? 'resident' : 'residents'}
                             {session.needsAttention ? ` · ${session.needsAttention} need you` : ''}
                           </option>
                         ))}
                       </select>
-                      <small>Filters the list. The world keeps its eight assigned seats.</small>
+                      <small>
+                        The world shows the eight most recently active sessions. This filters the
+                        list only.
+                      </small>
                     </label>
                   )}
                   <div className="list-caption">
@@ -446,7 +456,7 @@ export default function App() {
                       <h3>It’s quiet here</h3>
                       <p>
                         {bridgeStatus === 'connected'
-                          ? 'The bridge is connected. Configure a provider adapter or send a test event to welcome your first resident.'
+                          ? 'The bridge is connected. Enable local session discovery in setup to welcome your recent chats.'
                           : 'Connect the local bridge to welcome your agents.'}
                       </p>
                       <button className="text-button" onClick={() => setModal('connections')}>
@@ -463,7 +473,7 @@ export default function App() {
                         }
                       >
                         <AgentAvatar agent={agent} />
-                        <span className="resident-name">
+                        <span className="resident-name" title={agent.name}>
                           <strong>
                             {agent.name}
                             {agent.parentId && <GitBranch size={12} />}
@@ -486,7 +496,9 @@ export default function App() {
                                     ? 'Error'
                                     : agent.status === 'disconnected'
                                       ? 'Offline'
-                                      : 'Working'}
+                                      : agent.status === 'unknown'
+                                        ? 'Unknown'
+                                        : 'Working'}
                         </span>
                       </button>
                     ))
@@ -551,7 +563,10 @@ export default function App() {
                   </p>
                 )}
                 {chosen.seat >= 8 && (
-                  <p className="parent-note">Visible in the list · all eight seats are occupied.</p>
+                  <p className="parent-note">
+                    Listed here; the world reserves its eight seats for the most recently active
+                    sessions. Subagents share their session’s place.
+                  </p>
                 )}
                 {mode === 'demo' ? (
                   <div className="task-actions">
@@ -583,15 +598,27 @@ export default function App() {
                         useWorld.getState().setStatus(chosen.id, e.target.value as Status)
                       }
                     >
-                      {Object.entries(STATUS_LABEL).map(([v, l]) => (
-                        <option key={v} value={v}>
-                          {l}
-                        </option>
-                      ))}
+                      {Object.entries(STATUS_LABEL)
+                        .filter(([value]) => value !== 'unknown')
+                        .map(([v, l]) => (
+                          <option key={v} value={v}>
+                            {l}
+                          </option>
+                        ))}
                     </select>
                   </div>
                 ) : (
-                  <p className="live-note">Status comes from your connected agent.</p>
+                  <div className="live-note">
+                    <p>
+                      {chosen.evidence === 'history'
+                        ? 'Read-only local history observation. This may not reflect the current runtime state.'
+                        : 'Status reported by your connected agent.'}
+                    </p>
+                    <p>Last activity: {new Date(chosen.updatedAt).toLocaleString()}</p>
+                    {chosen.observedAt && (
+                      <p>Last status evidence: {new Date(chosen.observedAt).toLocaleString()}</p>
+                    )}
+                  </div>
                 )}
               </div>
             ) : (
@@ -687,7 +714,9 @@ export default function App() {
               {bridgeStatus === 'connected'
                 ? receivedEvents > 0
                   ? `${receivedEvents} events received · Listening`
-                  : 'Bridge connected · Awaiting events'
+                  : historyEnabled
+                    ? 'Watching local sessions · 5s refresh'
+                    : 'Bridge connected · Awaiting events'
                 : 'Waiting for a connection'}
             </span>
           )}
@@ -822,6 +851,21 @@ function Connections({ notify }: { notify: (s: string) => void }) {
   const lastReceivedAt = useWorld((s) => s.lastReceivedAt);
   const receivedProviders = useWorld((s) => s.receivedProviders);
   const residentCount = useWorld((s) => s.agents.length);
+  const discoveryProviders = useWorld((s) => s.discoveryProviders);
+  const discoverySupported = useWorld((s) => s.discoverySupported);
+  const toggleDiscovery = async (providerName: string) => {
+    setError('');
+    try {
+      const enabled = discoveryProviders.filter((p) => p.enabled).map((p) => p.provider as string);
+      const next = enabled.includes(providerName)
+        ? enabled.filter((p) => p !== providerName)
+        : [...enabled, providerName];
+      (await import('./bridge')).configureDiscovery(next);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not configure discovery');
+    }
+  };
+
   const [provider, setProvider] = useState<'Claude' | 'Gemini' | 'Codex'>('Claude');
   const [token, setToken] = useState('');
   const [url, setUrl] = useState('ws://127.0.0.1:4318');
@@ -856,8 +900,8 @@ function Connections({ notify }: { notify: (s: string) => void }) {
         <p>
           {status === 'connected'
             ? receivedEvents > 0
-              ? `${receivedEvents} new events received since this connection.`
-              : 'No new events received since this connection. A connected bridge does not automatically connect your providers.'
+              ? `${receivedEvents} new hook/proxy events received since this connection.`
+              : 'No hook/proxy events received since this connection. Local history observations are shown separately below.'
             : 'Connect the bridge first, then configure an event source below.'}
         </p>
         {mode === 'live' && (
@@ -934,7 +978,62 @@ function Connections({ notify }: { notify: (s: string) => void }) {
         </button>
       </div>
       <div className="connection-steps">
-        <h3>2. Verify event delivery</h3>
+        <h3>2. Discover existing sessions</h3>
+        <p>
+          Choose which local histories to read. The eight most recently active sessions across
+          providers occupy the world. The demo stays separate.
+        </p>
+        <p>
+          Experimental readers scan every 5 seconds while a live viewer is connected. Session IDs,
+          titles, timestamps, and status evidence stay in the local bridge/browser. Transcript
+          bodies and tool arguments are not sent to the world.
+        </p>
+        {status === 'connected' && !discoverySupported && (
+          <p role="alert">Restart npm run bridge to load the discovery update, then reconnect.</p>
+        )}
+        <div className="discovery-providers">
+          {(['Codex', 'Claude', 'Gemini'] as const).map((name) => {
+            const info = discoveryProviders.find((p) => p.provider === name);
+            return (
+              <section key={name} className="discovery-card" aria-label={`${name} discovery`}>
+                <div className="discovery-heading">
+                  <strong>
+                    {name === 'Claude'
+                      ? 'Claude Code CLI'
+                      : name === 'Gemini'
+                        ? 'Gemini CLI'
+                        : 'Codex local sessions'}
+                  </strong>
+                  <button
+                    className="secondary"
+                    disabled={
+                      status !== 'connected' || !discoverySupported || info?.state === 'scanning'
+                    }
+                    aria-pressed={info?.enabled || false}
+                    onClick={() => void toggleDiscovery(name)}
+                  >
+                    {info?.enabled ? `Disable ${name} discovery` : `Enable ${name} discovery`}
+                  </button>
+                </div>
+                <p>
+                  {info?.state || 'disabled'} · {info?.count || 0} sessions discovered
+                </p>
+                <p>
+                  {info?.detail || 'Connect the bridge, then enable this local history reader.'}
+                </p>
+                {info?.checkedAt && (
+                  <small>Last checked: {new Date(info.checkedAt).toLocaleTimeString()}</small>
+                )}
+              </section>
+            );
+          })}
+        </div>
+        <p>
+          Discovery choices apply to this bridge process and reset when it restarts. Claude/Gemini
+          web chats are not included. A chat can exist without a running agent; unknown activity is
+          shown explicitly.
+        </p>
+        <h3>3. Optional: verify event delivery</h3>
         <p>
           In another terminal at the repository root, export the same token and run the test below.
           This creates a synthetic Custom resident; it does not start an AI task.
@@ -946,7 +1045,7 @@ function Connections({ notify }: { notify: (s: string) => void }) {
           The variable applies to commands launched in that terminal. A .env file is not loaded
           automatically.
         </p>
-        <h3>3. Connect a provider</h3>
+        <h3>4. Add detailed lifecycle events</h3>
         <label className="field-label">
           Provider
           <select value={provider} onChange={(e) => setProvider(e.target.value as typeof provider)}>
@@ -958,8 +1057,10 @@ function Connections({ notify }: { notify: (s: string) => void }) {
         {provider === 'Codex' ? (
           <>
             <p>
-              <strong>Ordinary Codex desktop chats are not observed by this adapter.</strong> A
-              compatible App Server client must launch the included proxy and inherit GROVE_TOKEN.
+              <strong>Local discovery above can observe saved Codex desktop sessions.</strong> For
+              direct lifecycle telemetry, a compatible App Server client can launch the included
+              proxy and inherit GROVE_TOKEN. The proxy itself does not attach to ordinary desktop
+              chats.
             </p>
             <pre>
               <code>node /absolute/path/to/agentarium/bridge/codex-proxy.mjs</code>
@@ -987,7 +1088,9 @@ function Connections({ notify }: { notify: (s: string) => void }) {
         )}
       </div>
       <p className="privacy-note">
-        Only agent metadata is displayed. No prompts or credentials are sent to this hosted site.
+        Local discovery reads provider files without changing them. Titles can contain private
+        information; they are displayed locally. Provider credentials are never read. Disabling
+        discovery removes its records from the view; separately reported hook events remain.
       </p>
     </>
   );

@@ -6,6 +6,7 @@ export const STATUSES = [
   'completed',
   'failed',
   'disconnected',
+  'unknown',
 ];
 export const PROVIDERS = ['Codex', 'Claude', 'Gemini', 'Custom'];
 export const COLORS = [
@@ -58,8 +59,27 @@ export function validateEvent(input) {
     if (input[key] !== undefined) clean[key] = input[key];
   return clean;
 }
+export function agentKey(provider, sessionId, agentId) {
+  return JSON.stringify([provider || 'Custom', sessionId, agentId]);
+}
+export function normalizeAgent(agent) {
+  if (agent.source === 'demo') return agent;
+  const sessionId = agent.sessionId || agent.id.slice(0, agent.id.lastIndexOf(':'));
+  const agentId = agent.agentId || agent.id.slice(sessionId.length + 1) || 'main';
+  return {
+    ...agent,
+    sessionId,
+    agentId,
+    id: agentKey(agent.provider, sessionId, agentId),
+    parentId: agent.parentId
+      ? agent.parentId.startsWith('[')
+        ? agent.parentId
+        : agentKey(agent.provider, sessionId, agent.parentId.slice(sessionId.length + 1))
+      : undefined,
+  };
+}
 export function reduceAgentEvent(agents, event) {
-  const key = event.sessionId + ':' + event.agentId;
+  const key = agentKey(event.provider, event.sessionId, event.agentId);
   const old = agents.find((a) => a.id === key);
   if (old && event.sequence <= old.sequence) return agents;
   if (!old) {
@@ -71,6 +91,7 @@ export function reduceAgentEvent(agents, event) {
       {
         id: key,
         sessionId: event.sessionId,
+        agentId: event.agentId,
         name: event.name || 'Agent ' + (agents.length + 1),
         provider: event.provider || 'Custom',
         color: COLORS[seat % 8],
@@ -80,9 +101,13 @@ export function reduceAgentEvent(agents, event) {
         seat,
         startedAt: event.timestamp,
         updatedAt: event.timestamp,
-        parentId: event.parentId ? event.sessionId + ':' + event.parentId : undefined,
+        parentId: event.parentId
+          ? agentKey(event.provider, event.sessionId, event.parentId)
+          : undefined,
         sequence: event.sequence,
         source: 'live',
+        evidence: 'event',
+        observedAt: event.timestamp,
       },
     ];
   }
@@ -92,12 +117,16 @@ export function reduceAgentEvent(agents, event) {
           ...a,
           sessionId: event.sessionId,
           status: event.type,
+          evidence: 'event',
+          observedAt: event.timestamp,
           task: event.task ?? a.task,
           provider: event.provider ?? a.provider,
           name: event.name ?? a.name,
           updatedAt: event.timestamp,
           sequence: event.sequence,
-          parentId: event.parentId ? event.sessionId + ':' + event.parentId : a.parentId,
+          parentId: event.parentId
+            ? agentKey(event.provider, event.sessionId, event.parentId)
+            : a.parentId,
           startedAt:
             (a.status === 'idle' || a.status === 'completed' || a.status === 'failed') &&
             event.type === 'working'
