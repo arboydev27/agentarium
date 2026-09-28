@@ -167,3 +167,9 @@ Environment and application code were authored for Agent Grove. Icons: Lucide (I
 ### Manage your live world
 
 Select a resident to pin or hide its session. **Manage sessions** restores hidden choices and removes pins, even for sessions absent from the current snapshot. Choices survive refreshes in the same browser/app address. **Needs attention** includes waiting and failed residents outside the world and in hidden sessions. Connection loss preserves their last reported states. See [Managing live sessions](docs/session-management.md) for details.
+
+### Watch your residents work
+
+Select a seated-world resident and choose **Follow resident** to watch them move between their desk and a nearby resting spot. Use the eye button in the header for **Watch mode**, which hides the panels while retaining connection context, attention access, and an exit control. Drag to stop following; Escape exits watch mode.
+
+Characters type, review, raise a hand while waiting, and briefly celebrate fresh completion before resting. Arrival/departure is staged when sessions change seats. Reduced motion skips travel and uses still poses. These behaviors use the existing robot rig; see [The 3D world](docs/3d-world.md) for the asset contract, limitations, and animation details.

@@ -1588,3 +1588,94 @@ h1 span {
     max-height: 22dvh;
   }
 }
+
+.follow-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  margin: 8px 0 2px;
+  background: #e5ead9;
+  border-radius: 8px;
+  font-size: 11px;
+  color: #40533b;
+}
+.follow-button[aria-pressed='true'] {
+  background: #d3e2c8;
+}
+.watch-mode .topbar,
+.watch-mode .world-heading,
+.watch-mode .residents-panel,
+.watch-mode .left-controls,
+.watch-mode .camera-presets,
+.watch-mode .world-bottom {
+  display: none;
+}
+.watch-mode .world-canvas {
+  inset: 0;
+}
+.watch-hud {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: 24px;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+}
+.watch-caption {
+  margin-right: auto;
+  max-width: min(50vw, 560px);
+  color: #284838;
+  padding: 12px 18px;
+  border-radius: 16px;
+  background: #f8f9edf0;
+}
+.watch-caption strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+}
+.watch-caption span {
+  display: block;
+  font-size: 11px;
+  margin-top: 5px;
+  color: #65765a;
+}
+.watch-hud button {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 30px;
+  background: #f8f9edf0;
+  padding: 12px 16px;
+  font-size: 12px;
+  box-shadow: 0 4px 24px #203b2310;
+}
+.watch-hud .watch-attention {
+  background: #f6e8c8;
+  color: #745622;
+}
+@media (max-width: 800px) {
+  .watch-hud {
+    left: 12px;
+    right: 12px;
+    bottom: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .watch-caption {
+    width: 100%;
+    max-width: 100%;
+    margin-right: 0;
+    text-align: center;
+  }
+  .watch-hud button {
+    padding: 10px 12px;
+  }
+}

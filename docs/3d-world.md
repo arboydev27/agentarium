@@ -14,18 +14,28 @@ Changing world capacity requires coordinated changes to seat coordinates, desk p
 
 The bundled [robot.glb](../public/models/robot.glb) is loaded with `useGLTF` and preloaded by the world module. Each resident uses a skeleton-aware clone so its animation mixer can run independently. Materials are cloned and recolored per resident; geometry is shared. Cloned materials are disposed when the resident unmounts.
 
-| State                       | Clip / behavior                                                            |
-| --------------------------- | -------------------------------------------------------------------------- |
-| Working, tool, waiting      | `Sitting`; working/tool also receive a small procedural lower-arm movement |
-| Completed                   | `Dance`                                                                    |
-| Failed                      | `No`                                                                       |
-| Idle, disconnected, unknown | `Idle`                                                                     |
+| State                       | Behavior                                                                       |
+| --------------------------- | ------------------------------------------------------------------------------ |
+| Working                     | Walk to the chair, settle, then use an authored alternating typing pose        |
+| Tool use                    | Seated review pose with a restrained head glance; blue screen                  |
+| Waiting                     | Seated raised-hand gesture, amber screen and attention marker                  |
+| Failed                      | Seated head tilt, red screen and attention marker                              |
+| Fresh completion            | Leave the chair, walk to the resting spot, give one brief thumbs-up, then rest |
+| Idle, disconnected, unknown | Rest nearby, with a gentle glance/stretch loop; no invented success signal     |
 
-Historical completions older than 30 seconds use Idle instead of an ongoing celebration. Transitions fade over approximately 0.35 seconds. Sitting is clamped after a single playback. Characters shift a short distance between seated and standing positions; this is not walking or pathfinding. Procedural arm adjustments depend on the current rig's bone names.
+`src/world/rig.ts` authors desk clips against the actual bundled skeleton. A one-time CCD solve places the hands over the keyboard for sampled keyframes; no IK runs per frame. The asset contract test samples hand placement throughout typing/review loops. These are generated clips for the existing robot, not new external animation assets. The laptop is moved nearer the seated character, and seating height/root offsets align the body with its chair.
 
-Reduced motion freezes character animation, uses a stable seated pose where appropriate, accelerates laptop-lid settling, and disables cinematic orbit. Simulation pause stops ordinary character animation. These controls do not turn the entire renderer into an on-demand static scene.
+`src/world/motion.ts` holds a reversible path controller. Each seat has an entry point, resting spot, side approach, and desk destination on its own floor. The right studio route is shortened to clear the bookcase. This is local authored routing, not island-wide navigation or collision avoidance. Body pose blends over roughly 0.45 seconds; sitting height settles over 0.6 seconds. Work starts and interruptions reverse the same route without jumping directly through furniture. Resting spots have small ground markers.
 
-Before replacing the model, check its scale, origin, bone names, clip names, material names, seating alignment, and license. Preserve attribution in [the model license file](../public/models/LICENSE.md).
+When a visible session leaves, its character walks out and fades. Its seat admits the latest replacement only after departure, so the scene never mounts more than eight rigs. Rapid changes replace the pending arrival; hidden/departing residents are no longer selectable. Their cosmetic exit does not indicate task completion. Returning to a session before departure finishes cancels its exit.
+
+Completion celebrations last about 1.8 seconds once the character reaches rest, require evidence less than 30 seconds old, and are not restarted by repeated snapshots. Unknown status and restored stale telemetry never trigger them. Demo behavior is explicitly simulated. Ambient gestures do not imply tool actions or task progress.
+
+Reduced motion places characters immediately, uses still destination poses, and disables orbit; it skips walking, fades, and celebrations. Simulation pause and bridge loss freeze ordinary movement and animation. Cosmetic departures may finish while updates are paused so hidden sessions do not remain indefinitely. A snapshot loaded while paused is shown at its destination instead of invisible at an entry point.
+
+Cloned materials and skeleton resources are disposed at unmount; shared model geometry is preserved. Per-frame movement uses mutable scene objects rather than React state updates. Frame deltas are bounded to prevent a long background-tab gap from jumping a character across its route.
+
+Before replacing the rig, check scale, forward axis, floor origin, unique sanitized bone names, required clips, material names, and license. The authoring code currently expects `UpperArmL/R`, `LowerArmL/R`, `Palm1L/R`, `Head`, plus `Sitting`, `Walking`, `Idle`, and `ThumbsUp`. Run the asset contract test for any replacement. Preserve attribution in [the model license file](../public/models/LICENSE.md).
 
 ## Labels and interaction
 
@@ -35,9 +45,17 @@ The list and inspector provide a text-based way to inspect activity without inte
 
 ## Cameras and lighting
 
-The orthographic camera has overview, café, garden, and studio presets. Preset zoom is calculated from viewport dimensions. OrbitControls support manual orbit/zoom with constrained polar angles. Manual control cancels an active preset movement and cinematic rotation.
+The orthographic camera has overview, café, garden, and studio presets. Preset zoom is calculated from viewport dimensions. OrbitControls support manual orbit/zoom with constrained polar angles. Manual control cancels an active preset movement, following, and cinematic rotation.
 
-Preset transitions interpolate in the render loop; reduced motion makes them immediate. Cinematic mode slowly rotates the view. Day/evening settings change lighting and fog colors and enable lamp lighting. The main directional light uses a 2048 shadow map.
+Preset transitions interpolate in the render loop; reduced motion makes them immediate. Cinematic mode slowly rotates the view. Day/evening settings change lighting and fog colors and enable lamp lighting. The main directional light uses a 2048 shadow map at high quality and 512 at low quality.
+
+## Follow and watch modes
+
+Select a resident occupying a seat and choose **Follow resident**. The camera follows the actual moving character, including its walk to rest. Dragging or choosing a preset stops following. A session leaving the visible eight releases the follow camera. **Stop following** returns to the selected preset.
+
+The eye button in the header enters **Watch mode**: the world fills the viewport, panels are hidden, and only the selected resident retains its label. A compact overlay keeps simulation/live connection context, attention access, and an exit button visible. Watching does not automatically start camera orbit or follow an agent. It respects the existing camera choice. Escape exits watch mode; outside watch mode it stops following, then clears selection. Dialogs retain their own Escape handling.
+
+Watch and follow choices are temporary. Reduced motion makes camera placement immediate, and low quality lowers resolution/shadow cost. No frame-rate claim is made without device profiling.
 
 ## Performance and assets
 

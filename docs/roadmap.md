@@ -18,6 +18,8 @@ Acceptance: independent sessions cannot accidentally overwrite one another, aban
 
 ## 3. Improve animation and world interaction
 
+The first character-life milestone now includes generated keyboard/attention poses, local reversible routes, staged arrival/departure, brief completion reactions, follow camera, and watch mode. The original robot is retained. Distinct new character assets, island-wide navigation, and a measured device performance budget remain future work.
+
 Introduce authored typing and transition clips, richer character variety, and navigation between destinations. Define how seated work, standing, walking, and interruptions blend before adding pathfinding. Preserve reduced-motion alternatives.
 
 Acceptance: characters transition without snapping or furniture intersections, replacement rigs have a documented asset contract, and representative devices meet an agreed performance budget.

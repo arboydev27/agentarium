@@ -114,6 +114,8 @@ type State = {
   camera: 'overview' | 'café' | 'garden' | 'studio';
   cameraVersion: number;
   cinematic: boolean;
+  watchMode: boolean;
+  followAgent: string | null;
   bridgeStatus: 'offline' | 'connecting' | 'connected';
   bridgeError: string | null;
   receivedEvents: number;
@@ -190,6 +192,8 @@ export const useWorld = create<State>((set, get) => ({
   camera: 'overview',
   cameraVersion: 0,
   cinematic: false,
+  watchMode: false,
+  followAgent: null,
   bridgeStatus: 'offline',
   bridgeError: null,
   receivedEvents: 0,
@@ -270,6 +274,7 @@ export const useWorld = create<State>((set, get) => ({
       selected: null,
       events: [],
       mode: 'demo',
+      followAgent: null,
       playing: true,
       bridgeError: null,
       receivedEvents: 0,
@@ -363,6 +368,7 @@ export const useWorld = create<State>((set, get) => ({
   switchMode: (mode) =>
     set({
       mode,
+      followAgent: null,
       agents: mode === 'demo' ? initialAgents() : [],
       selected: null,
       events: [],

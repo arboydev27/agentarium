@@ -31,6 +31,8 @@ import {
   GitBranch,
   Volume2,
   VolumeX,
+  Eye,
+  ScanEye,
 } from 'lucide-react';
 import { useWorld, STATUS_LABEL } from './state';
 import { registerWorldTools } from './webmcp';
@@ -159,6 +161,8 @@ export default function App() {
     night = useWorld((s) => s.night),
     camera = useWorld((s) => s.camera),
     cinematic = useWorld((s) => s.cinematic),
+    watchMode = useWorld((s) => s.watchMode),
+    followAgent = useWorld((s) => s.followAgent),
     bridgeStatus = useWorld((s) => s.bridgeStatus);
   const receivedEvents = useWorld((s) => s.receivedEvents);
   const historyEnabled = useWorld((s) => s.discoveryProviders.some((p) => p.enabled));
@@ -201,13 +205,19 @@ export default function App() {
   }, []);
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !(e.target as HTMLElement).closest('dialog')) {
+        const world = useWorld.getState();
+        if (world.watchMode) world.set({ watchMode: false });
+        else if (world.followAgent) world.set({ followAgent: null });
+        else world.select(null);
+        return;
+      }
       if ((e.target as HTMLElement).closest('input,button,select,textarea,dialog')) return;
       if (e.code === 'Space') {
         e.preventDefault();
         if (useWorld.getState().mode === 'demo')
           useWorld.setState((s) => ({ playing: !s.playing }));
       }
-      if (e.key === 'Escape') useWorld.getState().select(null);
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
@@ -250,7 +260,7 @@ export default function App() {
     }
   };
   const changeCamera = (view: typeof camera) =>
-    set({ camera: view, cameraVersion: useWorld.getState().cameraVersion + 1 });
+    set({ camera: view, cameraVersion: useWorld.getState().cameraVersion + 1, followAgent: null });
   const spawn = () => {
     if (idle === 0) {
       setToast('Everyone is busy. Complete a task to free a resident.');
@@ -259,7 +269,7 @@ export default function App() {
     useWorld.getState().spawn();
   };
   return (
-    <main className={'app ' + (night ? 'night' : '')}>
+    <main className={'app ' + (night ? 'night ' : '') + (watchMode ? 'watch-mode' : '')}>
       <div
         className="world-canvas"
         aria-label="Interactive 3D café island. Drag to orbit, scroll to zoom. Use the residents list to select characters."
@@ -305,6 +315,14 @@ export default function App() {
                   ? 'Connecting…'
                   : 'Not connected'}
             <ChevronRight size={14} />
+          </button>
+          <button
+            className="icon-button"
+            aria-label="Enter watch mode"
+            title="Watch the world"
+            onClick={() => set({ watchMode: true })}
+          >
+            <Eye size={19} />
           </button>
           <button
             className="icon-button"
@@ -631,6 +649,21 @@ export default function App() {
                   </button>
                 </div>
                 {mode === 'live' && <SessionActions agent={chosen} notify={setToast} />}
+                {chosen.seat < 8 && (
+                  <button
+                    className="follow-button"
+                    aria-pressed={followAgent === chosen.id}
+                    onClick={() =>
+                      set({
+                        followAgent: followAgent === chosen.id ? null : chosen.id,
+                        cinematic: false,
+                      })
+                    }
+                  >
+                    <ScanEye size={14} />
+                    {followAgent === chosen.id ? 'Stop following' : 'Follow resident'}
+                  </button>
+                )}
                 <h3>{chosen.task}</h3>
                 <div className="task-meta">
                   <span>
@@ -733,7 +766,7 @@ export default function App() {
       <div className="camera-presets" aria-label="Camera views">
         {(['overview', 'café', 'garden', 'studio'] as const).map((view, i) => (
           <button
-            className={camera === view ? 'active' : ''}
+            className={camera === view && !followAgent ? 'active' : ''}
             key={view}
             onClick={() => changeCamera(view)}
           >
@@ -814,12 +847,52 @@ export default function App() {
         </div>
         <button
           className={'cinematic-button ' + (cinematic ? 'active' : '')}
-          onClick={() => set({ cinematic: !cinematic })}
+          onClick={() => set({ cinematic: !cinematic, followAgent: null })}
         >
           <span className="cinema-icon" />
           {cinematic ? 'Stop orbit' : 'Slow orbit'}
         </button>
       </footer>
+      {watchMode && (
+        <div className="watch-hud" aria-label="Watch controls">
+          <div className="watch-caption">
+            <strong>
+              {followAgent
+                ? `Following ${agents.find((a) => a.id === followAgent)?.name || 'resident'}`
+                : 'A little room for big ideas'}
+            </strong>
+            <span>
+              {mode === 'demo'
+                ? 'Simulation'
+                : bridgeStatus === 'connected'
+                  ? 'Live bridge · last reported activity'
+                  : 'Updates paused · last known activity'}
+            </span>
+          </div>
+          {waiting > 0 && (
+            <button
+              className="watch-attention"
+              onClick={() => {
+                set({ watchMode: false });
+                setCollapsed(false);
+                setTab('residents');
+                setSessionView('attention');
+                setSessionFilter('');
+              }}
+            >
+              <AlertCircle size={15} />
+              {waiting} need attention
+            </button>
+          )}
+          {followAgent && (
+            <button onClick={() => set({ followAgent: null })}>Stop following</button>
+          )}
+          <button onClick={() => set({ watchMode: false })}>
+            <X size={16} />
+            Exit watch mode
+          </button>
+        </div>
+      )}
       {toast && (
         <div role="status" className="toast">
           <Sprout size={17} />
@@ -878,7 +951,11 @@ export default function App() {
             <div>
               <Plug />
               <strong>Connect</strong>
-              <p>Use the local bridge to show real events. The simulation is always labeled.</p>
+              <p>
+                Use the local bridge to show real events. The simulation is always labeled. Select a
+                resident to follow them, or use Watch mode for a quiet view. Escape exits Watch
+                mode; dragging cancels following.
+              </p>
             </div>
           </div>
         </Modal>
@@ -915,7 +992,7 @@ function Settings() {
       <label>
         <span>
           <strong>Reduced motion</strong>
-          <small>Still characters and instant camera changes</small>
+          <small>Still poses, immediate placement, and instant camera changes</small>
         </span>
         <input
           type="checkbox"
