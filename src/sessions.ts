@@ -1,3 +1,4 @@
+import { matchesWorkFilter, type WorkFilter } from './world/hud';
 import { attentionFor } from './shared/work.mjs';
 import { sessionKey } from './shared/live.mjs';
 export { sessionKey } from './shared/live.mjs';
@@ -30,12 +31,19 @@ export function summarizeSessions(agents: Agent[]) {
   return [...sessions.values()];
 }
 
-export type SessionView = 'visible' | 'attention' | 'hidden';
-export function filterResidents(agents: Agent[], hidden: string[], view: SessionView, filter = '') {
+export type SessionView = 'visible' | 'attention' | 'hidden' | WorkFilter;
+export function filterResidents(
+  agents: Agent[],
+  hidden: string[],
+  view: SessionView,
+  filter = '',
+  paused = false,
+) {
   const hiddenKeys = new Set(hidden);
   return agents.filter((agent) => {
     if (filter && sessionKey(agent) !== filter) return false;
     if (view === 'attention') return !!attentionFor(agent);
+    if (view !== 'visible' && view !== 'hidden') return matchesWorkFilter(agent, view, paused);
     return hiddenKeys.has(sessionKey(agent)) === (view === 'hidden');
   });
 }

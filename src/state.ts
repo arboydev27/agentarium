@@ -136,6 +136,7 @@ type State = {
   quality: 'high' | 'low';
   labels: boolean;
   residentOutings: boolean;
+  worldLocation: 'overview' | 'café' | 'garden' | 'studio' | 'courtyard';
   camera: 'overview' | 'café' | 'garden' | 'studio' | 'courtyard';
   cameraVersion: number;
   cinematic: boolean;
@@ -233,6 +234,7 @@ export const useWorld = create<State>((set, get) => ({
   quality: 'high',
   labels: true,
   residentOutings: true,
+  worldLocation: 'overview',
   camera: 'overview',
   cameraVersion: 0,
   cinematic: false,

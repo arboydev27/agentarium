@@ -1,3 +1,4 @@
+import { districtAt } from './world/hud';
 import { ResidentJourney } from './world/journey';
 import { NavigationTraffic } from './world/navigation';
 import { residentStyle } from './world/personality';
@@ -466,6 +467,11 @@ function Camera({ positions }: { positions: Positions }) {
         Math.abs(camera.zoom - zoom.current) < 0.02
       )
         moving.current = false;
+    }
+    if (controls.current) {
+      const location = districtAt(controls.current.target.x, controls.current.target.z);
+      if (useWorld.getState().worldLocation !== location)
+        useWorld.setState({ worldLocation: location });
     }
   });
   return (

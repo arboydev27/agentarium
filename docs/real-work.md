@@ -52,3 +52,7 @@ Recap entries are historical observations: inspecting one opens the current task
 Connection setup now shows whether durable recap and rich context are available and explains built-in integration limits. Discovery cards and event receipt diagnostics remain separate. Capabilities are bridge features, not a promise that a specific installed provider supplies every field.
 
 Automated checks cover status-only compatibility, rich validation, request identity, uncertainty, hidden/pinned overflow, history pagination, retention gaps, authentication, and database restart. Browser checks use an isolated bridge with synthetic tasks. Real installed Claude/Gemini/Codex request/result capture and source navigation still require dedicated adapter work and end-to-end verification. No new provider-version compatibility is claimed by this milestone.
+
+## World HUD shortcuts
+
+The compact top-left panel replaces the introductory headline. Counts open matching tasks and clear prior search/session filters; status shortcuts include hidden tasks without restoring or reseating them. “Here” means assigned a visible world seat, not currently inside the camera viewport. Unknown includes disconnected or stale observation, and attention remains available even during uncertainty. Watch mode keeps the location selector and any attention indicator.

@@ -1,3 +1,4 @@
+import { WorldHUD } from './WorldHUD';
 import { Recap } from './Recap';
 import { TaskBrief, attentionMessage } from './TaskBrief';
 import { attentionFor } from './shared/work.mjs';
@@ -177,11 +178,18 @@ export default function App() {
   const [taskOrder, setTaskOrder] = useState<'recent' | 'attention'>('recent');
   const seating = useWorld((s) => s.seating);
   const bridgeId = useWorld((s) => s.bridgeId);
+  const worldLocation = useWorld((s) => s.worldLocation);
   const sessions = mode === 'live' ? summarizeSessions(agents) : [];
   const activeSession = sessions.some((s) => s.id === sessionFilter) ? sessionFilter : '';
   const listedAgents =
     mode === 'live'
-      ? filterResidents(agents, preferences.hidden, sessionView, activeSession)
+      ? filterResidents(
+          agents,
+          preferences.hidden,
+          sessionView,
+          activeSession,
+          bridgeStatus !== 'connected',
+        )
           .filter((a) =>
             [
               a.name,
@@ -200,7 +208,7 @@ export default function App() {
               b.updatedAt - a.updatedAt ||
               a.id.localeCompare(b.id),
           )
-      : agents;
+      : filterResidents(agents, [], sessionView);
   const [tab, setTab] = useState<'residents' | 'activity' | 'recap'>('residents');
   const [modal, setModal] = useState<'settings' | 'connections' | 'help' | 'sessions' | null>(null);
   const [collapsed, setCollapsed] = useState(() => window.innerWidth < 801);
@@ -211,7 +219,6 @@ export default function App() {
   const audioNodes = useRef<AudioNode[]>([]);
   const chosen = agents.find((a) => a.id === selected);
   const set = useWorld((s) => s.set);
-  const busy = agents.filter((a) => a.status === 'working' || a.status === 'tool').length;
   const waiting = agents.filter((a) => attentionFor(a)).length;
   const idle = agents.filter((a) => a.status === 'idle' || a.status === 'completed').length;
   useEffect(() => {
@@ -366,44 +373,26 @@ export default function App() {
           <span className="profile">A</span>
         </div>
       </header>
-      <div className="world-heading">
-        <div className="eyebrow">
-          <span className="sun-symbol">✳</span>
-          {night ? 'AFTER HOURS' : 'A LITTLE ROOM FOR BIG IDEAS'}
-        </div>
-        <h1>
-          The grove<span>.</span>
-        </h1>
-        <p>
-          {mode === 'demo'
-            ? 'A living world of simulated agents.'
-            : bridgeStatus === 'connected'
-              ? receivedEvents > 0
-                ? 'Agent events received. Your grove is listening.'
-                : agents.length
-                  ? 'Your recent sessions, at home in the grove.'
-                  : 'Bridge connected. Discover your recent sessions.'
-              : agents.length
-                ? 'Updates paused. Showing last known activity.'
-                : 'Connect an agent to bring the grove to life.'}
-        </p>
-        <div className="world-stats">
-          <span>
-            <i className="dot working" />
-            <strong>{busy}</strong> working
-          </span>
-          <span>
-            <i className="dot idle" />
-            <strong>{idle}</strong> unwinding
-          </span>
-          {waiting > 0 && (
-            <span>
-              <i className="dot waiting" />
-              <strong>{waiting}</strong> need you
-            </span>
-          )}
-        </div>
-      </div>
+      <WorldHUD
+        agents={agents}
+        paused={mode === 'live' && bridgeStatus !== 'connected'}
+        demo={mode === 'demo'}
+        compact={watchMode}
+        location={worldLocation}
+        navigate={(view) => {
+          changeCamera(view);
+          set({ cinematic: false });
+        }}
+        filter={(view) => {
+          set({ watchMode: false });
+          setCollapsed(false);
+          setTab('residents');
+          setSessionView(view);
+          setSessionFilter('');
+          setTaskSearch('');
+          useWorld.getState().select(null);
+        }}
+      />
       <div className="left-controls">
         <button
           className="icon-button floating"
@@ -560,6 +549,10 @@ export default function App() {
                           <option value="visible">All non-hidden sessions</option>
                           <option value="attention">Needs attention (includes hidden)</option>
                           <option value="hidden">Hidden sessions</option>
+                          <option value="working">Working (includes hidden)</option>
+                          <option value="completed">Completed (includes hidden)</option>
+                          <option value="unknown">Unknown (includes hidden)</option>
+                          <option value="here">Here in the world</option>
                         </select>
                       </label>
                       <button className="text-button" onClick={() => setModal('sessions')}>
@@ -603,6 +596,27 @@ export default function App() {
                       </small>
                     </label>
                   )}
+                  {sessionView !== 'visible' && (
+                    <div className="active-task-filter">
+                      <span>
+                        {sessionView === 'here'
+                          ? 'Here in the world'
+                          : sessionView === 'attention'
+                            ? 'Needs attention'
+                            : sessionView[0].toUpperCase() + sessionView.slice(1)}
+                      </span>
+                      <button
+                        className="text-button"
+                        onClick={() => {
+                          setSessionView('visible');
+                          setTaskSearch('');
+                          setSessionFilter('');
+                        }}
+                      >
+                        Clear filter
+                      </button>
+                    </div>
+                  )}
                   <div className="list-caption">
                     <span>NAME / PROVIDER</span>
                     <span>STATUS</span>
@@ -626,7 +640,7 @@ export default function App() {
                         ? 'No attention items match this view.'
                         : sessionView === 'hidden'
                           ? 'No hidden residents in this snapshot.'
-                          : 'No residents match this view. Restore hidden sessions in Manage sessions.'}
+                          : 'No tasks match this view.'}
                     </p>
                   ) : (
                     listedAgents.map((agent) => (
@@ -939,7 +953,7 @@ export default function App() {
             <strong>
               {followAgent
                 ? `Following ${agents.find((a) => a.id === followAgent)?.name || 'resident'}`
-                : 'A little room for big ideas'}
+                : 'Exploring the grove'}
             </strong>
             <span>
               {mode === 'demo'
@@ -949,22 +963,6 @@ export default function App() {
                   : 'Updates paused · last known activity'}
             </span>
           </div>
-          {waiting > 0 && (
-            <button
-              className="watch-attention"
-              onClick={() => {
-                set({ watchMode: false });
-                setCollapsed(false);
-                setTab('residents');
-                setSessionView('attention');
-                setTaskSearch('');
-                setSessionFilter('');
-              }}
-            >
-              <AlertCircle size={15} />
-              {waiting} need attention
-            </button>
-          )}
           {followAgent && (
             <button onClick={() => set({ followAgent: null })}>Stop following</button>
           )}

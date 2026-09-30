@@ -79,3 +79,11 @@ High quality enables these effects. Low quality returns trees to their neutral p
 Daylight uses a more restrained ambient/key-light balance; evening retains enough sky fill to read residents and status colors. Wood grain extends onto the studio floor, and subtle stone texture distinguishes paths and garden paving. Water uses a smoother material than stone or wood. Halos are small depth-tested sprites, not full-screen bloom; this pass adds no extra point lights or shadow maps. Canvas textures are original, local, and disposed with their owners.
 
 See [Rendering performance](rendering-performance.md) for the opt-in diagnostic overlay and the limits of the measurements.
+
+## Compact world HUD
+
+The large introductory headline has been replaced with a compact location/status panel. Its district selector moves the camera to a named area. The label follows the camera focus point using the authored zone bounds, including while following a moving resident; focus between/outside zones reads Overview. This describes the focused area, not everything visible in the viewport.
+
+Working, needs-attention, completed, and unknown buttons open matching tasks across the known collection, including hidden and unseated tasks. “Here” selects residents assigned to the eight world seats, regardless of camera visibility. Counts refer to task records, including subagents, rather than claiming that every saved chat is a visible resident. Attention can overlap unknown activity. Bridge disconnection or stale telemetry moves activity into the unknown count while preserving unresolved attention. No status is rewritten by these filters.
+
+Watch mode retains only the location chip and an attention button when needed. Selecting that button exits watch mode and opens attention. List filters can be cleared without changing seating, pins, or hiding. The minimap remains deferred until further spatial expansion.

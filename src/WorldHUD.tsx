@@ -1,0 +1,70 @@
+import type { Agent } from './state';
+import { worldCounts, type WorkFilter } from './world/hud';
+type View = 'overview' | 'café' | 'garden' | 'studio' | 'courtyard';
+export function WorldHUD({
+  agents,
+  paused,
+  demo,
+  compact,
+  location,
+  navigate,
+  filter,
+}: {
+  agents: Agent[];
+  paused: boolean;
+  demo: boolean;
+  compact: boolean;
+  location: View;
+  navigate: (view: View) => void;
+  filter: (view: WorkFilter | 'attention') => void;
+}) {
+  const counts = worldCounts(agents, paused);
+  return (
+    <section className={'world-hud' + (compact ? ' compact' : '')} aria-label="World overview">
+      <div className="world-location">
+        <h1>The Grove</h1>
+        <span aria-hidden="true">/</span>
+        <select
+          aria-label="Explore district"
+          value={location}
+          onChange={(e) => navigate(e.target.value as View)}
+        >
+          <option value="overview">Overview</option>
+          <option value="café">Café</option>
+          <option value="garden">Garden</option>
+          <option value="studio">Studio</option>
+          <option value="courtyard">Courtyard</option>
+        </select>
+      </div>
+      {!compact && (
+        <>
+          <div className="hud-counts" aria-label="Task filters">
+            <button onClick={() => filter('working')}>
+              <i className="dot working" />
+              {counts.working} working
+            </button>
+            <button
+              className={counts.attention ? 'has-attention' : ''}
+              onClick={() => filter('attention')}
+            >
+              <i className="dot waiting" />
+              {counts.attention} need attention
+            </button>
+            <button onClick={() => filter('completed')}>{counts.completed} completed</button>
+            <button onClick={() => filter('unknown')}>{counts.unknown} unknown</button>
+            <button onClick={() => filter('here')}>{counts.here} here</button>
+          </div>
+          <p>
+            {demo ? 'Simulation' : paused ? 'Updates paused' : 'Last reported activity'} ·{' '}
+            {agents.length} known tasks
+          </p>
+        </>
+      )}
+      {compact && counts.attention > 0 && (
+        <button className="hud-attention" onClick={() => filter('attention')}>
+          {counts.attention} need attention
+        </button>
+      )}
+    </section>
+  );
+}
