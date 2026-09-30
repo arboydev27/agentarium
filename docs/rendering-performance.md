@@ -10,7 +10,7 @@ Camera framing, resident motion, quality, display refresh rate, development tool
 
 ## Initial local observations
 
-September 28, 2026; development server, Codex in-app browser, 1280 × 720 viewport, eight simulated residents. These are individual settled-view samples, not a controlled before/after benchmark. The low-quality reading also enabled reduced motion, so the FPS difference cannot be attributed to quality alone.
+September 28, 2026; development server, Codex in-app browser, 1280 × 720 viewport, eight simulated residents. These are individual settled-view samples from the ambient-life milestone, before resident accessories and cross-zone journeys, not a controlled before/after benchmark. Re-measure the current scene rather than treating these as its performance target. The low-quality reading also enabled reduced motion, so the FPS difference cannot be attributed to quality alone.
 
 | View / settings                    | FPS | p95 interval | Draw calls | Triangles |
 | ---------------------------------- | --: | -----------: | ---------: | --------: |

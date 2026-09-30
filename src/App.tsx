@@ -668,7 +668,7 @@ export default function App() {
                 <div className="task-meta">
                   <span>
                     <Coffee size={13} />
-                    {chosen.zone}
+                    Home: {chosen.zone}
                   </span>
                   <span>
                     <Elapsed agent={chosen} />
@@ -989,6 +989,17 @@ function Settings() {
           type="checkbox"
           checked={s.labels}
           onChange={(e) => s.set({ labels: e.target.checked })}
+        />
+      </label>
+      <label>
+        <span>
+          <strong>Resident outings</strong>
+          <small>Idle residents visit shared spaces and return for work</small>
+        </span>
+        <input
+          type="checkbox"
+          checked={s.residentOutings}
+          onChange={(e) => s.set({ residentOutings: e.target.checked })}
         />
       </label>
       <label>

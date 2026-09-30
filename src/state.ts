@@ -111,6 +111,7 @@ type State = {
   reducedMotion: boolean;
   quality: 'high' | 'low';
   labels: boolean;
+  residentOutings: boolean;
   camera: 'overview' | 'café' | 'garden' | 'studio' | 'courtyard';
   cameraVersion: number;
   cinematic: boolean;
@@ -189,6 +190,7 @@ export const useWorld = create<State>((set, get) => ({
     typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
   quality: 'high',
   labels: true,
+  residentOutings: true,
   camera: 'overview',
   cameraVersion: 0,
   cinematic: false,
@@ -288,6 +290,8 @@ export const useWorld = create<State>((set, get) => ({
     const s = get();
     if (!s.playing || s.mode !== 'demo') return;
     const a = s.agents[Math.floor(Math.random() * s.agents.length)];
+    // Give simulated residents time to complete an outing. Manual tasks still start immediately.
+    if (s.residentOutings && a.status === 'idle' && Date.now() - a.updatedAt < 60000) return;
     const next: Status =
       a.status === 'working'
         ? 'tool'

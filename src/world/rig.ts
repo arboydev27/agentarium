@@ -151,5 +151,42 @@ export function createCharacterClips(source: THREE.Object3D, clips: THREE.Animat
       ];
     }),
   );
+  // Destination poses keep feet/seat alignment, with hands away from an absent keyboard.
+  for (const name of ['BenchRest', 'CafeBreak', 'GardenLook']) {
+    const base = name === 'BenchRest' ? pose : restPose;
+    const values = new Map(bones.map((o) => [o, { p: [] as number[], q: [] as number[] }]));
+    const destinationTimes = Array.from({ length: 25 }, (_, i) => i / 4);
+    for (const time of destinationTimes) {
+      for (const [o, p] of base) {
+        o.position.copy(p.p);
+        o.quaternion.copy(p.q);
+        o.scale.copy(p.s);
+      }
+      const wave = Math.sin((time * Math.PI) / 3);
+      poser.getObjectByName('Head')!.rotateY(wave * (name === 'GardenLook' ? 0.3 : 0.12));
+      if (name === 'CafeBreak') {
+        poser.getObjectByName('LowerArmR')!.rotateX(-0.45 - wave * 0.08);
+        poser.getObjectByName('Head')!.rotateX(0.05 + wave * 0.03);
+      }
+      for (const bone of bones) {
+        const value = values.get(bone)!;
+        bone.position.toArray(value.p, value.p.length);
+        bone.quaternion.toArray(value.q, value.q.length);
+      }
+    }
+    result.push(
+      new THREE.AnimationClip(
+        name,
+        6,
+        bones.flatMap((bone) => {
+          const value = values.get(bone)!;
+          return [
+            new THREE.VectorKeyframeTrack(`${bone.name}.position`, destinationTimes, value.p),
+            new THREE.QuaternionKeyframeTrack(`${bone.name}.quaternion`, destinationTimes, value.q),
+          ];
+        }),
+      ),
+    );
+  }
   return [...clips, ...result, rest];
 }

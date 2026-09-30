@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { reduceAgentEvent, validateEvent, agentKey } from './shared/protocol.mjs';
 import { useWorld } from './state';
 import type { AgentEvent } from './state';
@@ -100,4 +100,27 @@ describe('live connection diagnostics', () => {
     useWorld.getState().switchMode('demo');
     expect(useWorld.getState().lastReceivedAt).toBeNull();
   });
+});
+
+it('gives demo outings a minute of idle time without delaying manually started work', () => {
+  useWorld.getState().reset();
+  useWorld.setState({ residentOutings: true, playing: true });
+  const random = vi.spyOn(Math, 'random').mockReturnValue(3 / 8 + 0.001);
+  const now = vi.spyOn(Date, 'now').mockReturnValue(100000);
+  try {
+    useWorld.getState().setStatus('demo-3', 'idle');
+    now.mockReturnValue(159999);
+    useWorld.getState().tick();
+    expect(useWorld.getState().agents[3].status).toBe('idle');
+    now.mockReturnValue(160000);
+    useWorld.getState().tick();
+    expect(useWorld.getState().agents[3].status).toBe('working');
+    useWorld.getState().setStatus('demo-3', 'idle');
+    useWorld.getState().setStatus('demo-3', 'working');
+    expect(useWorld.getState().agents[3].status).toBe('working');
+  } finally {
+    random.mockRestore();
+    now.mockRestore();
+    useWorld.getState().reset();
+  }
 });

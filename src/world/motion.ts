@@ -108,7 +108,7 @@ export class ResidentMotion {
     if (!this.moving && this.distance === target && this.sitting === 0)
       this.celebration = Math.max(0, this.celebration - dt);
   }
-  clip(agent: Agent) {
+  clip(agent: Agent): string {
     if (this.moving) return 'Walking';
     if (this.sitting > 0 && deskBound(agent.status))
       return agent.status === 'waiting'

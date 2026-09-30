@@ -112,6 +112,7 @@ export function registerWorldTools() {
         useWorld.setState((s) => ({
           camera: p.view as typeof s.camera,
           cameraVersion: s.cameraVersion + 1,
+          followAgent: null,
         }));
         return { view: p.view };
       },

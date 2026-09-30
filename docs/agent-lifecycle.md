@@ -42,7 +42,7 @@ The simulator starts with eight named residents and mixed statuses. Its timer ru
 
 - Working becomes tool activity.
 - Tool activity becomes waiting with a 25% probability, otherwise completed.
-- Completed becomes idle; idle becomes working.
+- Completed becomes idle; idle becomes working. With Resident outings enabled, automatic ticks leave residents idle for at least 60 seconds. Manual tasks and status controls bypass that cosmetic pacing delay.
 - Waiting, failed, and disconnected do not automatically recover.
 
 Spawning a demo task reuses an idle or completed resident. Delegation optionally associates it with a parent. It does not create a ninth visual seat or call an AI provider. Pausing stops simulation progression and ordinary character animation; elapsed-time displays still use wall-clock time.
@@ -56,3 +56,7 @@ When the browser socket closes, last reported statuses remain intact and the UI 
 See [state.ts](../src/state.ts) and the [shared reducer](../src/shared/protocol.mjs) for exact behavior.
 
 See [Managing live sessions](session-management.md) for local presentation choices and attention handling.
+
+## Visual journeys
+
+Idle/completed residents with current telemetry may visit shared destinations. These are cosmetic outings, not provider actions. Working/tool/waiting/failed events update the interface and laptop immediately; an offsite character then returns along its route. Its walking time does not delay execution. Unknown/disconnected states do not start outings; stale telemetry freezes ordinary movement. Home-zone metadata stays tied to the assigned desk. See [Resident identity and journeys](resident-journeys.md).

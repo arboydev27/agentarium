@@ -13,9 +13,9 @@ The island is now **29.25 × 22.2 world units**. The original footprint was 19.5
 | Studio    | 7, 1.1, −5             | 9.6 × 7.6     | 4, 5         |
 | Courtyard | −6, 0.49, 5.5          | 11 × 7        | 6, 7         |
 
-The café occupies the back left, studio the back right, courtyard the front left, and garden the front right. Crossing paths connect the spaces visually. Café steps and studio stairs connect their raised floor edges. This is a composed diorama, not a traversable collision mesh.
+The café occupies the back left, studio the back right, courtyard the front left, and garden the front right. Crossing paths connect the spaces visually. Café steps and studio stairs connect their raised floor edges. An authored waypoint network connects resident routes to shared destinations across the diorama. Stair nodes encode elevation changes; there is no generated collision mesh.
 
-Each seat anchors its desk, laptop, chair, and a reversible local character route. The route enters 1.1 units to the right and 2.1 behind the seat, pauses at a resting spot, then approaches the chair from the side. Preserve body clearance around the entire route when placing furniture. Residents do not navigate between zones. Tests check route/body margins and desk bounds against each floor; visual review is still needed for furniture intersections.
+Each seat anchors its desk, laptop, chair, and a reversible local character route. The route enters 1.1 units to the right and 2.1 behind the seat, pauses at a resting spot, then approaches the chair from the side. Preserve body clearance around the entire route when placing furniture. Residents can continue from their resting spots onto the cross-zone graph. See [Resident identity and journeys](resident-journeys.md) for destination reservations and interruption behavior. Tests check route/body margins and desk bounds against each floor; visual review is still needed for furniture intersections.
 
 ## Art and camera direction
 
@@ -44,7 +44,7 @@ Fine-detail selection never wraps bridge connections, Zustand state, resident as
 
 ## Extending the world
 
-Change layout coordinates first, then place scenery around the routes and retune camera spans. Keep useful silhouettes in the base layer and optional decoration in a fine layer. Keep per-frame animation on mutable Three.js objects, avoid React state on every frame, and dispose textures/materials owned by a component.
+Change layout coordinates first, then update navigation nodes/edges and destination clearances, place scenery around the routes, and retune camera spans. Keep useful silhouettes in the base layer and optional decoration in a fine layer. Keep per-frame animation on mutable Three.js objects, avoid React state on every frame, and dispose textures/materials owned by a component.
 
 Before adding many more districts, profile frame time, draw calls, shadow cost, and memory on representative devices. Consider shared/instanced geometry for repeated props. Actual chunk streaming would additionally need spatial chunk ownership, asynchronous asset loading, prefetch/eviction boundaries, and a persistent state layer independent of mounted scenes. Those systems—and infinite procedural terrain—are future work.
 

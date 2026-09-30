@@ -22,6 +22,9 @@ describe('bundled character asset contract', () => {
       'DeskReview',
       'DeskWait',
       'DeskError',
+      'BenchRest',
+      'CafeBreak',
+      'GardenLook',
     ])
       expect(clips.some((c) => c.name === name)).toBe(true);
     for (const name of ['DeskType', 'DeskReview', 'DeskError']) {

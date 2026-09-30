@@ -1,6 +1,6 @@
 # The 3D world
 
-The scene is assembled in [World.tsx](../src/World.tsx), with scenery in [world/Environment.tsx](../src/world/Environment.tsx). It combines procedural scenery with an animated GLB character. It is an eight-seat presentation of agent state, not a physical simulation or navigation system.
+The scene is assembled in [World.tsx](../src/World.tsx), with scenery in [world/Environment.tsx](../src/world/Environment.tsx). It combines procedural scenery with an animated GLB character. It is an eight-seat presentation of agent state with authored navigation between shared destinations; it is not a physics simulation.
 
 ## Scene composition
 
@@ -14,22 +14,23 @@ Changing world capacity requires coordinated changes to seat coordinates, desk p
 
 ## Character model and animation
 
-The bundled [robot.glb](../public/models/robot.glb) is loaded with `useGLTF` and preloaded by the world module. Each resident uses a skeleton-aware clone so its animation mixer can run independently. Materials are cloned and recolored per resident; geometry is shared. Cloned materials are disposed when the resident unmounts.
+The bundled [robot.glb](../public/models/robot.glb) is loaded with `useGLTF` and preloaded by the world module. Each resident uses a skeleton-aware clone so its animation mixer can run independently. Materials are cloned and recolored per resident; body geometry is shared. Eight procedural head-accessory styles, trim palettes, and movement preferences are derived from resident identity, independently of seat assignment. Accessories attach to the head bone; their geometry/materials are owned and disposed per resident. Body proportions remain unchanged to preserve desk alignment. Cloned materials are disposed when the resident unmounts.
 
-| State                       | Behavior                                                                       |
-| --------------------------- | ------------------------------------------------------------------------------ |
-| Working                     | Walk to the chair, settle, then use an authored alternating typing pose        |
-| Tool use                    | Seated review pose with a restrained head glance; blue screen                  |
-| Waiting                     | Seated raised-hand gesture, amber screen and attention marker                  |
-| Failed                      | Seated head tilt, red screen and attention marker                              |
-| Fresh completion            | Leave the chair, walk to the resting spot, give one brief thumbs-up, then rest |
-| Idle, disconnected, unknown | Rest nearby, with a gentle glance/stretch loop; no invented success signal     |
+| State                                 | Behavior                                                                          |
+| ------------------------------------- | --------------------------------------------------------------------------------- |
+| Working                               | Walk to the chair, settle, then use an authored alternating typing pose           |
+| Tool use                              | Seated review pose with a restrained head glance; blue screen                     |
+| Waiting                               | Seated raised-hand gesture, amber screen and attention marker                     |
+| Failed                                | Seated head tilt, red screen and attention marker                                 |
+| Fresh completion                      | Leave the chair, walk to the resting spot, give one brief thumbs-up, then rest    |
+| Idle / completed with fresh telemetry | After a rest, visit a shared destination; return for work                         |
+| Disconnected / unknown / stale        | No new outings; unknown residents rest near their desk and stale movement freezes |
 
 `src/world/rig.ts` authors desk clips against the actual bundled skeleton. A one-time CCD solve places the hands over the keyboard for sampled keyframes; no IK runs per frame. The asset contract test samples hand placement throughout typing/review loops. These are generated clips for the existing robot, not new external animation assets. The laptop is moved nearer the seated character, and seating height/root offsets align the body with its chair.
 
-`src/world/motion.ts` holds a reversible path controller. Each seat has an entry point, resting spot, side approach, and desk destination on its own floor. The expanded layout gives all seats the same route offsets, with furniture placed outside those routes. This is local authored routing, not island-wide navigation or collision avoidance. Body pose blends over roughly 0.45 seconds; sitting height settles over 0.6 seconds. Work starts and interruptions reverse the same route without jumping directly through furniture. Resting spots have small ground markers.
+`src/world/motion.ts` holds a reversible path controller. Each seat has an entry point, resting spot, side approach, and desk destination on its own floor. The expanded layout gives all seats the same route offsets, with furniture placed outside those routes. `journey.ts` extends this with cross-zone trips over the authored graph in `navigation.ts`. Destination poses include a seated bench rest, café break, and looking around the garden. Shared destinations and transit corridors are reserved to avoid conflicting trips. See [Resident identity and journeys](resident-journeys.md). Body pose blends over roughly 0.45 seconds; sitting height settles over 0.6 seconds. Work starts and interruptions reverse the same route without jumping directly through furniture. Resting spots have small ground markers.
 
-When a visible session leaves, its character walks out and fades. Its seat admits the latest replacement only after departure, so the scene never mounts more than eight rigs. Rapid changes replace the pending arrival; hidden/departing residents are no longer selectable. Their cosmetic exit does not indicate task completion. Returning to a session before departure finishes cancels its exit.
+When a visible session leaves near its desk, its character walks out and fades. Offsite residents fade in place, including while paused, so seat replacement cannot get stuck behind frozen traffic. Its seat admits the latest replacement only after departure, so the scene never mounts more than eight rigs. Rapid changes replace the pending arrival; hidden/departing residents are no longer selectable. Their cosmetic exit does not indicate task completion. Returning to a session before departure finishes cancels its exit.
 
 Completion celebrations last about 1.8 seconds once the character reaches rest, require evidence less than 30 seconds old, and are not restarted by repeated snapshots. Unknown status and restored stale telemetry never trigger them. Demo behavior is explicitly simulated. Ambient gestures do not imply tool actions or task progress.
 
@@ -41,7 +42,7 @@ Before replacing the rig, check scale, forward axis, floor origin, unique saniti
 
 ## Labels and interaction
 
-Resident labels are DOM buttons positioned each frame by projecting a 3D anchor into the viewport. Text is assigned with `textContent`. Labels are hidden when outside the view and can be toggled in settings; selection can keep a label visible. Both world selection and the ordinary resident list update the same store.
+Resident labels are DOM buttons positioned each frame by projecting a 3D anchor into the viewport. Text is assigned with `textContent`. A selected resident’s label shows cosmetic location/activity; tooltips expose it for all residents. The inspector labels the assigned zone as Home, since a resident may be visiting somewhere else. Labels are hidden when outside the view and can be toggled in settings; selection can keep a label visible. Both world selection and the ordinary resident list update the same store.
 
 The list and inspector provide a text-based way to inspect activity without interpreting character gestures. Clicking empty canvas space clears selection. The application wraps world loading with Suspense and an error boundary.
 
@@ -53,7 +54,7 @@ Preset transitions interpolate in the render loop; reduced motion makes them imm
 
 ## Follow and watch modes
 
-Select a resident occupying a seat and choose **Follow resident**. The camera follows the actual moving character, including its walk to rest. Dragging or choosing a preset stops following. A session leaving the visible eight releases the follow camera. **Stop following** returns to the selected preset.
+Select a resident occupying a seat and choose **Follow resident**. The camera follows the actual moving character, including trips across the island. The follow angle is raised to reduce foreground obstruction. Dragging or choosing a preset stops following. A session leaving the visible eight releases the follow camera. **Stop following** returns to the selected preset.
 
 The eye button in the header enters **Watch mode**: the world fills the viewport, panels are hidden, and only the selected resident retains its label. A compact overlay keeps simulation/live connection context, attention access, and an exit button visible. Watching does not automatically start camera orbit or follow an agent. It respects the existing camera choice. Escape exits watch mode; outside watch mode it stops following, then clears selection. Dialogs retain their own Escape handling.
 

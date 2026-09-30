@@ -1,3 +1,7 @@
+import { ResidentJourney } from './world/journey';
+import { NavigationTraffic } from './world/navigation';
+import { residentStyle } from './world/personality';
+import { dressResident } from './world/appearance';
 import { RenderStats } from './world/RenderStats';
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
@@ -8,7 +12,7 @@ import type { ComponentRef } from 'react';
 type OrbitControlsImpl = ComponentRef<typeof OrbitControls>;
 import { useWorld } from './state';
 import type { Agent, Status } from './state';
-import { SEATS, ResidentMotion, routeForSeat } from './world/motion';
+import { SEATS, routeForSeat } from './world/motion';
 import { createCharacterClips, ROBOT_SCALE } from './world/rig';
 import { Box, Cylinder, Pot } from './world/primitives';
 import { Environment } from './world/Environment';
@@ -113,15 +117,18 @@ function Resident({
   onExit,
   clips,
   positions,
+  traffic,
 }: {
   agent: Agent;
   leaving: boolean;
   onExit: () => void;
   clips: THREE.AnimationClip[];
   positions: Positions;
+  traffic: NavigationTraffic;
 }) {
   const { scene } = useGLTF('/models/robot.glb');
-  const model = useMemo(() => {
+  const style = useMemo(() => residentStyle(agent.id), [agent.id]);
+  const dressed = useMemo(() => {
     const copy = clone(scene);
     copy.traverse((o) => {
       if (o instanceof THREE.Mesh) {
@@ -131,7 +138,7 @@ function Resident({
         const cloned = materials.map((m) => {
           const mat = m.clone() as THREE.MeshStandardMaterial;
           if (mat.name === 'Main') mat.color.set(agent.color);
-          if (mat.name === 'Grey') mat.color.set('#ede9d6');
+          if (mat.name === 'Grey') mat.color.set(style.trim);
           if (mat.name === 'Black') mat.color.set('#253c36');
           mat.roughness = 0.62;
           mat.transparent = true;
@@ -140,20 +147,27 @@ function Resident({
         o.material = Array.isArray(o.material) ? cloned : cloned[0];
       }
     });
-    return copy;
-  }, [scene, agent.color]);
+    const wardrobe = dressResident(copy, style);
+    return { copy, wardrobe };
+  }, [scene, agent.color, style]);
+  const model = dressed.copy;
   const materials = useMemo(() => {
     const all: THREE.Material[] = [];
     model.traverse((o) => {
       if (o instanceof THREE.Mesh)
         all.push(...(Array.isArray(o.material) ? o.material : [o.material]));
     });
-    return all;
+    return [...new Set(all)];
   }, [model]);
   const mixer = useMemo(() => new THREE.AnimationMixer(model), [model]);
   const active = useRef<THREE.AnimationAction | null>(null);
   const currentClip = useRef('');
-  const motion = useMemo(() => new ResidentMotion(agent.seat), [agent.seat]);
+  const motion = useMemo(
+    () => new ResidentJourney(agent.seat, agent.id, traffic),
+    [agent.seat, agent.id, traffic],
+  );
+  useEffect(() => () => motion.dispose(), [motion]);
+  const outings = useWorld((s) => s.residentOutings);
   const root = useRef<THREE.Group>(null);
   const worldPosition = useMemo(() => new THREE.Vector3(), []);
   const exited = useRef(false);
@@ -173,17 +187,20 @@ function Resident({
       positions.delete(agent.id);
       mixer.stopAllAction();
       mixer.uncacheRoot(model);
-      materials.forEach((m) => m.dispose());
+      materials.forEach((m) => {
+        if (!m.userData.wardrobe) m.dispose();
+      });
+      dressed.wardrobe.dispose();
       const skeletons = new Set<THREE.Skeleton>();
       model.traverse((o) => {
         if (o instanceof THREE.SkinnedMesh) skeletons.add(o.skeleton);
       });
       skeletons.forEach((skeleton) => skeleton.dispose());
     };
-  }, [agent.id, materials, mixer, model, positions]);
+  }, [agent.id, materials, mixer, model, positions, dressed]);
   useFrame((_, delta) => {
     if (!root.current) return;
-    motion.update(agent, delta, { reduced, playing, leaving, now: Date.now() });
+    motion.update(agent, delta, { reduced, playing, leaving, now: Date.now(), outings });
     root.current.position.fromArray(motion.position);
     root.current.rotation.y = motion.facing;
     positions.set(agent.id, worldPosition.copy(root.current.position));
@@ -202,6 +219,7 @@ function Resident({
       currentClip.current = name;
       if (reduced) mixer.update(0);
     }
+    if (active.current) active.current.timeScale = name === 'Walking' ? style.pace / 1.05 : 1;
     mixer.update(reduced || (!playing && !leaving) ? 0 : Math.min(delta, 0.05));
     if (motion.exited && !exited.current) {
       exited.current = true;
@@ -242,10 +260,12 @@ function ResidentSlot({
   desired,
   clips,
   positions,
+  traffic,
 }: {
   desired?: Agent;
   clips: THREE.AnimationClip[];
   positions: Positions;
+  traffic: NavigationTraffic;
 }) {
   const [occupant, setOccupant] = useState(desired);
   const latest = useRef(desired);
@@ -265,6 +285,7 @@ function ResidentSlot({
       onExit={() => setOccupant(latest.current)}
       clips={clips}
       positions={positions}
+      traffic={traffic}
     />
   );
 }
@@ -277,7 +298,7 @@ function WorldLabel({
   agent: Agent;
   selected: boolean;
   height: number;
-  motion: ResidentMotion;
+  motion: ResidentJourney;
 }) {
   const anchor = useRef<THREE.Group>(null);
   const element = useRef<HTMLButtonElement | null>(null);
@@ -312,6 +333,11 @@ function WorldLabel({
     const dot = document.createElement('i');
     dot.style.background = statusColors[agent.status];
     button.append(dot, document.createTextNode(agent.name));
+    if (selected) {
+      const activity = document.createElement('small');
+      activity.className = 'resident-location';
+      button.append(activity);
+    }
     if (agent.status === 'waiting' || agent.status === 'failed') {
       const alert = document.createElement('span');
       alert.textContent = '!';
@@ -322,6 +348,10 @@ function WorldLabel({
     if (!anchor.current || !element.current) return;
     element.current.dataset.behavior = motion.moving ? 'walking' : motion.clip(agent);
     element.current.dataset.seat = String(agent.seat);
+    element.current.dataset.destination = motion.activity;
+    const detail = element.current.querySelector('small');
+    if (detail && detail.textContent !== motion.activity) detail.textContent = motion.activity;
+    element.current.title = `${agent.name} — ${motion.activity} (visual activity)`;
     anchor.current.updateWorldMatrix(true, false);
     point.setFromMatrixPosition(anchor.current.matrixWorld).project(camera);
     element.current.style.visibility =
@@ -334,6 +364,7 @@ function Residents({ positions }: { positions: Positions }) {
   const { scene, animations } = useGLTF('/models/robot.glb');
   const clips = useMemo(() => createCharacterClips(scene, animations), [scene, animations]);
   const agents = useWorld((s) => s.agents);
+  const traffic = useMemo(() => new NavigationTraffic(), []);
   return (
     <>
       {Array.from({ length: 8 }, (_, i) => (
@@ -345,6 +376,7 @@ function Residents({ positions }: { positions: Positions }) {
           desired={agents.find((a) => a.seat === seat)}
           clips={clips}
           positions={positions}
+          traffic={traffic}
         />
       ))}
       {SEATS.map((_, seat) => {
@@ -418,7 +450,7 @@ function Camera({ positions }: { positions: Positions }) {
     const point = follow && followVisible ? positions.get(follow) : null;
     if (point) {
       targetLook.current.set(point.x, point.y + 1, point.z);
-      targetPos.current.set(point.x + 6, point.y + 5, point.z + 8);
+      targetPos.current.set(point.x + 5, point.y + 8.5, point.z + 7);
       zoom.current = Math.min(size.width / 10, size.height / 8);
       moving.current = true;
     }

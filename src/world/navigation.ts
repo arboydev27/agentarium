@@ -1,0 +1,167 @@
+import { routeForSeat, routeLengths, type Point } from './motion';
+
+export type Destination = {
+  id: string;
+  label: string;
+  node: string;
+  facing: number;
+  seated?: boolean;
+  clip: 'Rest' | 'BenchRest' | 'CafeBreak' | 'GardenLook';
+};
+export const DESTINATIONS: Destination[] = [
+  { id: 'coffee', label: 'café counter', node: 'coffee', facing: -Math.PI / 2, clip: 'CafeBreak' },
+  { id: 'window', label: 'café window', node: 'window', facing: Math.PI, clip: 'GardenLook' },
+  {
+    id: 'garden-west',
+    label: 'garden terrace',
+    node: 'garden-west',
+    facing: 0.4,
+    clip: 'GardenLook',
+  },
+  { id: 'garden-east', label: 'garden terrace', node: 'garden-east', facing: -0.4, clip: 'Rest' },
+  {
+    id: 'bench',
+    label: 'courtyard bench',
+    node: 'bench',
+    facing: Math.PI / 2,
+    seated: true,
+    clip: 'BenchRest',
+  },
+  { id: 'basin', label: 'courtyard basin', node: 'basin', facing: Math.PI / 2, clip: 'GardenLook' },
+  { id: 'studio-break', label: 'studio terrace', node: 'studio-break', facing: 0, clip: 'Rest' },
+  { id: 'promenade', label: 'tree-lined path', node: 'promenade', facing: 0, clip: 'GardenLook' },
+];
+// Authored walkable lanes, including elevation changes at stairs and floor edges.
+// Destinations are terminal branches so resting residents never occupy through routes.
+export const NODES: Record<string, Point> = {
+  west: [-6.8, 0.46, 0.85],
+  center: [0.1, 0.46, 0.85],
+  east: [6.8, 0.46, 0.85],
+  'cafe-step': [-6.8, 0.55, 0.65],
+  'cafe-door': [-6.8, 0.68, 0.25],
+  'cafe-aisle': [-6.8, 0.68, -5.35],
+  'coffee-approach': [-9.9, 0.68, -5.35],
+  coffee: [-9.9, 0.68, -6.15],
+  'window-approach': [-2.4, 0.68, -5.35],
+  window: [-2.4, 0.68, -5.5],
+  'studio-step0': [6.8, 0.46, 0],
+  'studio-step1': [6.8, 0.605, -0.35],
+  'studio-step2': [6.8, 0.785, -0.71],
+  'studio-step3': [6.8, 0.965, -1.07],
+  'studio-door': [6.8, 1.1, -1.45],
+  'studio-aisle': [6.8, 1.1, -6.8],
+  'studio-break-approach': [3, 1.1, -1.45],
+  'studio-break': [3, 1.1, -2.2],
+  'garden-door': [6.8, 0.55, 1.2],
+  'garden-aisle': [6.8, 0.55, 2.4],
+  'garden-front': [6.8, 0.55, 6.9],
+  'garden-west': [4, 0.55, 7.5],
+  'garden-east': [8.5, 0.55, 7.5],
+  'court-door': [-6.8, 0.49, 2.2],
+  'court-aisle': [-6.2, 0.49, 3.15],
+  'bench-approach': [-9.4, 0.49, 3.4],
+  bench: [-10.33, 0.49, 3.4],
+  'court-front': [-6.2, 0.49, 7.7],
+  basin: [-3.7, 0.49, 7.7],
+  promenade: [0.1, 0.46, 8],
+};
+const chains = [
+  ['west', 'center', 'east'],
+  ['west', 'cafe-step', 'cafe-door', 'cafe-aisle'],
+  ['cafe-aisle', 'coffee-approach', 'coffee'],
+  ['cafe-aisle', 'window-approach', 'window'],
+  [
+    'east',
+    'studio-step0',
+    'studio-step1',
+    'studio-step2',
+    'studio-step3',
+    'studio-door',
+    'studio-aisle',
+  ],
+  ['studio-door', 'studio-break-approach', 'studio-break'],
+  ['east', 'garden-door', 'garden-aisle', 'garden-front'],
+  ['garden-front', 'garden-west'],
+  ['garden-front', 'garden-east'],
+  ['west', 'court-door', 'court-aisle', 'court-front', 'basin'],
+  ['court-aisle', 'bench-approach', 'bench'],
+  ['center', 'promenade'],
+];
+for (let seat = 0; seat < 8; seat++) {
+  const p = routeForSeat(seat)[1];
+  NODES[`home-${seat}`] = p;
+  const laneZ = seat < 2 ? -5.35 : seat < 4 ? 2.4 : seat < 6 ? -6.8 : 3.15;
+  NODES[`join-${seat}`] = [p[0], p[1], laneZ];
+  const hub =
+    seat < 2 ? 'cafe-aisle' : seat < 4 ? 'garden-aisle' : seat < 6 ? 'studio-aisle' : 'court-aisle';
+  chains.push([`home-${seat}`, `join-${seat}`, hub]);
+}
+export const EDGES = chains.flatMap((chain) =>
+  chain.slice(1).map((id, i) => [chain[i], id] as const),
+);
+export function planRoute(start: string, end: string) {
+  if (!NODES[start] || !NODES[end]) throw new Error('Unknown navigation node');
+  const distances = new Map([[start, 0]]),
+    previous = new Map<string, string>();
+  const pending = new Set(Object.keys(NODES));
+  while (pending.size) {
+    const current = [...pending].reduce((a, b) =>
+      (distances.get(a) ?? Infinity) < (distances.get(b) ?? Infinity) ? a : b,
+    );
+    if (!Number.isFinite(distances.get(current))) break;
+    pending.delete(current);
+    if (current === end) break;
+    for (const edge of EDGES) {
+      const next = edge[0] === current ? edge[1] : edge[1] === current ? edge[0] : null;
+      if (!next || !pending.has(next)) continue;
+      const cost =
+        distances.get(current)! + Math.hypot(...NODES[next].map((v, i) => v - NODES[current][i]));
+      if (cost < (distances.get(next) ?? Infinity)) {
+        distances.set(next, cost);
+        previous.set(next, current);
+      }
+    }
+  }
+  if (!distances.has(end)) throw new Error('Unreachable navigation destination');
+  const ids = [end];
+  while (ids[0] !== start) ids.unshift(previous.get(ids[0])!);
+  const points = ids.map((id) => NODES[id]);
+  return { ids, points, lengths: routeLengths(points) };
+}
+
+// Atomic corridor reservations avoid two travelers meeting head-on or deadlocking
+// while each holds a different segment. Disjoint corridors can run concurrently.
+export class NavigationTraffic {
+  private corridors = new Map<string, Set<string>>();
+  private destinations = new Map<string, string>();
+  private returning = new Map<string, Set<string>>();
+  reserveDestination(owner: string, destination: string) {
+    const held = this.destinations.get(destination);
+    if (held && held !== owner) return false;
+    this.destinations.set(destination, owner);
+    return true;
+  }
+  acquire(owner: string, ids: string[], priority = false) {
+    const wanted = new Set(ids);
+    if (priority) this.returning.set(owner, wanted);
+    if (!priority)
+      for (const [other, waiting] of this.returning) {
+        if (owner !== other && ids.some((id) => waiting.has(id))) return false;
+      }
+    for (const [other, held] of this.corridors) {
+      if (owner !== other && ids.some((id) => held.has(id))) return false;
+    }
+    this.returning.delete(owner);
+    this.corridors.set(owner, wanted);
+    return true;
+  }
+  releaseCorridor(owner: string) {
+    this.corridors.delete(owner);
+  }
+  release(owner: string) {
+    this.releaseCorridor(owner);
+    this.returning.delete(owner);
+    for (const [destination, held] of this.destinations)
+      if (held === owner) this.destinations.delete(destination);
+  }
+}

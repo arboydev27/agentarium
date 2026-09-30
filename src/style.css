@@ -1683,3 +1683,15 @@ h1 span {
     padding: 10px 12px;
   }
 }
+
+.world-label .resident-location {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  font-size: 9px;
+  font-weight: 400;
+  color: #53664a;
+  border-left: 1px solid #a9b59a;
+  padding-left: 6px;
+}
