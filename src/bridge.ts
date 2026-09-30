@@ -41,6 +41,9 @@ function open() {
         attempt = 0;
         useWorld.getState().hydrate(data.agents);
         useWorld.setState({
+          bridgeId: typeof data.bridgeId === 'string' ? data.bridgeId : null,
+          richContext: data.capabilities?.richContext === true,
+          historySupported: data.capabilities?.history === true,
           discoverySupported: data.discoverySupported === true,
           discoveryProviders: data.providers || [],
         });
@@ -82,4 +85,24 @@ export function configureDiscovery(providers: string[]) {
   if (!useWorld.getState().discoverySupported)
     throw new Error('Restart npm run bridge to enable local discovery.');
   socket.send(JSON.stringify({ type: 'discover', providers }));
+}
+
+export async function fetchHistory(after: number, until?: number, signal?: AbortSignal) {
+  if (!current || useWorld.getState().bridgeStatus !== 'connected')
+    throw new Error('Connect the bridge to load the recap.');
+  const connection = current;
+  const url = new URL('/history', connection.url);
+  url.protocol = url.protocol === 'wss:' ? 'https:' : 'http:';
+  url.searchParams.set('after', String(after));
+  if (until !== undefined) url.searchParams.set('until', String(until));
+  const response = await fetch(url, {
+    headers: { Authorization: 'Bearer ' + connection.token },
+    signal,
+  });
+  if (!response.ok)
+    throw new Error('Could not load history. Reconnect or check the bridge version.');
+  const page = await response.json();
+  if (current !== connection || page.bridgeId !== useWorld.getState().bridgeId)
+    throw new Error('The bridge changed. Refresh the recap.');
+  return page;
 }

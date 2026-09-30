@@ -1,3 +1,4 @@
+import { attentionFor } from './shared/work.mjs';
 import { sessionKey } from './shared/live.mjs';
 export { sessionKey } from './shared/live.mjs';
 import type { Agent } from './state';
@@ -23,7 +24,7 @@ export function summarizeSessions(agents: Agent[]) {
       label: `${agent.provider} · ${agentSessionId(agent)}`,
     };
     session.count++;
-    if (agent.status === 'waiting' || agent.status === 'failed') session.needsAttention++;
+    if (attentionFor(agent)) session.needsAttention++;
     sessions.set(id, session);
   }
   return [...sessions.values()];
@@ -34,7 +35,7 @@ export function filterResidents(agents: Agent[], hidden: string[], view: Session
   const hiddenKeys = new Set(hidden);
   return agents.filter((agent) => {
     if (filter && sessionKey(agent) !== filter) return false;
-    if (view === 'attention') return agent.status === 'waiting' || agent.status === 'failed';
+    if (view === 'attention') return !!attentionFor(agent);
     return hiddenKeys.has(sessionKey(agent)) === (view === 'hidden');
   });
 }

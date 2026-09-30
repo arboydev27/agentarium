@@ -59,3 +59,9 @@ Include Node version, browser, operating system, provider version when relevant,
 Restart the bridge after upgrading, reconnect, and enable a reader. A connected bridge alone does not enable discovery. Cards distinguish missing history, empty storage, format/read errors, and successful scans. CLI histories are separate from Claude/Gemini web histories. Check the provider home directory in the bridge environment. See [Local session discovery](local-discovery.md).
 
 Claude/Gemini discovery supplies existence and recency; add hooks for activity. Codex working/tool observations expire after two minutes without supporting records. Hook/proxy event counters do not include history scans.
+
+## Task details or recap are missing
+
+Restart the bridge and reconnect to load its new capabilities. An older bridge can still supply status while lacking durable recap or stable acknowledgement scope. Recap only contains meaningful telemetry accepted after the upgrade; local discovery scans and events lost during downtime are not included.
+
+Built-in adapters still omit request bodies, outcomes, and source links. Enabling `GROVE_RICH_CONTEXT=1` allows an explicitly configured producer to send these optional fields; it does not enrich existing adapters automatically. Without a source link, use Copy session ID. “Marked seen” is local acknowledgement, not provider resolution. See [Real-work attention and recap](real-work.md).

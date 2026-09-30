@@ -1573,7 +1573,7 @@ h1 span {
 }
 .live-panel .inspector {
   overflow-y: auto;
-  max-height: min(38dvh, 340px);
+  max-height: min(52dvh, 490px);
   min-height: 100px;
   flex-shrink: 1;
 }
@@ -1694,4 +1694,94 @@ h1 span {
   color: #53664a;
   border-left: 1px solid #a9b59a;
   padding-left: 6px;
+}
+
+.task-brief {
+  margin: 14px 0;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.task-brief h4 {
+  margin: 0 0 7px;
+  font-size: 12px;
+}
+.task-brief dl {
+  display: grid;
+  grid-template-columns: 80px minmax(0, 1fr);
+  gap: 6px 10px;
+}
+.task-brief dt,
+.context-note {
+  color: #526747;
+}
+.task-brief dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.task-brief p {
+  margin: 6px 0;
+  overflow-wrap: anywhere;
+}
+.attention-card,
+.result-card {
+  padding: 12px;
+  margin: 12px 0;
+  border: 1px solid #b99b6355;
+  border-radius: 10px;
+  background: #b99b6310;
+}
+.attention-card small {
+  display: block;
+}
+.task-brief a {
+  color: #35572a;
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+.session-filter input {
+  width: 100%;
+  min-width: 0;
+  padding: 8px;
+  color: inherit;
+  background: #fffefa;
+  border: 1px solid #ccd9bd;
+  border-radius: 6px;
+}
+.task-brief button:disabled {
+  opacity: 0.65;
+}
+.recap {
+  padding: 14px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.recap h3 {
+  margin: 0 0 8px;
+}
+.recap-item {
+  padding: 12px 0;
+  border-bottom: 1px solid #ccd9bd;
+  overflow-wrap: anywhere;
+}
+.recap-item small {
+  display: block;
+  opacity: 0.7;
+}
+.recap button {
+  padding: 7px 10px;
+  border: 1px solid #ccd9bd;
+  border-radius: 6px;
+  background: #fffefa;
+  color: inherit;
+  margin: 5px 6px 5px 0;
+  cursor: pointer;
+}
+.recap button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.recap a {
+  display: inline-block;
+  color: #35572a;
+  margin: 5px;
 }

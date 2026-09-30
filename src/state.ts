@@ -7,7 +7,25 @@ export { reduceAgentEvent } from './shared/protocol.mjs';
 export type Status =
   'idle' | 'working' | 'tool' | 'waiting' | 'completed' | 'failed' | 'disconnected' | 'unknown';
 export type Provider = 'Codex' | 'Claude' | 'Gemini' | 'Custom';
+export type AttentionItem = {
+  id: string;
+  kind: 'waiting' | 'input' | 'approval' | 'failure';
+  since: number;
+  updatedAt: number;
+  requestId?: string;
+  message?: string;
+};
+export type WorkContext = {
+  objective?: string;
+  activity?: string;
+  runId?: string;
+  sourceUrl?: string;
+  request?: { id: string; kind: 'input' | 'approval'; message?: string };
+  result?: { summary: string; url?: string };
+};
 export type Agent = {
+  work?: WorkContext;
+  attention?: AttentionItem;
   id: string;
   sessionId?: string;
   agentId?: string;
@@ -28,6 +46,7 @@ export type Agent = {
   source: 'demo' | 'live';
 };
 export type AgentEvent = {
+  work?: WorkContext;
   id: string;
   agentId: string;
   sessionId: string;
@@ -98,6 +117,11 @@ export type DiscoveryProvider = {
 };
 const saved = loadPreferences();
 type State = {
+  bridgeId: string | null;
+  richContext: boolean;
+  historySupported: boolean;
+  seating: 'recent' | 'attention';
+  setSeating: (mode: 'recent' | 'attention') => void;
   sessionPreferences: SessionPreferences;
   preferenceError: string | null;
   changeSession: (key: string, action: 'pin' | 'unpin' | 'hide' | 'restore') => string | null;
@@ -137,6 +161,21 @@ type State = {
   switchMode: (m: 'demo' | 'live') => void;
 };
 export const useWorld = create<State>((set, get) => ({
+  bridgeId: null,
+  richContext: false,
+  historySupported: false,
+  seating: 'recent',
+  setSeating: (seating) =>
+    set((s) => ({
+      seating,
+      agents:
+        s.mode === 'live'
+          ? seatLatestSessions(s.agents, s.agents, {
+              ...s.sessionPreferences,
+              attentionFirst: seating === 'attention',
+            })
+          : s.agents,
+    })),
   sessionPreferences: saved.preferences,
   preferenceError: saved.error,
   changeSession: (key, action) => {
@@ -163,7 +202,10 @@ export const useWorld = create<State>((set, get) => ({
     set({
       sessionPreferences: preferences,
       preferenceError: savePreferences(preferences),
-      agents: seatLatestSessions(s.agents, s.agents, preferences),
+      agents: seatLatestSessions(s.agents, s.agents, {
+        ...preferences,
+        attentionFirst: s.seating === 'attention',
+      }),
       selected:
         action === 'hide' && s.agents.some((a) => a.id === s.selected && sessionKey(a) === key)
           ? null
@@ -273,6 +315,9 @@ export const useWorld = create<State>((set, get) => ({
   reset: () =>
     set({
       agents: initialAgents(),
+      bridgeId: null,
+      richContext: false,
+      historySupported: false,
       selected: null,
       events: [],
       mode: 'demo',
@@ -323,7 +368,10 @@ export const useWorld = create<State>((set, get) => ({
     seen.add(e.id);
     if (seen.size > 3000) seen.delete(seen.values().next().value!);
     set({
-      agents: seatLatestSessions(next, s.agents, s.sessionPreferences),
+      agents: seatLatestSessions(next, s.agents, {
+        ...s.sessionPreferences,
+        attentionFirst: s.seating === 'attention',
+      }),
       receivedEvents: s.receivedEvents + 1,
       lastReceivedAt: Date.now(),
       receivedProviders: [
@@ -350,11 +398,10 @@ export const useWorld = create<State>((set, get) => ({
   },
   hydrate: (agents) =>
     set({
-      agents: seatLatestSessions(
-        agents.map(normalizeAgent),
-        get().agents,
-        get().sessionPreferences,
-      ),
+      agents: seatLatestSessions(agents.map(normalizeAgent), get().agents, {
+        ...get().sessionPreferences,
+        attentionFirst: get().seating === 'attention',
+      }),
       bridgeStatus: 'connected',
       bridgeError: null,
       receivedEvents: 0,
@@ -366,12 +413,18 @@ export const useWorld = create<State>((set, get) => ({
   syncSessions: (agents) => {
     const s = get();
     if (s.mode !== 'live') return;
-    const next = seatLatestSessions(agents.map(normalizeAgent), s.agents, s.sessionPreferences);
+    const next = seatLatestSessions(agents.map(normalizeAgent), s.agents, {
+      ...s.sessionPreferences,
+      attentionFirst: s.seating === 'attention',
+    });
     set({ agents: next, selected: next.some((a) => a.id === s.selected) ? s.selected : null });
   },
   switchMode: (mode) =>
     set({
       mode,
+      bridgeId: null,
+      richContext: false,
+      historySupported: false,
       followAgent: null,
       agents: mode === 'demo' ? initialAgents() : [],
       selected: null,

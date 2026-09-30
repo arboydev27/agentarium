@@ -107,9 +107,9 @@ The browser retries closed connections after 1, 2, 4, 8, 16, then at most 30 sec
 
 ## Storage and delivery guarantees
 
-SQLite uses WAL mode and two tables: `events` (ID, agent ID, sequence, JSON payload) and `agents` (composite ID and JSON snapshot). Accepted updates are transactional. The event table retains the newest 10,000 rows; agent snapshots retain current sequence values independently of event pruning.
+SQLite uses WAL mode. Its original tables are `events` (ID, agent ID, sequence, JSON payload) and `agents` (composite ID and JSON snapshot). Accepted updates are transactional. The event table retains the newest 10,000 rows; agent snapshots retain current sequence values independently of event pruning.
 
-There is no history/replay HTTP endpoint, migration framework, or resident deletion API. Snapshots recover current state after reconnect, but do not rebuild the browser activity feed. Producer delivery has a two-second timeout and no retry queue, so telemetry can be lost while the bridge is unavailable. This is an observational prototype, not an exactly-once delivery system.
+An authenticated meaningful-history endpoint and versioned schema initialization are now available (see below); there is no resident deletion API. Snapshots recover current state after reconnect but do not rebuild the ephemeral activity feed. The separate Recap view reads durable history. Producer delivery has a two-second timeout and no retry queue, so telemetry can be lost while the bridge is unavailable. This is an observational prototype, not an exactly-once delivery system.
 
 Built-in adapters forward selected lifecycle metadata and tool names. Custom producers can supply arbitrary allowed text, which is stored locally; keep secrets and unnecessary task content out of events. Do not expose this loopback service as a public multi-user backend without a separate security design.
 
@@ -122,3 +122,31 @@ Scanning emits `{"type":"sessions","agents":[...],"providers":[...]}`. This is a
 Identities use the JSON-encoded tuple `[provider, sessionId, agentId]`; omitted event providers mean Custom. Existing bridge-owned keys are upgraded transactionally at startup. Discovered records are memory-only and have `evidence: "history"`, optional `observedAt`, and sequence -1 when no telemetry exists. Submitted events still require a nonnegative sequence. See [Local session discovery](local-discovery.md).
 
 Restored telemetry records preserve their last status and include `telemetryStale: true` after a bridge restart. A newer accepted event clears the flag. Browser transport disconnection does not rewrite task statuses. Pin/hide preferences are local browser presentation choices and introduce no bridge commands.
+
+## Real-work context and history
+
+The updated snapshot advertises `protocolVersion: 2`, a persistent database `bridgeId`, and `capabilities: { attentionEpisodes: true, richContext: boolean, history: true }`. This is additive capability advertisement; legacy status-only producers and older snapshots still work. Reconnect after restarting an updated bridge to discover its capabilities.
+
+`GROVE_RICH_CONTEXT=1` enables optional event `work` metadata. It is off by default. An event with `work` is rejected with HTTP 400 while disabled; strip the field to send a status-only event. Existing adapters do not automatically emit it.
+
+```json
+{
+  "objective": "Prepare a product research brief",
+  "activity": "Waiting for the destination choice",
+  "runId": "run-1",
+  "sourceUrl": "https://example.com/session/123",
+  "request": {
+    "id": "question-1",
+    "kind": "input",
+    "message": "Where should the brief be delivered?"
+  }
+}
+```
+
+This is the `work` object, not a full event. Use real supported destinations rather than the illustrative URL. `objective` and `activity` allow 300 characters; `runId` and request IDs allow 200. Request kind is `input` or `approval`; message is optional, up to 1,000 characters. Requests require a waiting event. Completed/failed events may instead include `result: { summary, url? }`, with a required nonempty summary up to 1,000 characters. Links are limited to 2,048 characters, HTTPS only, with no username/password. Unknown work properties are dropped. Empty required strings, oversized fields, and incompatible status metadata are rejected.
+
+`GET /history?after=0&limit=50` requires the same bearer token and origin policy as events. The response contains `bridgeId`, `until`, `next`, `oldest`, `gap`, `hasMore`, and `items`. Each item has its monotonic `cursor`, event/agent/session identity, status, event time, bridge receipt time, task label, and supplied work/attention metadata. Subsequent pages pass `after=next&until=<original until>` to hold a fixed boundary while new events arrive. Limits are clamped to 1–100. Invalid/ahead-of-database cursors return 400. No credentials belong in query strings.
+
+The journal retains 10,000 meaningful records independently of the raw event log. It begins at upgrade, without replaying old events. Cursor gaps caused by pruning are explicit. New attention episodes, terminal transitions/runs, and reported unknown/disconnected transitions are recorded transactionally with the agent snapshot. Discovery scans and browser transport state are not journaled.
+
+SQLite `user_version` is now 2, with bridge-owned `metadata` and `history` tables created transactionally. Existing agent/event records retain identity and sequence. A newer unknown schema version is rejected. Bridge identity persists across restart and changes with a new database. Attention episodes are embedded in agent JSON snapshots and survive journal pruning. See [Real-work attention and recap](real-work.md) for acknowledgement, retention, and privacy limits.

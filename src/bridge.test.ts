@@ -85,3 +85,27 @@ describe('bridge connection lifecycle', () => {
     expect(FakeSocket.instances).toHaveLength(2);
   });
 });
+
+it('advertises work features per bridge and falls back when an old bridge reconnects', () => {
+  vi.stubGlobal('WebSocket', FakeSocket);
+  try {
+    connectBridge('ws://127.0.0.1:4318', 'token');
+    const ws = FakeSocket.instances.at(-1)!;
+    ws.message({
+      type: 'snapshot',
+      agents: [],
+      bridgeId: 'database-one',
+      protocolVersion: 2,
+      capabilities: { richContext: true, history: true },
+    });
+    expect(useWorld.getState().bridgeId).toBe('database-one');
+    expect(useWorld.getState().historySupported).toBe(true);
+    ws.message({ type: 'snapshot', agents: [] });
+    expect(useWorld.getState().bridgeId).toBeNull();
+    expect(useWorld.getState().richContext).toBe(false);
+    expect(useWorld.getState().historySupported).toBe(false);
+  } finally {
+    disconnectBridge();
+    vi.unstubAllGlobals();
+  }
+});

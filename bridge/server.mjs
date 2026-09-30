@@ -1,5 +1,6 @@
+import { createHistory } from './history.mjs';
 import http from 'node:http';
-import { randomBytes, timingSafeEqual } from 'node:crypto';
+import { randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { resolve, dirname } from 'node:path';
@@ -20,6 +21,7 @@ export function createBridge({
   dbPath = DEFAULT_DB_PATH,
   discover = createDiscovery(),
   discoveryInterval = 5000,
+  richContext = false,
   origins = [
     'http://127.0.0.1:5173',
     'http://localhost:5173',
@@ -32,6 +34,29 @@ export function createBridge({
   db.exec(
     'PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS events (id TEXT PRIMARY KEY, agent_id TEXT NOT NULL, sequence INTEGER NOT NULL, payload TEXT NOT NULL); CREATE TABLE IF NOT EXISTS agents (id TEXT PRIMARY KEY, payload TEXT NOT NULL);',
   );
+  const schemaVersion = db.prepare('PRAGMA user_version').get().user_version;
+  if (schemaVersion > 2) {
+    db.close();
+    throw new Error('Bridge database is newer than this version.');
+  }
+  db.exec('BEGIN');
+  try {
+    db.exec('CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL)');
+    db.prepare('INSERT OR IGNORE INTO metadata(key,value) VALUES (?,?)').run(
+      'bridgeId',
+      randomUUID(),
+    );
+    db.exec(
+      'CREATE TABLE IF NOT EXISTS history (cursor INTEGER PRIMARY KEY AUTOINCREMENT, payload TEXT NOT NULL)',
+    );
+    db.exec('PRAGMA user_version=2; COMMIT');
+  } catch (error) {
+    db.exec('ROLLBACK');
+    db.close();
+    throw error;
+  }
+  const bridgeId = db.prepare("SELECT value FROM metadata WHERE key='bridgeId'").get().value;
+  const history = createHistory(db, bridgeId);
   let agents = db
     .prepare('SELECT payload FROM agents')
     .all()
@@ -129,6 +154,17 @@ export function createBridge({
       res.end('Unauthorized');
       return;
     }
+    if (req.method === 'GET' && req.url?.split('?')[0] === '/history') {
+      try {
+        const page = history.page(new URL(req.url, 'http://localhost').searchParams);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(page));
+      } catch (error) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: error.message }));
+      }
+      return;
+    }
     if (req.method !== 'POST' || req.url !== '/events') {
       res.writeHead(404);
       res.end();
@@ -145,6 +181,16 @@ export function createBridge({
         }
       }
       const event = validateEvent(JSON.parse(body));
+      if (event.work && !richContext) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(
+          JSON.stringify({
+            error:
+              'Rich context is disabled. Enable GROVE_RICH_CONTEXT=1 or send status-only events.',
+          }),
+        );
+        return;
+      }
       if (hasEvent.get(event.id)) {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end('{"accepted":false,"reason":"duplicate"}');
@@ -173,6 +219,11 @@ export function createBridge({
           (a) => a.id === agentKey(event.provider, event.sessionId, event.agentId),
         );
         saveAgent.run(changed.id, JSON.stringify(changed));
+        history.record(
+          agents.find((a) => a.id === changed.id),
+          changed,
+          event,
+        );
         db.exec(
           'DELETE FROM events WHERE rowid NOT IN (SELECT rowid FROM events ORDER BY rowid DESC LIMIT 10000)',
         );
@@ -251,6 +302,9 @@ export function createBridge({
         ws.send(
           JSON.stringify({
             type: 'snapshot',
+            bridgeId,
+            protocolVersion: 2,
+            capabilities: { attentionEpisodes: true, richContext, history: true },
             agents: combined(),
             providers,
             discoverySupported: true,
@@ -302,6 +356,7 @@ export function createBridge({
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const bridge = createBridge({
     port: Number(process.env.GROVE_PORT || 4318),
+    richContext: process.env.GROVE_RICH_CONTEXT === '1',
     token: process.env.GROVE_TOKEN || undefined,
     dbPath: process.env.GROVE_DB || undefined,
     origins: process.env.GROVE_ORIGINS?.split(','),

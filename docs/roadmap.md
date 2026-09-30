@@ -4,6 +4,12 @@ This is a proposed development sequence, not a list of shipped features or sched
 
 The first local-discovery milestone is implemented: opt-in readers, provider diagnostics, provider-qualified identities, and stable latest-eight session seating. The session-control milestone adds browser-local pins, hide/restore, attention across all sessions, and transport/task-state separation. Broader integration hardening remains below.
 
+## Next product priority: real-work attention
+
+Prioritize the [real-work attention plan](real-work-plan.md) before further major map expansion. Build on the existing all-session list, attention filter, pins/hiding, and diagnostics: establish richer trustworthy evidence, ship task briefs and actionable attention, then add completion handoffs and a durable away recap. The first implementation now includes task briefs, persisted attention episodes, attention-first views, and a bounded telemetry recap; see [current behavior and limits](real-work.md). Real provider capture and validation remain required. Its phased acceptance gates define the implementation sequence; the numbered areas below remain supporting work and longer-term directions.
+
+The [desktop companion plan](companion-product-plan.md) belongs to a separate future project. It is documented here for reuse, not part of Agentarium’s implementation scope or desktop packaging milestone.
+
 ## 1. Validate real provider integrations
 
 Run controlled sessions against selected Claude Code, Gemini CLI, and Codex App Server versions. Record the version, emitted payload shapes, attribution behavior, and supported lifecycle events. Add regression fixtures from sanitized payloads.
@@ -12,7 +18,7 @@ Acceptance: each supported integration has a documented setup tested end to end,
 
 ## 2. Strengthen session and delivery management
 
-Design resident/session cleanup, sequence continuity, bounded delivery queues, and retry semantics. Transport disconnection now preserves last reported state; further provider-level freshness policies remain. Add deliberate SQLite schema/version migration handling before evolving persisted records.
+Design resident/session cleanup, sequence continuity, bounded delivery queues, and retry semantics. Transport disconnection now preserves last reported state; further provider-level freshness policies remain. The real-work milestone adds versioned bridge schema initialization; continue testing future migrations before evolving persisted records.
 
 Acceptance: independent sessions cannot accidentally overwrite one another, abandoned residents can be managed without deleting a database, and downtime behavior is both testable and visible to users.
 
@@ -42,6 +48,6 @@ Acceptance: a new user can install, connect, diagnose, and update the app withou
 
 ## Current non-goals and gaps
 
-There is no real-task launcher, provider billing dashboard, multi-user authorization system, public bridge deployment, history API, automated settings installer, desktop package, or continuous-integration workflow. Session pin/hide preferences are persisted locally; visual preferences remain temporary. Asset and bundle performance have no formal budget yet.
+There is no real-task launcher, provider billing dashboard, multi-user authorization system, public bridge deployment, full provider-history browser, automated settings installer, desktop package, or continuous-integration workflow. Session pin/hide preferences are persisted locally; visual preferences remain temporary. Asset and bundle performance have no formal budget yet.
 
 The original cinematic-world vision will require substantial art direction, assets, animation work, and profiling in addition to application code. The existing architecture provides a place to connect that work to observable agent state.

@@ -1,3 +1,4 @@
+import { validateWork, workUpdate } from './work.mjs';
 export const STATUSES = [
   'idle',
   'working',
@@ -57,6 +58,13 @@ export function validateEvent(input) {
     'parentId',
   ])
     if (input[key] !== undefined) clean[key] = input[key];
+  if (input.work !== undefined) {
+    clean.work = validateWork(input.work);
+    if (clean.work.request && input.type !== 'waiting')
+      throw new Error('Requests require waiting status');
+    if (clean.work.result && !['completed', 'failed'].includes(input.type))
+      throw new Error('Results require completed or failed status');
+  }
   return clean;
 }
 export function agentKey(provider, sessionId, agentId) {
@@ -89,6 +97,7 @@ export function reduceAgentEvent(agents, event) {
     return [
       ...agents,
       {
+        ...workUpdate(undefined, event),
         id: key,
         sessionId: event.sessionId,
         agentId: event.agentId,
@@ -115,6 +124,7 @@ export function reduceAgentEvent(agents, event) {
     a.id === key
       ? {
           ...a,
+          ...workUpdate(a, event),
           sessionId: event.sessionId,
           status: event.type,
           evidence: 'event',

@@ -22,7 +22,7 @@ The session dropdown and Show residents filter affect the list only. They do not
 
 The **need attention · View all** button remains available when the resident panel is collapsed. It clears the session filter and opens all waiting/failed residents, including hidden sessions, subagents, and sessions outside the grove. Inspect them and optionally restore or pin their session. These are last reported states, not a separate confirmation that a provider is currently awaiting input.
 
-The attention view does not automatically displace pinned sessions or modify saved choices. Completion or a later accepted status removes a resident from attention. There are no desktop notifications or provider-control actions.
+The attention view does not automatically displace pinned sessions or modify saved choices. Completion or later accepted progress/idle evidence resolves an episode; unknown/disconnected evidence preserves earlier unresolved attention. There are no desktop notifications or provider-control actions.
 
 ## Saved choices
 
@@ -45,3 +45,7 @@ On a bridge restart, persisted telemetry preserves its last status and carries `
 - `src/SessionControls.tsx`: inspector controls and saved-choice manager.
 - `src/sessions.ts`: normal/hidden/attention filtering.
 - `src/preferences.test.ts`, `src/bridge.test.ts`, and bridge integration tests: pin capacity, new arrivals, child hiding, restoration, reload persistence, storage errors, simulation isolation, disconnects, and restart evidence.
+
+## Real-work controls
+
+Task briefs, search, list ordering, optional attention-first seating, local seen acknowledgements, and durable Recap are described in [Real-work attention and recap](real-work.md). The default remains pins followed by recent sessions. Attention-first seating is opt-in and never overrides pins or hiding. The list remains available beyond the world's eight seats.

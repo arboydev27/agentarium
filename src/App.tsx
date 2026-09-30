@@ -1,3 +1,6 @@
+import { Recap } from './Recap';
+import { TaskBrief, attentionMessage } from './TaskBrief';
+import { attentionFor } from './shared/work.mjs';
 import { Component, lazy, Suspense, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import {
@@ -170,13 +173,35 @@ export default function App() {
   const preferenceError = useWorld((s) => s.preferenceError);
   const [sessionView, setSessionView] = useState<SessionView>('visible');
   const [sessionFilter, setSessionFilter] = useState('');
+  const [taskSearch, setTaskSearch] = useState('');
+  const [taskOrder, setTaskOrder] = useState<'recent' | 'attention'>('recent');
+  const seating = useWorld((s) => s.seating);
+  const bridgeId = useWorld((s) => s.bridgeId);
   const sessions = mode === 'live' ? summarizeSessions(agents) : [];
   const activeSession = sessions.some((s) => s.id === sessionFilter) ? sessionFilter : '';
   const listedAgents =
     mode === 'live'
       ? filterResidents(agents, preferences.hidden, sessionView, activeSession)
+          .filter((a) =>
+            [
+              a.name,
+              a.provider,
+              a.sessionId,
+              a.task,
+              a.work?.objective,
+              attentionFor(a)?.message,
+            ].some((text) => text?.toLowerCase().includes(taskSearch.trim().toLowerCase())),
+          )
+          .sort(
+            (a, b) =>
+              (taskOrder === 'attention'
+                ? Number(!!attentionFor(b)) - Number(!!attentionFor(a))
+                : 0) ||
+              b.updatedAt - a.updatedAt ||
+              a.id.localeCompare(b.id),
+          )
       : agents;
-  const [tab, setTab] = useState<'residents' | 'activity'>('residents');
+  const [tab, setTab] = useState<'residents' | 'activity' | 'recap'>('residents');
   const [modal, setModal] = useState<'settings' | 'connections' | 'help' | 'sessions' | null>(null);
   const [collapsed, setCollapsed] = useState(() => window.innerWidth < 801);
   const [toast, setToast] = useState('');
@@ -187,7 +212,7 @@ export default function App() {
   const chosen = agents.find((a) => a.id === selected);
   const set = useWorld((s) => s.set);
   const busy = agents.filter((a) => a.status === 'working' || a.status === 'tool').length;
-  const waiting = agents.filter((a) => a.status === 'waiting' || a.status === 'failed').length;
+  const waiting = agents.filter((a) => attentionFor(a)).length;
   const idle = agents.filter((a) => a.status === 'idle' || a.status === 'completed').length;
   useEffect(() => {
     const t = setInterval(() => useWorld.getState().tick(), 6500 / speed);
@@ -440,6 +465,17 @@ export default function App() {
             >
               <Activity size={17} />
             </button>
+            {mode === 'live' && (
+              <button
+                className={tab === 'recap' ? 'active' : ''}
+                onClick={() => {
+                  setTab('recap');
+                  setCollapsed(false);
+                }}
+              >
+                Recap
+              </button>
+            )}
           </div>
           <button
             className="icon-button small"
@@ -456,6 +492,7 @@ export default function App() {
               setTab('residents');
               setCollapsed(false);
               setSessionView('attention');
+              setTaskSearch('');
               setSessionFilter('');
             }}
           >
@@ -476,6 +513,41 @@ export default function App() {
                   {mode === 'live' && (
                     <div className="session-tools">
                       <label className="session-filter">
+                        Search tasks
+                        <input
+                          type="search"
+                          value={taskSearch}
+                          onChange={(e) => setTaskSearch(e.target.value)}
+                          placeholder="Title, provider, session, or request"
+                        />
+                      </label>
+                      <label className="session-filter">
+                        List order
+                        <select
+                          value={taskOrder}
+                          onChange={(e) => setTaskOrder(e.target.value as 'recent' | 'attention')}
+                        >
+                          <option value="recent">Latest activity</option>
+                          <option value="attention">Attention first</option>
+                        </select>
+                      </label>
+                      <label className="session-filter">
+                        World seating
+                        <select
+                          value={seating}
+                          onChange={(e) =>
+                            useWorld.getState().setSeating(e.target.value as 'recent' | 'attention')
+                          }
+                        >
+                          <option value="recent">Pins, then latest eight</option>
+                          <option value="attention">Pins, then attention first</option>
+                        </select>
+                        <small>
+                          {agents.filter((a) => attentionFor(a) && a.seat >= 8).length} attention
+                          items outside the world. Pins and hidden choices are preserved.
+                        </small>
+                      </label>
+                      <label className="session-filter">
                         Show residents
                         <select
                           value={sessionView}
@@ -485,7 +557,7 @@ export default function App() {
                             useWorld.getState().select(null);
                           }}
                         >
-                          <option value="visible">Visible sessions</option>
+                          <option value="visible">All non-hidden sessions</option>
                           <option value="attention">Needs attention (includes hidden)</option>
                           <option value="hidden">Hidden sessions</option>
                         </select>
@@ -500,7 +572,7 @@ export default function App() {
                       )}
                       {sessionView === 'attention' && (
                         <small>
-                          Waiting and failed residents across every session, including hidden
+                          Unresolved reported attention across every session, including hidden
                           sessions and those outside the grove.
                         </small>
                       )}
@@ -526,8 +598,8 @@ export default function App() {
                         ))}
                       </select>
                       <small>
-                        Pins take priority in the eight seats; recent sessions fill the rest. These
-                        filters change the list only.
+                        Pins take priority in the eight seats; the seating choice fills the rest.
+                        These filters change the list only.
                       </small>
                     </label>
                   )}
@@ -551,7 +623,7 @@ export default function App() {
                   ) : listedAgents.length === 0 ? (
                     <p className="empty-filter">
                       {sessionView === 'attention'
-                        ? 'No waiting or failed residents in this view.'
+                        ? 'No attention items match this view.'
                         : sessionView === 'hidden'
                           ? 'No hidden residents in this snapshot.'
                           : 'No residents match this view. Restore hidden sessions in Manage sessions.'}
@@ -561,6 +633,7 @@ export default function App() {
                       <button
                         key={agent.id}
                         className={'resident-row ' + (selected === agent.id ? 'selected' : '')}
+                        title={attentionFor(agent) ? attentionMessage(agent) : agent.task}
                         onClick={() =>
                           useWorld.getState().select(selected === agent.id ? null : agent.id)
                         }
@@ -605,6 +678,8 @@ export default function App() {
                     ))
                   )}
                 </>
+              ) : tab === 'recap' && mode === 'live' ? (
+                <Recap key={bridgeId || 'legacy'} />
               ) : (
                 <div className="activity-list">
                   <div className="list-caption">AROUND THE GROVE</div>
@@ -664,7 +739,7 @@ export default function App() {
                     {followAgent === chosen.id ? 'Stop following' : 'Follow resident'}
                   </button>
                 )}
-                <h3>{chosen.task}</h3>
+                <h3>{chosen.work?.objective || chosen.task}</h3>
                 <div className="task-meta">
                   <span>
                     <Coffee size={13} />
@@ -676,6 +751,9 @@ export default function App() {
                 </div>
                 {mode === 'live' && (
                   <p className="parent-note session-id">Session: {agentSessionId(chosen)}</p>
+                )}
+                {mode === 'live' && (
+                  <TaskBrief key={`${bridgeId}:${chosen.id}`} agent={chosen} notify={setToast} />
                 )}
                 {chosen.parentId && (
                   <p className="parent-note">
@@ -879,6 +957,7 @@ export default function App() {
                 setCollapsed(false);
                 setTab('residents');
                 setSessionView('attention');
+                setTaskSearch('');
                 setSessionFilter('');
               }}
             >
@@ -1039,6 +1118,8 @@ function Connections({ notify }: { notify: (s: string) => void }) {
   const residentCount = useWorld((s) => s.agents.length);
   const discoveryProviders = useWorld((s) => s.discoveryProviders);
   const discoverySupported = useWorld((s) => s.discoverySupported);
+  const richContext = useWorld((s) => s.richContext);
+  const historySupported = useWorld((s) => s.historySupported);
   const toggleDiscovery = async (providerName: string) => {
     setError('');
     try {
@@ -1107,6 +1188,28 @@ function Connections({ notify }: { notify: (s: string) => void }) {
           </p>
         )}
       </section>
+      {status === 'connected' && (
+        <section className="connection-diagnostics" aria-label="Observation capabilities">
+          <strong>What this connection can report</strong>
+          <p>
+            Durable event recap: {historySupported ? 'available' : 'restart an updated bridge'}.
+          </p>
+          <p>
+            Optional request text, objectives, results, and HTTPS links:{' '}
+            {richContext ? 'enabled for configured producers' : 'disabled'}.
+          </p>
+          <p>
+            Built-in hooks and the proxy report lifecycle status, not request bodies or output
+            summaries. Local readers show history evidence; Claude and Gemini discovery alone cannot
+            confirm running work.
+          </p>
+          <p>
+            Source navigation is available only when a producer supplies a link. Provider
+            compatibility is fixture-tested; the installed provider version still needs an
+            end-to-end check.
+          </p>
+        </section>
+      )}
       <div className="connection-steps">
         <h3>1. Connect your local bridge</h3>
         <p>

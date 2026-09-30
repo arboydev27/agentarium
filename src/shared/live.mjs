@@ -1,3 +1,4 @@
+import { attentionFor } from './work.mjs';
 const zones = ['Café', 'Café', 'Garden', 'Garden', 'Studio', 'Studio', 'Courtyard', 'Courtyard'];
 export function sessionKey(agent) {
   return JSON.stringify([agent.provider, agent.sessionId]);
@@ -12,6 +13,13 @@ export function mergeSessions(telemetry, discovered) {
         found.updatedAt > old.updatedAt && (found.observedAt || 0) > (old.observedAt || 0);
       records.set(found.id, {
         ...(preferHistory ? found : old),
+        attention:
+          preferHistory && !['unknown', 'disconnected'].includes(found.status)
+            ? attentionFor(found)
+            : attentionFor(old),
+        work: preferHistory
+          ? { objective: old.work?.objective, sourceUrl: old.work?.sourceUrl }
+          : old.work,
         name: found.name,
         color: found.color,
         updatedAt: Math.max(found.updatedAt, old.updatedAt),
@@ -39,6 +47,9 @@ export function seatLatestSessions(agents, previous = [], preferences = {}) {
     .sort(
       (a, b) =>
         Number(pinned.has(b.key)) - Number(pinned.has(a.key)) ||
+        (preferences.attentionFirst
+          ? Number(b.members.some(attentionFor)) - Number(a.members.some(attentionFor))
+          : 0) ||
         b.updatedAt - a.updatedAt ||
         a.key.localeCompare(b.key),
     )

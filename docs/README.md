@@ -2,7 +2,7 @@
 
 Agentarium is the repository; **Agent Grove** is the product name shown in the application. It visualizes agent activity as residents in a 3D world. The browser starts with simulated activity. Real activity requires the separate local bridge and a configured telemetry adapter.
 
-These documents describe the implementation as of September 28, 2026. Source files linked throughout are the authority when behavior changes.
+Implementation guides describe the current code; planning documents are explicitly marked as proposed. The product plans were added September 29, 2026. Source files linked throughout are the authority when behavior changes.
 
 ## Reading guide
 
@@ -23,6 +23,15 @@ These documents describe the implementation as of September 28, 2026. Source fil
 | [Roadmap](roadmap.md)                                  | Current limitations and proposed next milestones                                     |
 
 For a first run, start with Getting started. For a new provider, read Agent lifecycle, Bridge protocol, and Provider integrations. For visual changes, read Architecture and 3D world.
+
+- [Real-work attention and recap](real-work.md): task briefs, attention-first views, optional context, durable history, and current integration limits.
+
+## Product planning
+
+- [Agentarium real-work attention plan](real-work-plan.md): the next in-repository milestone—task briefs, attention, results, away recap, and integration diagnostics.
+- [Standalone desktop companion plan](companion-product-plan.md): a portable brief for a separate application and repository, with its own scope, architecture, and release gates.
+
+The Agentarium plan tracks an implementation in progress; its usage guide distinguishes shipped behavior from remaining work. The companion brief remains a separate future project.
 
 ## Current scope
 

@@ -62,7 +62,7 @@ React owns the interface; React Three Fiber connects React components to Three.j
 5. The bridge broadcasts the accepted event to authenticated browser connections.
 6. The browser uses the shared reducer and updates the interface and world.
 
-On connection, a full snapshot replaces browser agent state. The browser does not request historical activity: its feed contains events observed during the current connection/mode, not a replay of SQLite's event table.
+On connection, a full snapshot replaces browser agent state. The Activity log contains events observed during the current connection/mode. The separate Recap view queries authenticated `/history` pages with a fixed upper cursor; it does not replay events into current agent state.
 
 ## Optional browser tools
 
@@ -72,7 +72,7 @@ These tools operate on the same Zustand state as the UI. Demo mutation tools rej
 
 ## Persistence boundaries
 
-SQLite stores live agent snapshots and a bounded event log. UI preferences, selection, simulation state, connection credentials, and the browser activity feed are not persisted. The GLB character model ships as a static asset; interface fonts currently load from Google Fonts.
+SQLite stores live agent snapshots, a bounded event log, bridge identity, and a separate bounded meaningful-history journal. Browser storage saves pin/hide choices, seen attention IDs, and bridge-scoped recap cursors. Selection, visual preferences, simulation state, connection credentials, and the ephemeral activity feed are not persisted. The GLB character model ships as a static asset; interface fonts currently load from Google Fonts.
 
 ## Local-history path
 
@@ -87,3 +87,7 @@ Ambient effects in `world/Ambience.tsx` use mutable Three.js objects and do not 
 ## Resident identity and navigation
 
 `world/personality.ts` maps identity to stable accessory, palette, pace, and leisure timing. `world/appearance.ts` creates owned accessory meshes attached to the shared rig. `world/journey.ts` layers outings over the existing desk movement controller. `world/navigation.ts` owns an authored waypoint graph, shortest-path planning, destination leases, and atomic corridor reservations. A coordinator is scoped to the mounted Residents world and cleaned up with its residents; no navigation state is sent to the bridge. Graph travel and character animation remain outside decorative detail layers. See [Resident identity and journeys](resident-journeys.md).
+
+## Real-work projection
+
+`shared/work.mjs` validates optional rich context and reduces attention episodes independently of visuals. `TaskBrief.tsx` displays requests, outcomes, and safe navigation fallbacks. `Recap.tsx` queries `bridge/history.mjs` through `bridge.ts`; journal writes share the accepted-event transaction. History pages never mutate live status. The list and attention-first seating consume the same episode projection. See [Real-work attention and recap](real-work.md).
