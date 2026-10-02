@@ -59,6 +59,31 @@ describe('navigation graph', () => {
     expect(traffic.reserveDestination('b', 'bench')).toBe(true);
     expect(traffic.acquire('b', ['x', 'y'])).toBe(true);
   });
+  it('opens a cleared branch while reserving the route ahead and prioritizing a return', () => {
+    const traffic = new NavigationTraffic(),
+      garden = planRoute('home-0', 'garden-west'),
+      cafe = planRoute('home-1', 'coffee'),
+      studio = planRoute('home-4', 'garden-east');
+    expect(traffic.acquire('garden-bound', garden.ids)).toBe(true);
+    expect(traffic.acquire('cafe-bound', cafe.ids)).toBe(false);
+    traffic.releasePassed('garden-bound', garden.lengths[garden.ids.indexOf('center')] + 1);
+    expect(traffic.acquire('cafe-bound', cafe.ids)).toBe(true);
+    expect(traffic.acquire('studio-bound', studio.ids)).toBe(false);
+    expect(traffic.acquire('garden-bound', garden.ids, true)).toBe(false);
+    expect(traffic.acquire('new-cafe-trip', cafe.ids)).toBe(false);
+    traffic.release('cafe-bound');
+    expect(traffic.acquire('garden-bound', garden.ids, true)).toBe(true);
+  });
+  it('treats overlapping physical lanes as shared even when their waypoint names differ', () => {
+    const traffic = new NavigationTraffic(),
+      homeLane = planRoute('home-1', 'join-1'),
+      windowLane = planRoute('cafe-aisle', 'window-approach');
+    expect(homeLane.ids.some((id) => windowLane.ids.includes(id))).toBe(false);
+    expect(traffic.acquire('home', homeLane.ids)).toBe(true);
+    expect(traffic.acquire('window', windowLane.ids)).toBe(false);
+    traffic.releasePassed('home', homeLane.lengths.at(-1)! + 1);
+    expect(traffic.acquire('window', windowLane.ids)).toBe(true);
+  });
 });
 
 describe('resident journeys', () => {
@@ -92,6 +117,31 @@ describe('resident journeys', () => {
     expect(waiting.status).toBe('waiting');
     advance(motion, waiting, 60);
     expect(motion.clip(waiting)).toBe('DeskWait');
+  });
+  it('waits safely when work interrupts a trip after another resident enters the cleared branch', () => {
+    const traffic = new NavigationTraffic(),
+      motion = new ResidentJourney(0, 'demo-2', traffic),
+      cafe = planRoute('home-1', 'coffee');
+    let passedCenter = false;
+    for (let frame = 0; frame < 120 * 60; frame++) {
+      motion.update(agent(), 1 / 60, options);
+      if (motion.activity.startsWith('Walking to') && motion.position[0] > 1) {
+        passedCenter = true;
+        break;
+      }
+    }
+    expect(passedCenter).toBe(true);
+    expect(traffic.acquire('cafe-traveler', cafe.ids)).toBe(true);
+    const before = motion.position;
+    motion.update(agent(0, 'working'), 1 / 60, options);
+    expect(motion.activity).toBe('Waiting for a clear path');
+    expect(motion.position).toEqual(before);
+    traffic.release('cafe-traveler');
+    motion.update(agent(0, 'working'), 1 / 60, options);
+    expect(motion.activity).toBe('Returning to desk');
+    expect(Math.hypot(...motion.position.map((v, axis) => v - before[axis]))).toBeLessThan(0.05);
+    advance(motion, agent(0, 'working'), 70);
+    expect(motion.activity).toBe('At desk');
   });
   it('does not roam from unknown, disconnected, stale, paused, or reduced states', () => {
     for (const state of [
@@ -180,7 +230,8 @@ it('lets eight residents share destinations without body overlaps or starvation'
   const traffic = new NavigationTraffic();
   const motions = Array.from({ length: 8 }, (_, i) => new ResidentJourney(i, `demo-${i}`, traffic));
   const visited = new Set<number>();
-  let closest = Infinity;
+  let closest = Infinity,
+    closestAt = '';
   for (let frame = 0; frame < 300 * 30; frame++) {
     motions.forEach((m, i) => {
       m.update(agent(i), 1 / 30, options);
@@ -190,10 +241,14 @@ it('lets eight residents share destinations without body overlaps or starvation'
       for (let j = i + 1; j < 8; j++) {
         const a = motions[i].position,
           b = motions[j].position;
-        closest = Math.min(closest, Math.hypot(a[0] - b[0], a[2] - b[2]));
+        const gap = Math.hypot(a[0] - b[0], a[2] - b[2]);
+        if (gap < closest) {
+          closest = gap;
+          closestAt = `${frame / 30}s ${i}:${motions[i].activity} ${a} / ${j}:${motions[j].activity} ${b}`;
+        }
       }
   }
-  expect(closest).toBeGreaterThan(0.6);
+  expect(closest, closestAt).toBeGreaterThan(0.6);
   expect(visited.size).toBe(8);
 });
 

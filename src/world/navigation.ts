@@ -129,12 +129,97 @@ export function planRoute(start: string, end: string) {
   return { ids, points, lengths: routeLengths(points) };
 }
 
-// Atomic corridor reservations avoid two travelers meeting head-on or deadlocking
-// while each holds a different segment. Disjoint corridors can run concurrently.
+function edgeKey(a: string, b: string) {
+  return `edge:${[a, b].sort().join('\0')}`;
+}
+type Resource = { start: number; end: number; from?: Point; to?: Point };
+function pointDistanceToSegment(point: Point, from: Point, to: Point) {
+  const dx = to[0] - from[0],
+    dz = to[2] - from[2],
+    lengthSquared = dx * dx + dz * dz;
+  const t = lengthSquared
+    ? Math.max(
+        0,
+        Math.min(1, ((point[0] - from[0]) * dx + (point[2] - from[2]) * dz) / lengthSquared),
+      )
+    : 0;
+  return Math.hypot(point[0] - from[0] - t * dx, point[2] - from[2] - t * dz);
+}
+function lanesConflict(a: Resource, b: Resource) {
+  if (!a.from || !b.from) return false;
+  const aTo = a.to ?? a.from,
+    bTo = b.to ?? b.from;
+  const boundsApart =
+    Math.max(a.from[0], aTo[0]) + 0.7 < Math.min(b.from[0], bTo[0]) ||
+    Math.max(b.from[0], bTo[0]) + 0.7 < Math.min(a.from[0], aTo[0]) ||
+    Math.max(a.from[2], aTo[2]) + 0.7 < Math.min(b.from[2], bTo[2]) ||
+    Math.max(b.from[2], bTo[2]) + 0.7 < Math.min(a.from[2], aTo[2]);
+  if (boundsApart) return false;
+  const cross = (p: Point, q: Point, r: Point) =>
+    (q[0] - p[0]) * (r[2] - p[2]) - (q[2] - p[2]) * (r[0] - p[0]);
+  const ac = cross(a.from, aTo, b.from),
+    ad = cross(a.from, aTo, bTo),
+    ca = cross(b.from, bTo, a.from),
+    cb = cross(b.from, bTo, aTo);
+  if (ac * ad < 0 && ca * cb < 0) return true;
+  return (
+    Math.min(
+      pointDistanceToSegment(a.from, b.from, bTo),
+      pointDistanceToSegment(aTo, b.from, bTo),
+      pointDistanceToSegment(b.from, a.from, aTo),
+      pointDistanceToSegment(bTo, a.from, aTo),
+    ) < 0.7
+  );
+}
+function routeResources(ids: string[]) {
+  const lengths = ids.every((id) => NODES[id])
+    ? routeLengths(ids.map((id) => NODES[id]))
+    : ids.map((_, i) => i);
+  const resources = new Map<string, Resource>();
+  const include = (key: string, resource: Resource) => {
+    const previous = resources.get(key);
+    resources.set(
+      key,
+      previous
+        ? {
+            ...resource,
+            start: Math.min(previous.start, resource.start),
+            end: Math.max(previous.end, resource.end),
+          }
+        : resource,
+    );
+  };
+  for (let i = 0; i < ids.length; i++) {
+    include(`node:${ids[i]}`, { start: lengths[i], end: lengths[i], from: NODES[ids[i]] });
+    if (i === 0) continue;
+    const start = lengths[i - 1],
+      end = lengths[i];
+    include(edgeKey(ids[i - 1], ids[i]), {
+      start,
+      end,
+      from: NODES[ids[i - 1]],
+      to: NODES[ids[i]],
+    });
+  }
+  return resources;
+}
+function resourcesConflict(wanted: Map<string, Resource>, held: Map<string, Resource>) {
+  for (const [key, resource] of wanted) {
+    if (held.has(key)) return true;
+    for (const [otherKey, other] of held)
+      if (otherKey !== key && lanesConflict(resource, other)) return true;
+  }
+  return false;
+}
+
+// Reserve the route ahead atomically, then release cleared nodes and edges behind the traveler.
+// This admits intersecting trips once their shared corridor is safely behind one
+// resident, without allowing opposing travelers to meet inside a narrow lane.
 export class NavigationTraffic {
-  private corridors = new Map<string, Set<string>>();
+  private corridors = new Map<string, Map<string, Resource>>();
   private destinations = new Map<string, string>();
-  private returning = new Map<string, Set<string>>();
+  private returning = new Map<string, Map<string, Resource>>();
+  private readonly clearance = 0.95;
   reserveDestination(owner: string, destination: string) {
     const held = this.destinations.get(destination);
     if (held && held !== owner) return false;
@@ -142,18 +227,29 @@ export class NavigationTraffic {
     return true;
   }
   acquire(owner: string, ids: string[], priority = false) {
-    const wanted = new Set(ids);
+    const wanted = routeResources(ids);
     if (priority) this.returning.set(owner, wanted);
     if (!priority)
       for (const [other, waiting] of this.returning) {
-        if (owner !== other && ids.some((id) => waiting.has(id))) return false;
+        if (owner !== other && resourcesConflict(wanted, waiting)) return false;
       }
     for (const [other, held] of this.corridors) {
-      if (owner !== other && ids.some((id) => held.has(id))) return false;
+      if (owner !== other && resourcesConflict(wanted, held)) return false;
     }
     this.returning.delete(owner);
     this.corridors.set(owner, wanted);
     return true;
+  }
+  releasePassed(owner: string, distance: number, returning = false) {
+    const held = this.corridors.get(owner);
+    if (!held) return;
+    for (const [resource, { start, end }] of held) {
+      const behind = returning
+        ? start > distance + this.clearance
+        : end < distance - this.clearance;
+      if (behind) held.delete(resource);
+    }
+    if (held.size === 0) this.corridors.delete(owner);
   }
   releaseCorridor(owner: string) {
     this.corridors.delete(owner);

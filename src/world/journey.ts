@@ -72,8 +72,15 @@ export class ResidentJourney extends ResidentMotion {
         this.moving = false;
         return;
       }
-      if (!leisure || options.leaving || trip.dwell >= this.style.visitSeconds)
+      if (
+        (!leisure || options.leaving || trip.dwell >= this.style.visitSeconds) &&
+        !trip.returning
+      ) {
         trip.returning = true;
+        // Outbound travel may have released the corridor behind us. Reclaim the
+        // complete return before reversing, or wait here with our current lease.
+        trip.held = this.traffic.acquire(this.identity, trip.path.ids, true);
+      }
       if (trip.returning && !trip.held)
         trip.held = this.traffic.acquire(this.identity, trip.path.ids, true);
       const end = trip.path.lengths.at(-1)!;
@@ -93,6 +100,7 @@ export class ResidentJourney extends ResidentMotion {
         trip.distance = trip.returning
           ? Math.max(0, trip.distance - dt * this.style.pace)
           : Math.min(end, trip.distance + dt * this.style.pace);
+        this.traffic.releasePassed(this.identity, trip.distance, trip.returning);
       }
       const after = this.position;
       const dx = after[0] - before[0],

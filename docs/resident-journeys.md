@@ -31,9 +31,9 @@ A resident first finishes its local desk transition and any eligible completion 
 
 ## Shared-space coordination
 
-Each destination has an exclusive lease. Each traveling resident atomically reserves every node in its transit corridor before moving; routes with shared nodes wait, while disjoint routes can run concurrently. The outbound corridor is released at arrival, but the destination remains reserved until the resident returns. Returning residents request priority over new outings. Leases are released on return, removal, reduced-motion placement, and unmount.
+Each destination has an exclusive lease. A traveling resident atomically reserves its route ahead, including named nodes, edges, and grid cells covering overlapping physical lanes even when their waypoint names differ. Nodes and lane cells are released after the resident clears them by 0.95 units, allowing a new trip into a cleared branch without waiting for the first resident to reach its destination. The destination remains reserved until the resident returns. A return reclaims the complete path before reversing and has priority over new outings. Leases are released on return, removal, reduced-motion placement, and unmount.
 
-This deliberately conservative scheme prevents head-on meetings and partial-lock deadlocks. It can make a resident wait longer than local steering would. A paused or stale traveler keeps its corridor so other residents do not walk through it. It does not reroute around arbitrary newly placed props. Before expanding capacity, consider finer reservations, passing lanes, and a crowd-steering layer.
+This deliberately conservative scheme prevents head-on meetings and partial-lock deadlocks. It can make a resident wait longer than local steering would because the path ahead remains reserved. A paused or stale traveler keeps its corridor so other residents do not walk through it. Two routes at different elevations may also block each other if their ground-plane footprints overlap. It does not reroute around arbitrary newly placed props. Before expanding capacity, consider passing lanes and a crowd-steering layer.
 
 ## Work takes priority
 
@@ -59,4 +59,4 @@ Demo automatic ticks leave idle residents alone for at least 60 seconds while ou
 4. Add destination poses in `rig.ts` and verify the shared skeleton contract. Keep accessory geometry independent of body animation tracks.
 5. Run layout, navigation, traffic, interruption, pause/removal, and asset tests. Inspect the new route in the browser, including reduced motion and follow mode.
 
-Tests cover all 64 home-to-destination routes, reverse paths, desk/chair and selected major-prop clearance, atomic leases, returning priority, interrupted travel, and a five-minute simulation in which all eight residents reach destinations without body overlaps. These authored-footprint checks do not replace visual inspection or constitute a general collision solver.
+Tests cover all 64 home-to-destination routes, reverse paths, desk/chair and selected major-prop clearance, atomic leases, returning priority, overlapping lanes with different waypoint names, interrupted travel, and a five-minute simulation in which all eight residents reach destinations without body overlaps. These authored-footprint checks do not replace visual inspection or constitute a general collision solver.
