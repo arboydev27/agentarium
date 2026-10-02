@@ -7,10 +7,17 @@ import { Box, Cylinder, Sphere, Sign, Tree, Pot, Lamp } from './primitives';
 import { LOOKOUT, ZONES, type ZoneName } from './layout';
 import { DetailLayer } from './DetailLayer';
 import { useSurfaceTextures } from './surfaces';
-import { meadowTrailPoint, terrainHeight } from './terrain';
+import {
+  LANDSCAPE_SEGMENTS,
+  LANDSCAPE_SIZE,
+  meadowTrailPoint,
+  terrainHeight,
+  walkwayHeight,
+} from './terrain';
 import { MeadowScenery } from './scenery/Meadow';
 import { OrchardCommons } from './scenery/Orchard';
 import { clearOfOrchard, clearOfOrchardView } from './scenery/orchardPlacement';
+import { FarRidge } from './scenery/FarRidge';
 
 const wood = '#b98b60';
 const green = '#365d4a';
@@ -27,7 +34,7 @@ function LandscapePath() {
       for (const side of [-1, 1]) {
         const x = center + side * 1.15;
         const edgeZ = z + side * lateral * 1.15;
-        positions.push(x, terrainHeight(x, edgeZ) + 0.045, edgeZ);
+        positions.push(x, walkwayHeight(x, edgeZ, 0.045), edgeZ);
       }
       if (i) {
         const a = (i - 1) * 2;
@@ -59,7 +66,7 @@ function LookoutBranch() {
       const z = THREE.MathUtils.lerp(startZ, LOOKOUT.z, t);
       for (const side of [-1, 1]) {
         const edgeZ = z + side * 0.78;
-        positions.push(x, terrainHeight(x, edgeZ) + 0.05 + t * 0.05, edgeZ);
+        positions.push(x, walkwayHeight(x, edgeZ, 0.05 + t * 0.05), edgeZ);
       }
       if (i) {
         const a = (i - 1) * 2;
@@ -166,7 +173,12 @@ function MeadowLookout() {
 function Landscape() {
   const geometry = useMemo(() => {
     // Put the mesh boundary well beyond the fog so no rectangular edge enters view.
-    const ground = new THREE.PlaneGeometry(600, 600, 128, 128);
+    const ground = new THREE.PlaneGeometry(
+      LANDSCAPE_SIZE,
+      LANDSCAPE_SIZE,
+      LANDSCAPE_SEGMENTS,
+      LANDSCAPE_SEGMENTS,
+    );
     ground.rotateX(-Math.PI / 2);
     const positions = ground.getAttribute('position');
     const colors = new Float32Array(positions.count * 3);
@@ -205,6 +217,7 @@ function Landscape() {
       <LandscapeGroves />
       <MeadowScenery />
       <OrchardCommons />
+      <FarRidge />
     </group>
   );
 }

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useWorld } from '../../state';
 import { ORCHARD } from '../layout';
-import { meadowTrailPoint, terrainHeight } from '../terrain';
+import { meadowTrailPoint, terrainHeight, walkwayHeight } from '../terrain';
 import { Box, Cylinder, Sign } from '../primitives';
 import { ORCHARD_BRANCH, ORCHARD_PAVILION } from './orchardPlacement';
 
@@ -36,7 +36,7 @@ function OrchardPath() {
       for (const side of [-1, 0, 1]) {
         const edgeX = x + normalX * side * 1.05;
         const edgeZ = z + normalZ * side * 1.05;
-        positions.push(edgeX, terrainHeight(edgeX, edgeZ) + lift, edgeZ);
+        positions.push(edgeX, walkwayHeight(edgeX, edgeZ, lift), edgeZ);
         const color = side === 0 ? centerColor : edgeColor;
         colors.push(color.r, color.g, color.b);
       }
