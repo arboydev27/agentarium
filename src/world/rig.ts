@@ -131,7 +131,10 @@ export function createCharacterClips(source: THREE.Object3D, clips: THREE.Animat
       o.scale.copy(p.s);
     }
     const stretch = Math.pow(Math.max(0, Math.sin((t * Math.PI) / 6)), 4);
+    const breath = Math.sin((t * Math.PI * 2) / 3);
     poser.getObjectByName('Head')!.rotateY(Math.sin((t * Math.PI) / 6) * 0.16);
+    poser.getObjectByName('Head')!.rotateZ(Math.sin((t * Math.PI) / 6) * 0.025);
+    poser.getObjectByName('Torso_1')!.rotateX(breath * 0.014);
     poser.getObjectByName('UpperArmL')!.rotateZ(-stretch * 0.28);
     poser.getObjectByName('UpperArmR')!.rotateZ(stretch * 0.28);
     for (const bone of bones) {
@@ -162,11 +165,29 @@ export function createCharacterClips(source: THREE.Object3D, clips: THREE.Animat
         o.quaternion.copy(p.q);
         o.scale.copy(p.s);
       }
-      const wave = Math.sin((time * Math.PI) / 3);
-      poser.getObjectByName('Head')!.rotateY(wave * (name === 'GardenLook' ? 0.3 : 0.12));
-      if (name === 'CafeBreak') {
-        poser.getObjectByName('LowerArmR')!.rotateX(-0.45 - wave * 0.08);
-        poser.getObjectByName('Head')!.rotateX(0.05 + wave * 0.03);
+      const glance = Math.sin((time * Math.PI) / 3);
+      const gesture = (1 - Math.cos((time * Math.PI) / 3)) / 2;
+      const breath = Math.sin((time * Math.PI * 2) / 3);
+      const head = poser.getObjectByName('Head')!;
+      const torso = poser.getObjectByName('Torso_1')!;
+      // Gestures are authored around the sitting or standing pose. Feet, hips,
+      // and the seat remain anchored throughout each destination loop.
+      torso.rotateX(breath * (name === 'BenchRest' ? 0.012 : 0.018));
+      if (name === 'BenchRest') {
+        head.rotateY(glance * 0.17);
+        head.rotateZ(glance * 0.035);
+        poser.getObjectByName('LowerArmL')!.rotateX(gesture * 0.075);
+        poser.getObjectByName('LowerArmR')!.rotateX(-gesture * 0.075);
+      } else if (name === 'CafeBreak') {
+        head.rotateY(glance * 0.14);
+        head.rotateX(0.045 + gesture * 0.055);
+        poser.getObjectByName('LowerArmR')!.rotateX(-0.2 - gesture * 0.16);
+        poser.getObjectByName('UpperArmL')!.rotateZ(-gesture * 0.07);
+      } else {
+        torso.rotateY(glance * 0.055);
+        head.rotateY(glance * 0.28);
+        head.rotateZ(glance * 0.045);
+        poser.getObjectByName('UpperArmL')!.rotateZ(-gesture * 0.09);
       }
       for (const bone of bones) {
         const value = values.get(bone)!;

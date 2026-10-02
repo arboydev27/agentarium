@@ -8,6 +8,8 @@ Residents now have distinct looks and can visit destinations beyond their assign
 
 Accessories are original procedural geometry attached to the bundled robot's animated head. The existing body rig and proportions are preserved for reliable keyboard contact and chair alignment. This milestone does not add eight new body meshes or human characters. Accessories remain visible at low quality and under reduced motion. Owned geometry/materials are disposed when residents leave; the shared GLB geometry is retained.
 
+The shared rig's standing rest, bench rest, café break, and garden look loops now include small head, torso, and arm gestures. Their feet and hips remain anchored to the original floor or seat pose, and the desk-hand alignment remains separate. These are cosmetic movements; they do not represent provider activity.
+
 ## Destinations and routes
 
 Eight destination slots are available:
