@@ -374,3 +374,167 @@ it('fades an offsite removal in place without waiting for a frozen corridor', ()
   expect(m.position).toEqual(p);
   expect(traffic.acquire('replacement', Object.keys(NODES))).toBe(true);
 });
+
+it('shows the lookout promptly in ordinary demo pacing without forced destinations', () => {
+  // Match the default 6.5s demo tick and its 60s idle window with deterministic choices.
+  const results = [];
+  for (let run = 1; run <= 4; run++) {
+    let seed = run;
+    const random = () => {
+      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+      return seed / 2 ** 32;
+    };
+    const agents = initialAgents().map((entry) => ({ ...entry, updatedAt: 0 }));
+    const traffic = new NavigationTraffic();
+    const motions = agents.map((entry, seat) => new ResidentJourney(seat, entry.id, traffic));
+    let starts = 0,
+      arrivals = 0,
+      firstArrival = -1,
+      firstStart = -1,
+      closest = Infinity;
+    let scoutFirstStatusChange = -1,
+      scoutSecondStatusChange = -1,
+      scoutFirstReturn = -1,
+      scoutHome = -1;
+    const last = motions.map(() => '');
+    for (let frame = 0; frame < 900 * 30; frame++) {
+      const time = frame / 30;
+      motions.forEach((motion, index) => {
+        motion.update(agents[index], 1 / 30, { ...options, now: time * 1000 });
+        if (motion.activity !== last[index] && motion.activity === 'Walking to meadow lookout') {
+          starts++;
+          if (firstStart < 0) firstStart = time;
+        }
+        if (motion.activity !== last[index] && motion.activity === 'Resting at meadow lookout') {
+          arrivals++;
+          if (firstArrival < 0) firstArrival = time;
+        }
+        if (
+          index === 7 &&
+          firstArrival >= 0 &&
+          scoutFirstReturn < 0 &&
+          motion.activity === 'Returning to desk'
+        )
+          scoutFirstReturn = time;
+        if (
+          index === 7 &&
+          scoutFirstReturn >= 0 &&
+          scoutHome < 0 &&
+          (motion.activity === 'Near desk' || motion.activity === 'At desk')
+        )
+          scoutHome = time;
+        last[index] = motion.activity;
+      });
+      for (let i = 0; i < motions.length; i++)
+        for (let j = i + 1; j < motions.length; j++) {
+          const a = motions[i].position,
+            b = motions[j].position;
+          closest = Math.min(closest, Math.hypot(a[0] - b[0], a[2] - b[2]));
+        }
+      if (frame > 0 && frame % 195 === 0) {
+        const index = Math.floor(random() * agents.length),
+          current = agents[index];
+        if (current.status === 'idle' && time * 1000 - current.updatedAt < 60000) continue;
+        const next =
+          current.status === 'working'
+            ? 'tool'
+            : current.status === 'tool'
+              ? random() > 0.75
+                ? 'waiting'
+                : 'completed'
+              : current.status === 'completed'
+                ? 'idle'
+                : current.status === 'idle'
+                  ? 'working'
+                  : current.status;
+        agents[index] = { ...current, status: next, updatedAt: time * 1000 };
+        if (index === 7 && next !== current.status) {
+          if (scoutFirstStatusChange < 0) scoutFirstStatusChange = time;
+          else if (scoutSecondStatusChange < 0) scoutSecondStatusChange = time;
+        }
+      }
+    }
+    results.push({
+      run,
+      starts,
+      arrivals,
+      firstStart,
+      firstArrival,
+      scoutFirstStatusChange,
+      scoutSecondStatusChange,
+      scoutFirstReturn,
+      scoutHome,
+      closest,
+    });
+  }
+  for (const result of results) {
+    expect(result.firstStart, `seed ${result.run}`).toBeLessThan(20);
+    expect(result.firstArrival, `seed ${result.run}`).toBeGreaterThan(0);
+    expect(result.firstArrival, `seed ${result.run}`).toBeLessThan(80);
+    expect(result.scoutFirstStatusChange, `seed ${result.run}`).toBeGreaterThan(
+      result.firstArrival,
+    );
+    expect(result.scoutHome - result.scoutFirstReturn, `seed ${result.run}`).toBeLessThan(70);
+    expect(result.scoutHome, `seed ${result.run}`).toBeLessThan(result.scoutSecondStatusChange);
+    expect(result.closest, `seed ${result.run}`).toBeGreaterThan(0.6);
+  }
+});
+
+it('keeps eight mixed-status residents moving without collisions or indefinite route waits', () => {
+  const agents = initialAgents().map((entry) => ({
+    ...entry,
+    status: 'idle' as typeof entry.status,
+  }));
+  const traffic = new NavigationTraffic(),
+    motions = agents.map((entry, seat) => new ResidentJourney(seat, entry.id, traffic));
+  const visited = new Set<number>(),
+    waitingFor = motions.map(() => 0),
+    returningSince = motions.map(() => -1);
+  let closest = Infinity,
+    maxWait = 0,
+    longestReturn = 0,
+    interruptions = 0,
+    completedReturns = 0;
+  for (let frame = 0; frame < 960 * 30; frame++) {
+    const time = frame / 30;
+    motions.forEach((motion, seat) => {
+      const phase = (time + seat * 17) % 180;
+      const status = phase < 110 ? 'idle' : phase < 145 ? 'working' : 'waiting';
+      if (agents[seat].status !== status) {
+        if (
+          status === 'working' &&
+          (motion.activity.startsWith('Walking to') || motion.activity.startsWith('Resting at'))
+        ) {
+          returningSince[seat] = time;
+          interruptions++;
+        }
+        agents[seat] = { ...agents[seat], status, updatedAt: time * 1000 };
+      }
+      motion.update(agents[seat], 1 / 30, { ...options, now: time * 1000 });
+      if (motion.activity.startsWith('Resting at')) visited.add(seat);
+      waitingFor[seat] =
+        motion.activity === 'Waiting for a clear path' ? waitingFor[seat] + 1 / 30 : 0;
+      maxWait = Math.max(maxWait, waitingFor[seat]);
+      if (
+        returningSince[seat] >= 0 &&
+        (motion.activity === 'At desk' || motion.activity === 'Near desk')
+      ) {
+        longestReturn = Math.max(longestReturn, time - returningSince[seat]);
+        returningSince[seat] = -1;
+        completedReturns++;
+      }
+    });
+    for (let i = 0; i < motions.length; i++)
+      for (let j = i + 1; j < motions.length; j++) {
+        const a = motions[i].position,
+          b = motions[j].position;
+        closest = Math.min(closest, Math.hypot(a[0] - b[0], a[2] - b[2]));
+      }
+  }
+  expect(visited.size).toBe(8);
+  expect(interruptions).toBeGreaterThan(0);
+  expect(completedReturns).toBe(interruptions);
+  expect(maxWait).toBeLessThan(90);
+  expect(longestReturn).toBeLessThan(90);
+  expect(closest).toBeGreaterThan(0.6);
+});

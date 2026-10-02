@@ -31,7 +31,7 @@ export const DESTINATIONS: Destination[] = [
   },
   { id: 'basin', label: 'courtyard basin', node: 'basin', facing: Math.PI / 2, clip: 'GardenLook' },
   { id: 'studio-break', label: 'studio terrace', node: 'studio-break', facing: 0, clip: 'Rest' },
-  { id: 'promenade', label: 'tree-lined path', node: 'promenade', facing: 0, clip: 'GardenLook' },
+  // Profile seven starts with this landmark, making the new district visible in the demo.
   {
     id: 'meadow:lookout',
     label: 'meadow lookout',
@@ -39,6 +39,7 @@ export const DESTINATIONS: Destination[] = [
     facing: 0.7,
     clip: 'GardenLook',
   },
+  { id: 'promenade', label: 'tree-lined path', node: 'promenade', facing: 0, clip: 'GardenLook' },
 ];
 // Authored walkable lanes, including elevation changes at stairs and floor edges.
 // Destinations are terminal branches so resting residents never occupy through routes.
