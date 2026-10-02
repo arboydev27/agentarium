@@ -11,7 +11,7 @@ npm run dev
 
 Open the address printed by Vite, normally `http://127.0.0.1:5173`. The dev command uses a strict port: an occupied port produces an error instead of silently selecting another one.
 
-The initial residents and activity are simulated. Select a resident to inspect it, use the simulation controls to change activity, and explore the five camera presets. No provider account or API key is needed for this mode.
+The initial residents and activity are simulated. Select a resident to inspect it, use the simulation controls to change activity, and explore the seven camera presets. No provider account or API key is needed for this mode.
 
 ## Connect the local bridge
 

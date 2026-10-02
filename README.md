@@ -12,7 +12,7 @@ See the [detailed documentation](docs/README.md) for setup, architecture, agent 
 - Gentle tree sway, drifting leaves, courtyard water ripples, and evening lamp glows, with reduced-motion and low-quality alternatives.
 - Eight expressive CC0 robot residents with distinct procedural accessories, trim palettes, walking pace, and skeletal work/rest animations. Working residents open their laptops; idle residents close them.
 - Idle residents visit café, garden, studio, bench, basin, and path destinations over a reserved waypoint network; live work sends them back to their desks.
-- Orbit and zoom controls, six camera presets including Horizon, slow camera orbit, ambient audio, reduced motion, and rendering-quality controls.
+- Orbit and zoom controls, seven camera presets including a perspective Horizon and Meadow Lookout, slow camera orbit, ambient audio, reduced motion, and rendering-quality controls.
 - A clearly labeled simulator with tasks, delegation, waiting, completion, failure, pause, speed, reset, an activity feed, and an inspector.
 - Opt-in local session discovery for Codex, Claude Code CLI, and Gemini CLI; up to eight sessions occupy stable seats, with pinned sessions first.
 - Guided local connection setup, fresh-event diagnostics, and a session filter for live residents.
@@ -20,7 +20,7 @@ See the [detailed documentation](docs/README.md) for setup, architecture, agent 
 - Claude Code and Gemini CLI telemetry hooks, a Codex App Server stdio proxy, and a generic event endpoint.
 - Optional WebMCP controls using the same application state as the visible UI.
 
-This is the first playable implementation, not a finished film-quality animation production. It uses one reusable character rig with color variants. Residents now use authored keyboard/attention clips and reversible desk routes plus cross-zone journeys. A full city, custom human characters, generated navmeshes, crowd steering, and desktop packaging remain future milestones. Fine scenery details mount when close enough to see and disappear on low quality; the broad terrain is decorative, and residents still walk only inside the original district. This is a finite scene, not an infinite streamed world. See [World layout and rendering](docs/world-layout.md).
+This is the first playable implementation, not a finished film-quality animation production. It uses one reusable character rig with color variants. Residents now use authored keyboard/attention clips and reversible desk routes plus cross-zone journeys to a meadow lookout beyond the original district. A full city, custom human characters, generated navmeshes, crowd steering, and desktop packaging remain future milestones. Fine scenery details mount when close enough to see and disappear on low quality; most of the broad terrain remains decorative. This is a finite scene, not an infinite streamed world. See [World layout and rendering](docs/world-layout.md).
 
 **The initial world is simulated. No live provider is connected automatically, no provider settings are modified, and no AI task is launched by the simulator.** The adapters have automated protocol/fixture coverage. They still need end-to-end validation against the specific installed provider versions and sessions you choose to connect.
 

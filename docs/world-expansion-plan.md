@@ -1,6 +1,6 @@
 # Toward an explorable Agentarium world
 
-Agentarium's inhabited district currently contains the café, studio, garden, courtyard, eight resident seats, and authored paths between them. The landscape around it is an initial visual expansion: terrain and distant groves give the camera somewhere to look beyond the district, but agents cannot yet travel onto that terrain. This distinction matters to users and to future navigation code.
+Agentarium's inhabited district contains the café, studio, garden, courtyard, eight resident seats, and authored paths between them. A first route now leaves that district for Meadow Lookout. Most surrounding terrain and distant groves remain visual scenery, not a general navigation surface. This distinction matters to users and to future navigation code.
 
 ## Experience target
 
@@ -8,11 +8,11 @@ A user should be able to pan from the original district toward a visible horizon
 
 The spatial model should have three layers:
 
-| Layer           | Purpose                                                        | Current state                         |
-| --------------- | -------------------------------------------------------------- | ------------------------------------- |
-| Active district | Desks, routes, destinations, interactive selection             | Four-zone island implemented          |
-| Near landscape  | Connected paths and landmarks that can become future districts | Decorative terrain and groves started |
-| Far horizon     | Silhouette and atmosphere without unnecessary detail           | Broad terrain and fog started         |
+| Layer           | Purpose                                                        | Current state                        |
+| --------------- | -------------------------------------------------------------- | ------------------------------------ |
+| Active district | Desks, routes, destinations, interactive selection             | Four-zone island implemented         |
+| Near landscape  | Connected paths and landmarks that can become future districts | Meadow Lookout and trail route added |
+| Far horizon     | Silhouette and atmosphere without unnecessary detail           | Perspective view, terrain, and fog   |
 
 ## Milestones
 
@@ -20,13 +20,13 @@ The spatial model should have three layers:
 
 Extend the visible ground well beyond the current island, keep the existing desk/navigation geometry clear, and give users an explicit horizon view. Use inexpensive geometry and instance repeated trees. Match fog to the terrain edge so zooming or panning does not expose an abrupt empty border. Test day/night, low/high quality, reduced motion, watch/follow, and different window sizes.
 
-The first implementation uses a finite 600 × 600 decorative landscape. A raised plateau blends the original district into meadow, with a winding scenic trail, clustered groves, and a northern rise. Its edge and tree placements are deterministic; no background generation or streaming runs yet. The central district remains the sole walkable resident area, and the trail does not yet carry residents.
+The current implementation uses a finite 600 × 600 landscape. A raised plateau blends the original district into meadow, with a winding trail, clustered groves, and a northern rise. Horizon now uses perspective to show a lower skyline and far land. Terrain and tree placements are deterministic; no background generation or streaming runs yet. One route along the trail carries residents to the lookout.
 
 ### 2. Make the first outside area truly traversable
 
 Choose one neighboring district with a purpose and clear silhouette, then author its floor, route connections, destination slots, sightlines, and camera bookmark. Move from an isolated floating island toward continuous paths. Preserve a path back to every current seat and a way to distinguish the home district from a resident's current destination. Add collision/clearance checks for every new prop, not only the old eight seats.
 
-The current global graph can serve a small additional area, but node IDs and destination reservations should become district-qualified. Keep visual availability separate from provider activity: an offscreen resident must not become idle merely because its district unmounts.
+The first outside area is Meadow Lookout, with an open-sided shelter, an authored branch from the trail, a terminal destination, terrain-aligned route samples, and a camera bookmark. Its IDs are district-qualified and its route is covered by clearance and interruption tests. The current global graph can serve this small area; further expansion needs more route capacity and passing behavior. Keep visual availability separate from provider activity: an offscreen resident must not become idle merely because its district unmounts.
 
 ### 3. Add spatial streaming before multiplying districts
 
@@ -46,6 +46,6 @@ A release of a larger district should meet these gates: no resident clips throug
 
 ## Current constraints
 
-The existing orthographic camera, finite authored node graph, eight seated residents, and single-scene renderer are good for the first district. They are not an infinite-world engine. The new wide terrain is visual context while we develop the first connected, interactive outside area. Expansion should proceed in measured districts rather than treating distant decorative geometry as completed world scale.
+The finite authored node graph, eight seated residents, and single-scene renderer are good for the first district and lookout. They are not an infinite-world engine. Orthographic views serve close places and the perspective Horizon serves the vista. Most wide terrain is still visual context; expansion should proceed in measured districts rather than treating distant decorative geometry as completed world scale.
 
 See [World layout and rendering](world-layout.md), [Resident identity and journeys](resident-journeys.md), and [Rendering performance](rendering-performance.md) for the current contracts and measurement method.

@@ -32,7 +32,7 @@ Acceptance: characters transition without snapping or furniture intersections, r
 
 ## 4. Expand visual capacity
 
-The first spatial expansion is implemented: a 29.25 × 22.2 walkable district, four explicit zones, a richer café/terrace, six camera presets including Horizon, camera-aware fine-detail layers, and a decorative landscape beyond the district. The visible capacity remains eight. Actual chunk streaming, infinite terrain, and asset streaming are not implemented.
+The first spatial expansion is implemented: a 29.25 × 22.2 walkable district, four explicit zones, a richer café/terrace, seven camera presets including a perspective Horizon and Meadow Lookout, camera-aware fine-detail layers, and a connected trail route to the first outside destination. The visible capacity remains eight, and most distant landscape remains decorative. Actual chunk streaming, infinite terrain, and asset streaming are not implemented.
 
 The ambient-life pass adds tree sway, instanced perimeter leaves, basin ripples, evening halos, and surface refinements. An opt-in diagnostic overlay now exposes local frame intervals and renderer counters; initial observations are in [Rendering performance](rendering-performance.md).
 
