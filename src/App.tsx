@@ -856,26 +856,32 @@ export default function App() {
         )}
       </aside>
       <div className="camera-presets" aria-label="Camera views">
-        {(['overview', 'café', 'garden', 'studio', 'courtyard'] as const).map((view, i) => (
-          <button
-            className={camera === view && !followAgent ? 'active' : ''}
-            key={view}
-            onClick={() => changeCamera(view)}
-          >
-            {i === 0 ? (
-              <Focus size={15} />
-            ) : i === 1 ? (
-              <Coffee size={15} />
-            ) : i === 2 ? (
-              <Leaf size={15} />
-            ) : i === 3 ? (
-              <Laptop size={15} />
-            ) : (
-              <Sprout size={15} />
-            )}
-            <span>{view === 'overview' ? 'Overview' : view[0].toUpperCase() + view.slice(1)}</span>
-          </button>
-        ))}
+        {(['overview', 'café', 'garden', 'studio', 'courtyard', 'horizon'] as const).map(
+          (view, i) => (
+            <button
+              className={camera === view && !followAgent ? 'active' : ''}
+              key={view}
+              onClick={() => changeCamera(view)}
+            >
+              {i === 0 ? (
+                <Focus size={15} />
+              ) : i === 1 ? (
+                <Coffee size={15} />
+              ) : i === 2 ? (
+                <Leaf size={15} />
+              ) : i === 3 ? (
+                <Laptop size={15} />
+              ) : i === 4 ? (
+                <Sprout size={15} />
+              ) : (
+                <Eye size={15} />
+              )}
+              <span>
+                {view === 'overview' ? 'Overview' : view[0].toUpperCase() + view.slice(1)}
+              </span>
+            </button>
+          ),
+        )}
       </div>
       <footer className="world-bottom">
         <div className="orbit-hint">

@@ -136,8 +136,8 @@ type State = {
   quality: 'high' | 'low';
   labels: boolean;
   residentOutings: boolean;
-  worldLocation: 'overview' | 'café' | 'garden' | 'studio' | 'courtyard';
-  camera: 'overview' | 'café' | 'garden' | 'studio' | 'courtyard';
+  worldLocation: 'overview' | 'café' | 'garden' | 'studio' | 'courtyard' | 'horizon';
+  camera: 'overview' | 'café' | 'garden' | 'studio' | 'courtyard' | 'horizon';
   cameraVersion: number;
   cinematic: boolean;
   watchMode: boolean;

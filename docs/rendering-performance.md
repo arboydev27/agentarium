@@ -24,7 +24,7 @@ The hundreds of draw calls indicate that repeated base scenery is a useful futur
 
 1. Use the same browser, viewport, display, camera preset, quality, and resident state. Prefer a production build with `npm run build` and `npm run preview` for formal profiling.
 2. Let the scene settle, pause the simulator for a stable resident arrangement, and record multiple samples over at least 30 seconds. Environmental motion intentionally continues when the simulator is paused.
-3. Compare high and low quality while holding Reduced motion constant. Then separately test reduced motion. Record daylight and evening, overview and café close-up.
+3. Compare high and low quality while holding Reduced motion constant. Then separately test reduced motion. Record daylight and evening, overview, Horizon, and café close-up. The wider landscape adds terrain geometry and instanced groves; compare its view separately from a close district view.
 4. Check resize, camera travel, repeated detail mounting, and high/low switching. Resource counts should settle rather than grow indefinitely after repeated identical cycles.
 5. Test representative integrated graphics and mobile devices before promising frame rates. Use browser performance tools for long tasks, GPU timings, memory bytes, and loading analysis; the overlay cannot replace them.
 

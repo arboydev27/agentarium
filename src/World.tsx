@@ -442,9 +442,14 @@ function Camera({ positions }: { positions: Positions }) {
   const zoom = useRef(30);
   useEffect(() => {
     const preset = CAMERA_VIEWS[view];
+    zoom.current = Math.min(size.width / preset.span[0], size.height / preset.span[1]);
     targetPos.current.fromArray(preset.pos);
     targetLook.current.fromArray(preset.look);
-    zoom.current = Math.min(size.width / preset.span[0], size.height / preset.span[1]);
+    if (view === 'horizon') {
+      // A narrow canvas shows more vertical world space at the same zoom. Keep
+      // the camera above that entire slice so its lower rays still meet land.
+      targetPos.current.y = Math.max(preset.pos[1], (size.height / zoom.current) * 0.62);
+    }
     moving.current = true;
   }, [view, version, size.width, size.height, follow]);
   useFrame((_, d) => {
@@ -498,7 +503,7 @@ function Lighting() {
   const night = useWorld((s) => s.night);
   return (
     <>
-      <fog attach="fog" args={[night ? '#263a43' : '#d8dfd0', 45, 100]} />
+      <fog attach="fog" args={[night ? '#263a43' : '#d8dfd0', 85, 165]} />
       <ambientLight intensity={night ? 0.55 : 0.85} color={night ? '#a2b6ed' : '#fff8e7'} />
       <hemisphereLight args={[night ? '#849ccf' : '#e8f0e0', '#849970', night ? 0.7 : 1.25]} />
       <directionalLight
@@ -528,7 +533,7 @@ export default function World() {
       orthographic
       shadows
       dpr={quality === 'low' ? 1 : [1, 1.6]}
-      camera={{ position: [27, 26, 35], zoom: 30, near: 0.1, far: 180 }}
+      camera={{ position: [27, 26, 35], zoom: 30, near: 0.1, far: 360 }}
       gl={{ antialias: true, powerPreference: 'high-performance' }}
       onPointerMissed={() => useWorld.getState().select(null)}
     >

@@ -26,17 +26,17 @@ Acceptance: independent sessions cannot accidentally overwrite one another, aban
 
 The first character-life milestone now includes generated keyboard/attention poses, local reversible routes, staged arrival/departure, brief completion reactions, follow camera, and watch mode. The original robot is retained. The resident-variety milestone now adds eight procedural accessory styles, stable leisure preferences, authored cross-zone routing, exclusive destinations, and shared-corridor reservations. Distinct new body rigs, generated navmeshes, local crowd steering, and a measured device performance budget remain future work.
 
-Next, evaluate distinct body rigs against the keyboard/seat contract, add richer transition clips, and replace conservative whole-corridor reservations with local crowd steering when capacity grows. Preserve reduced-motion alternatives and test interruptions.
+The shared rig now has subtle anchored gestures at rest and shared destinations. Route reservations release cleared lanes while keeping the path ahead reserved, and they account for differently named overlapping lanes. Next, evaluate distinct body rigs against the keyboard/seat contract, add richer transition clips, and explore passing lanes or local crowd steering when capacity grows. Preserve reduced-motion alternatives and test interruptions.
 
 Acceptance: characters transition without snapping or furniture intersections, replacement rigs have a documented asset contract, and representative devices meet an agreed performance budget.
 
 ## 4. Expand visual capacity
 
-The first spatial expansion is implemented: a 29.25 × 22.2 island, four explicit zones, a richer café/terrace, five camera presets, and camera-aware fine-detail layers. The visible capacity remains eight. Actual chunk streaming, infinite terrain, and asset streaming are not implemented.
+The first spatial expansion is implemented: a 29.25 × 22.2 walkable district, four explicit zones, a richer café/terrace, six camera presets including Horizon, camera-aware fine-detail layers, and a decorative landscape beyond the district. The visible capacity remains eight. Actual chunk streaming, infinite terrain, and asset streaming are not implemented.
 
 The ambient-life pass adds tree sway, instanced perimeter leaves, basin ripples, evening halos, and surface refinements. An opt-in diagnostic overlay now exposes local frame intervals and renderer counters; initial observations are in [Rendering performance](rendering-performance.md).
 
-Next, profile representative devices and establish a draw-call, triangle, and frame-time budget. Then design additional spaces and a stable assignment policy for more than eight visible agents. Consider grouping by session/provider, focusing active work, and showing overflow intentionally. Profile geometry, animation mixers, DOM labels, and shadows before raising counts.
+The [world expansion plan](world-expansion-plan.md) defines the path from this visual horizon to the first connected outside district, then spatial streaming. Next, profile representative devices and establish a draw-call, triangle, and frame-time budget. Design additional spaces and a stable assignment policy for more than eight visible agents. Consider grouping by session/provider, focusing active work, and showing overflow intentionally. Profile geometry, animation mixers, DOM labels, and shadows before raising counts.
 
 Acceptance: capacity behavior is understandable, selection works across groups, and expansion does not hide relevant waiting or failed tasks.
 

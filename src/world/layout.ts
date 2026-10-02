@@ -20,7 +20,7 @@ export const SEATS: Point[] = [
   [-4.5, 0.49, 6],
 ];
 export const CAMERA_VIEWS: Record<
-  'overview' | ZoneName,
+  'overview' | 'horizon' | ZoneName,
   { pos: Point; look: Point; span: [number, number] }
 > = {
   overview: { pos: [27, 26, 35], look: [0, 2.8, 0], span: [40, 32] },
@@ -28,4 +28,5 @@ export const CAMERA_VIEWS: Record<
   garden: { pos: [15, 12, 18], look: [7, 1.8, 5], span: [16, 12] },
   studio: { pos: [15, 12, 9], look: [7, 2.2, -5], span: [16, 12] },
   courtyard: { pos: [1, 11, 18], look: [-6, 1.5, 5.5], span: [16, 12] },
+  horizon: { pos: [0, 17, 40], look: [0, 2, -23], span: [50, 28] },
 };

@@ -38,6 +38,10 @@ describe('expanded world layout', () => {
       expect(camera.span.every((value) => value > 0)).toBe(true);
     }
   });
+  it('offers a wider horizon view beyond the inhabited island', () => {
+    expect(CAMERA_VIEWS.horizon.look[2]).toBeLessThan(-WORLD.depth / 2);
+    expect(CAMERA_VIEWS.horizon.span[0]).toBeGreaterThan(WORLD.width * 1.5);
+  });
 });
 
 describe('decorative detail selection', () => {

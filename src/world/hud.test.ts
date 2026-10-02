@@ -27,11 +27,12 @@ it('treats stale/paused activity as unknown without clearing reported attention'
   expect(filterResidents(agents, [], 'unknown', '', true)).toHaveLength(8);
   expect(paused.here).toBe(8);
 });
-it('identifies the focused district and falls back to overview between or outside districts', () => {
+it('identifies focused districts, the central overview, and the outer horizon', () => {
   expect(districtAt(-7, -4.5)).toBe('café');
   expect(districtAt(7, 5)).toBe('garden');
   expect(districtAt(7, -5)).toBe('studio');
   expect(districtAt(-6, 5.5)).toBe('courtyard');
   expect(districtAt(0, 0)).toBe('overview');
-  expect(districtAt(99, 99)).toBe('overview');
+  expect(districtAt(25, 0)).toBe('horizon');
+  expect(districtAt(99, 99)).toBe('horizon');
 });

@@ -1,6 +1,6 @@
 import type { Agent } from './state';
 import { worldCounts, type WorkFilter } from './world/hud';
-type View = 'overview' | 'café' | 'garden' | 'studio' | 'courtyard';
+type View = 'overview' | 'café' | 'garden' | 'studio' | 'courtyard' | 'horizon';
 export function WorldHUD({
   agents,
   paused,
@@ -34,6 +34,7 @@ export function WorldHUD({
           <option value="garden">Garden</option>
           <option value="studio">Studio</option>
           <option value="courtyard">Courtyard</option>
+          <option value="horizon">Horizon</option>
         </select>
       </div>
       {!compact && (

@@ -21,6 +21,7 @@ Implementation guides describe the current code; planning documents are explicit
 | [Development](development.md)                          | Commands, formatting, tests, extension workflow, and deployment boundaries           |
 | [Troubleshooting](troubleshooting.md)                  | Common startup, connection, attribution, and rendering problems                      |
 | [Roadmap](roadmap.md)                                  | Current limitations and proposed next milestones                                     |
+| [World expansion plan](world-expansion-plan.md)        | Horizon, connected districts, streaming, and performance gates                       |
 
 For a first run, start with Getting started. For a new provider, read Agent lifecycle, Bridge protocol, and Provider integrations. For visual changes, read Architecture and 3D world.
 
@@ -37,6 +38,6 @@ The Agentarium plan tracks an implementation in progress; its usage guide distin
 
 The implementation includes an eight-seat 3D environment, a simulator, a live event bridge, SQLite snapshots, provider adapters, and optional browser automation tools. It observes external agents; it does not launch real AI work, manage provider credentials, or schedule tasks. A working resident indicates the latest reported status, not independent proof that a model is currently computing.
 
-The project currently uses a shared robot rig with color variants and procedural scenery. The expanded island includes local walking routes and camera-aware decorative detail. Residents now have eight accessory styles and authored cross-zone navigation. Custom human characters, generated navmeshes, world streaming, and film-quality animation remain future work. Provider adapters have fixture tests; compatibility with a particular installed provider must be verified in that environment.
+The project currently uses a shared robot rig with color variants and procedural scenery. The expanded island includes local walking routes and camera-aware decorative detail. A wider landscape surrounds the island, but resident travel remains inside the original district. Residents have eight accessory styles and authored cross-zone navigation. Custom human characters, generated navmeshes, world streaming, and film-quality animation remain future work. Provider adapters have fixture tests; compatibility with a particular installed provider must be verified in that environment.
 
 - [Managing live sessions](session-management.md): pins, hiding, restoration, saved choices, and attention.

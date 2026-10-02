@@ -1,10 +1,10 @@
 # World layout and rendering
 
-The island is now **29.25 × 22.2 world units**. The original footprint was 19.5 × 14.8, so this is 1.5× on each horizontal axis and 2.25× the area. Capacity remains eight residents: two in each zone. Both the simulator and live mode use the same scenery and seat geometry.
+The inhabited district is **29.25 × 22.2 world units**. The original footprint was 19.5 × 14.8, so this is 1.5× on each horizontal axis and 2.25× the area. A continuous 600 × 600 scenic terrain now surrounds it. Capacity remains eight residents: two in each zone. Both the simulator and live mode use the same scenery and seat geometry.
 
 ## Layout contract
 
-`src/world/layout.ts` owns the footprint, rectangular floor bounds, eight seat origins, and five camera presets. X is left/right, Y is elevation, and Z is depth. The grass surface is Y = 0.4. Floor coordinates specify the top surface rather than the center of a mesh.
+`src/world/layout.ts` owns the walkable district footprint, rectangular floor bounds, eight seat origins, and six camera presets. X is left/right, Y is elevation, and Z is depth. The grass surface is Y = 0.4. Floor coordinates specify the top surface rather than the center of a mesh. The surrounding terrain in `Environment.tsx` is scenic only; it is not part of these floors or the resident navigation graph.
 
 | Zone      | Floor center (X, Y, Z) | Width × depth | Seat indices |
 | --------- | ---------------------- | ------------- | ------------ |
@@ -21,9 +21,9 @@ Each seat anchors its desk, laptop, chair, and a reversible local character rout
 
 The café is the main landmark: warm plaster, sage trim, subtle wood grain, a shallow cutaway roof, communal table, espresso counter, bakery display, menu boards, and terrace seating. Additional chairs and tables are scenery, not extra agent slots. Evening mode adds warm pendant light and window color. Steam is decorative and independent of task activity; reduced motion hides it.
 
-The studio retains its warmer roof and raised deck. The garden has a larger pergola, string bulbs, and vine detail. The courtyard adds a resting bench, planting, and a decorative basin with animated ripples. Trees sway slightly and twelve instanced leaves drift along the perimeter at high quality. Reduced motion keeps the world still. Perimeter trees frame the island without putting trunks in the resident routes.
+The studio retains its warmer roof and raised deck. The garden has a larger pergola, string bulbs, vine detail, and lower planting beds. The courtyard adds a resting bench, planting, paving, and a decorative basin with animated ripples. Trees sway slightly and twelve instanced leaves drift along the perimeter at high quality. Reduced motion keeps the world still. A broad terrain plateau meets the district floors and slopes into a meadow. A winding scenic trail, northern rise, and clustered instanced groves extend the view; these new features are not part of resident routes.
 
-Overview frames the whole island. Café, Garden, Studio, and Courtyard presets use viewport-aware orthographic zoom. Follow resident still tracks the moving character. Watch mode provides an unobstructed scene. Camera movement respects reduced motion. Large roofs are intentionally shallow so users can see working residents and the interior.
+Overview frames the whole district. Café, Garden, Studio, and Courtyard presets use viewport-aware orthographic zoom. Horizon frames the inhabited district against the surrounding land and distant groves. Its camera rises in narrow viewports so the full vertical frame still intersects the ground. Follow resident still tracks the moving character. Watch mode provides an unobstructed scene. Camera movement respects reduced motion. Large roofs are intentionally shallow so users can see working residents and the interior.
 
 ## How detail selection works
 
@@ -46,6 +46,6 @@ Fine-detail selection never wraps bridge connections, Zustand state, resident as
 
 Change layout coordinates first, then update navigation nodes/edges and destination clearances, place scenery around the routes, and retune camera spans. Keep useful silhouettes in the base layer and optional decoration in a fine layer. Keep per-frame animation on mutable Three.js objects, avoid React state on every frame, and dispose textures/materials owned by a component.
 
-Before adding many more districts, profile frame time, draw calls, shadow cost, and memory on representative devices. Consider shared/instanced geometry for repeated props. Actual chunk streaming would additionally need spatial chunk ownership, asynchronous asset loading, prefetch/eviction boundaries, and a persistent state layer independent of mounted scenes. Those systems—and infinite procedural terrain—are future work.
+Before adding many more districts, profile frame time, draw calls, shadow cost, and memory on representative devices. Consider shared/instanced geometry for repeated props. Actual chunk streaming would additionally need spatial chunk ownership, asynchronous asset loading, prefetch/eviction boundaries, and a persistent state layer independent of mounted scenes. Those systems—and infinite procedural terrain—are future work. See the [world expansion plan](world-expansion-plan.md) for the staged path from this decorative landscape to traversable districts.
 
 Validation: `npm test`, `npm run build`, then inspect overview and each zone, high/low quality, evening, reduced motion, follow/watch, and narrow viewports. Automated layout/detail tests live in `src/world/layout.test.ts`.

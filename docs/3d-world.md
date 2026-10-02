@@ -48,7 +48,7 @@ The list and inspector provide a text-based way to inspect activity without inte
 
 ## Cameras and lighting
 
-The orthographic camera has overview, café, garden, studio, and courtyard presets. Preset targets and framing spans come from the shared layout; zoom is calculated from viewport dimensions. OrbitControls support manual orbit/zoom with constrained polar angles. Manual control cancels an active preset movement, following, and cinematic rotation.
+The orthographic camera has overview, café, garden, studio, courtyard, and horizon presets. Preset targets and framing spans come from the shared layout; zoom is calculated from viewport dimensions. OrbitControls support manual orbit/zoom with constrained polar angles. Manual control cancels an active preset movement, following, and cinematic rotation. The horizon scene is decorative terrain around the first walkable district, not a second navigation area.
 
 Preset transitions interpolate in the render loop; reduced motion makes them immediate. Cinematic mode slowly rotates the view. Day/evening settings change lighting and fog colors and enable lamp lighting. The main directional light uses a 2048 shadow map at high quality and 512 at low quality.
 
@@ -74,7 +74,7 @@ The robot is a CC0 asset credited to Tomás Laulhé (Quaternius), with changes c
 
 `src/world/Ambience.tsx` adds gentle tree sway, twelve instanced falling leaves along the planted perimeter, three expanding water rings in the courtyard basin, and small evening halos around existing lamps and café pendants. Leaves shrink to zero at the cycle boundary rather than visibly jumping back to the top. The water surface remains visible without animation. These effects are decorative: they neither read nor change agent activity.
 
-High quality enables these effects. Low quality returns trees to their neutral pose and removes leaves, water rings, and halos. Reduced motion also returns trees to neutral and removes leaves/rings; steady lighting and static water remain. The existing café steam disappears under reduced motion or when its detail layer is absent. Simulation pause stops resident activity but does not stop environmental ambience; use Reduced motion for a still world. Ambient deltas are capped at 50 ms after a suspended tab.
+High quality enables these effects. Low quality returns trees to their neutral pose and removes leaves, water rings, and halos. Reduced motion also returns trees to neutral and removes leaves/rings; steady lighting and static water remain. The existing café steam disappears under reduced motion or when its detail layer is absent. Simulation pause stops resident activity but does not stop environmental ambience; use Reduced motion for a still world. Ambient deltas are capped at 50 ms after a suspended tab. The wider landscape uses one terrain mesh, one scenic trail mesh, and instanced distant trees. The 600 × 600 ground blends the constructed district into meadow and a northern rise; the trail remains decorative. Low quality halves distant tree instances. This scenery has no task-driven animations.
 
 Daylight uses a more restrained ambient/key-light balance; evening retains enough sky fill to read residents and status colors. Wood grain extends onto the studio floor, and subtle stone texture distinguishes paths and garden paving. Water uses a smoother material than stone or wood. Halos are small depth-tested sprites, not full-screen bloom; this pass adds no extra point lights or shadow maps. Canvas textures are original, local, and disposed with their owners.
 
@@ -82,7 +82,7 @@ See [Rendering performance](rendering-performance.md) for the opt-in diagnostic 
 
 ## Compact world HUD
 
-The large introductory headline has been replaced with a compact location/status panel. Its district selector moves the camera to a named area. The label follows the camera focus point using the authored zone bounds, including while following a moving resident; focus between/outside zones reads Overview. This describes the focused area, not everything visible in the viewport.
+The large introductory headline has been replaced with a compact location/status panel. Its district selector moves the camera to a named area. The label follows the camera focus point using the authored zone bounds, including while following a moving resident; focus between zones reads Overview and focus beyond the district reads Horizon. This describes the focused area, not everything visible in the viewport.
 
 Working, needs-attention, completed, and unknown buttons open matching tasks across the known collection, including hidden and unseated tasks. “Here” selects residents assigned to the eight world seats, regardless of camera visibility. Counts refer to task records, including subagents, rather than claiming that every saved chat is a visible resident. Attention can overlap unknown activity. Bridge disconnection or stale telemetry moves activity into the unknown count while preserving unresolved attention. No status is rewritten by these filters.
 

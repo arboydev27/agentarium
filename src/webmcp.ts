@@ -99,7 +99,10 @@ export function registerWorldTools() {
       inputSchema: {
         type: 'object',
         properties: {
-          view: { type: 'string', enum: ['overview', 'café', 'garden', 'studio', 'courtyard'] },
+          view: {
+            type: 'string',
+            enum: ['overview', 'café', 'garden', 'studio', 'courtyard', 'horizon'],
+          },
         },
         required: ['view'],
         additionalProperties: false,
@@ -107,7 +110,11 @@ export function registerWorldTools() {
       annotations: { readOnlyHint: false },
       execute: (input) => {
         const p = object(input);
-        if (!['overview', 'café', 'garden', 'studio', 'courtyard'].includes(p.view as string))
+        if (
+          !['overview', 'café', 'garden', 'studio', 'courtyard', 'horizon'].includes(
+            p.view as string,
+          )
+        )
           throw new Error('Unknown view');
         useWorld.setState((s) => ({
           camera: p.view as typeof s.camera,
