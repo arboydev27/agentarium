@@ -2007,6 +2007,11 @@ h1 span {
   stroke: #9aa984;
   stroke-width: 1.5;
 }
+.landmark-orchard {
+  fill: #638c64;
+  stroke: #e4e7c9;
+  stroke-width: 1;
+}
 .landmark-north {
   position: absolute;
   top: 7px;
@@ -2052,6 +2057,10 @@ h1 span {
 .landmark-pin.lookout {
   right: 16px;
   top: 73px;
+}
+.landmark-pin.orchard {
+  right: 10px;
+  top: 16px;
 }
 .landmark-pin.horizon {
   left: 62px;
@@ -2099,6 +2108,13 @@ h1 span {
   }
   .landmark-pin.lookout {
     top: 42px;
+  }
+  .landmark-pin.orchard {
+    right: 5px;
+    top: 7px;
+  }
+  .landmark-pin.horizon {
+    left: 8px;
   }
   .landmark-pin.overview {
     bottom: 5px;

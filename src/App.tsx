@@ -38,6 +38,7 @@ import {
   VolumeX,
   Eye,
   MapPin,
+  Trees,
   ScanEye,
 } from 'lucide-react';
 import { useWorld, STATUS_LABEL } from './state';
@@ -900,8 +901,8 @@ export default function App() {
             className={camera === view && !followAgent ? 'active' : ''}
             key={view}
             onClick={() => changeCamera(view)}
-            aria-label={`${view === 'overview' ? 'Overview' : view[0].toUpperCase() + view.slice(1)} view`}
-            title={`${view === 'overview' ? 'Overview' : view[0].toUpperCase() + view.slice(1)} view`}
+            aria-label={`${view === 'orchard' ? 'Orchard Commons' : view === 'overview' ? 'Overview' : view[0].toUpperCase() + view.slice(1)} view`}
+            title={`${view === 'orchard' ? 'Orchard Commons' : view === 'overview' ? 'Overview' : view[0].toUpperCase() + view.slice(1)} view`}
           >
             {view === 'overview' ? (
               <Focus size={15} />
@@ -915,6 +916,8 @@ export default function App() {
               <Sprout size={15} />
             ) : view === 'lookout' ? (
               <MapPin size={15} />
+            ) : view === 'orchard' ? (
+              <Trees size={15} />
             ) : (
               <Eye size={15} />
             )}

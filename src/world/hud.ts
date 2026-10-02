@@ -1,6 +1,6 @@
 import type { Agent } from '../state';
 import { attentionFor } from '../shared/work.mjs';
-import { LOOKOUT, WORLD, ZONES, type WorldView, type ZoneName } from './layout';
+import { LOOKOUT, ORCHARD, WORLD, ZONES, type WorldView, type ZoneName } from './layout';
 export type WorkFilter = 'working' | 'completed' | 'unknown' | 'here';
 export function matchesWorkFilter(agent: Agent, filter: WorkFilter, paused = false) {
   if (filter === 'here') return agent.seat >= 0 && agent.seat < 8;
@@ -30,6 +30,7 @@ export function districtAt(x: number, z: number): WorldView {
       return name;
   }
   if (Math.hypot(x - LOOKOUT.x, z - LOOKOUT.z) <= LOOKOUT.focusRadius) return 'lookout';
+  if (Math.hypot(x - ORCHARD.x, z - ORCHARD.z) <= ORCHARD.focusRadius) return 'orchard';
   return Math.abs(x) > WORLD.width / 2 + 5 || Math.abs(z) > WORLD.depth / 2 + 5
     ? 'horizon'
     : 'overview';

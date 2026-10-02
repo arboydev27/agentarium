@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { Eye, Focus, Map, MapPin, X } from 'lucide-react';
+import { Eye, Focus, Map, MapPin, Trees, X } from 'lucide-react';
 import type { WorldView } from './world/layout';
 
 const LANDMARKS = [
   { view: 'overview', label: 'Overview', icon: Focus, detail: 'The resident grove' },
   { view: 'lookout', label: 'Lookout', icon: MapPin, detail: 'Northern clearing' },
+  { view: 'orchard', label: 'Orchard', icon: Trees, detail: 'Orchard Commons' },
   { view: 'horizon', label: 'Horizon', icon: Eye, detail: 'Ridge and sky' },
 ] as const;
 
@@ -95,6 +96,9 @@ export function LandmarkMap({
                 d="M29 120c13-9 26-11 43-6l21 12 19-7 31 10 4 20-28 17-66-2-27-20Z"
               />
               <circle className="landmark-clearing" cx="206" cy="86" r="17" />
+              <circle className="landmark-orchard" cx="228" cy="38" r="7" />
+              <circle className="landmark-orchard" cx="243" cy="45" r="6" />
+              <circle className="landmark-orchard" cx="216" cy="51" r="6" />
             </svg>
             <span className="landmark-north" aria-hidden="true">
               N ↑
