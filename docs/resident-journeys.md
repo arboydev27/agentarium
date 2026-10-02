@@ -12,7 +12,7 @@ The shared rig's standing rest, bench rest, café break, and garden look loops n
 
 ## Destinations and routes
 
-Nine destination slots are available:
+Ten destination slots are available:
 
 | Destination         | Visual activity          |
 | ------------------- | ------------------------ |
@@ -25,8 +25,9 @@ Nine destination slots are available:
 | Studio terrace      | Relaxing                 |
 | Tree-lined path     | Looking around           |
 | Meadow Lookout      | Looking around           |
+| Orchard Commons     | Looking around           |
 
-The navigation graph connects each desk's existing resting point to authored clear lanes, central paths, stairs, and destination branches. Shortest-path planning uses geometric edge distance. Routes include floor heights, studio stair elevations, and terrain-aligned trail samples leading to a lookout beyond the original district. Destinations are terminal branches so a resting resident does not occupy a through-route. This is pathfinding over authored waypoints, not a generated navmesh, physics engine, or arbitrary obstacle avoidance.
+The navigation graph connects each desk's existing resting point to authored clear lanes, central paths, stairs, and destination branches. Shortest-path planning uses geometric edge distance. Routes include floor heights, studio stair elevations, and terrain-aligned trail samples leading to Meadow Lookout and farther Orchard Commons. Destinations are terminal branches so a resting resident does not occupy a through-route. This is pathfinding over authored waypoints, not a generated navmesh, physics engine, or arbitrary obstacle avoidance.
 
 A resident first finishes its local desk transition and any eligible completion reaction. After its profile's rest interval, it attempts an outing. It tries preferred destinations in a rotating order, visits an available one, rests, and returns home. If no route is available, it waits near its desk and retries after roughly one second.
 
@@ -34,7 +35,7 @@ A resident first finishes its local desk transition and any eligible completion 
 
 Each destination has an exclusive lease. A traveling resident atomically reserves its route ahead, including named nodes, edges, and grid cells covering overlapping physical lanes even when their waypoint names differ. Nodes and lane cells are released after the resident clears them by 0.95 units, allowing a new trip into a cleared branch without waiting for the first resident to reach its destination. The destination remains reserved until the resident returns. A return reclaims the complete path before reversing and has priority over new outings. Leases are released on return, removal, reduced-motion placement, and unmount.
 
-This deliberately conservative scheme prevents head-on meetings and partial-lock deadlocks. It can make a resident wait longer than local steering would because the path ahead remains reserved. A paused or stale traveler keeps its corridor so other residents do not walk through it. Two routes at different elevations may also block each other if their ground-plane footprints overlap. It does not reroute around arbitrary newly placed props. Before expanding capacity, consider passing lanes and a crowd-steering layer.
+This deliberately conservative scheme prevents head-on meetings and partial-lock deadlocks. It can make a resident wait longer than local steering would because the path ahead remains reserved. Orchard Commons is roughly 100 route units from the central path, so a complete return can take over 90 seconds at the slowest resident pace even without contention. A paused or stale traveler keeps its corridor so other residents do not walk through it. Two routes at different elevations may also block each other if their ground-plane footprints overlap. It does not reroute around arbitrary newly placed props. Before expanding capacity, consider passing lanes and a crowd-steering layer.
 
 ## Work takes priority
 
@@ -60,4 +61,4 @@ Demo automatic ticks leave idle residents alone for at least 60 seconds while ou
 4. Add destination poses in `rig.ts` and verify the shared skeleton contract. Keep accessory geometry independent of body animation tracks.
 5. Run layout, navigation, traffic, interruption, pause/removal, and asset tests. Inspect the new route in the browser, including reduced motion and follow mode.
 
-Tests cover all 72 home-to-destination routes, reverse paths, desk/chair and selected major-prop clearance, lookout trail grade and clearance, atomic leases, returning priority, overlapping lanes with different waypoint names, interrupted travel, and multi-resident simulations without body overlaps. These authored-footprint checks do not replace visual inspection or constitute a general collision solver.
+Tests cover all 80 home-to-destination routes, reverse paths, desk/chair and selected major-prop clearance, lookout and orchard trail grade and clearance, atomic leases, returning priority, overlapping lanes with different waypoint names, interrupted travel, and multi-resident simulations without body overlaps. These authored-footprint checks do not replace visual inspection or constitute a general collision solver.
