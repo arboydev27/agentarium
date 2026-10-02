@@ -1,15 +1,198 @@
 import { BasinWater, DriftingLeaves, WarmGlow } from './Ambience';
-import { memo, useRef } from 'react';
+import { memo, useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useWorld } from '../state';
 import { Box, Cylinder, Sphere, Sign, Tree, Pot, Lamp } from './primitives';
-import { WORLD, ZONES, type ZoneName } from './layout';
+import { ZONES, type ZoneName } from './layout';
 import { DetailLayer } from './DetailLayer';
 import { useSurfaceTextures } from './surfaces';
 
 const wood = '#b98b60';
 const green = '#365d4a';
+
+// The landscape is scenery beneath this district. Future walkable districts can
+// replace sections of it without changing the current authored resident routes.
+function landscapeHeight(x: number, z: number) {
+  const distance = Math.hypot(x, z);
+  const beyondDistrict = THREE.MathUtils.smoothstep(distance, 16, 34);
+  const distantRidge = THREE.MathUtils.smoothstep(distance, 38, 105);
+  const northernRise = THREE.MathUtils.smoothstep(-z, 16, 68);
+  const folds = Math.sin(x * 0.085) * Math.cos(z * 0.061) * 0.8 + Math.sin((x + z) * 0.044) * 0.55;
+  const northernCrest = 7.2 + Math.sin(x * 0.061) * 2.3 + Math.sin(x * 0.135 + 0.8) * 1.1;
+  const meadow =
+    -1.55 +
+    beyondDistrict * (0.55 + folds * 0.45) +
+    distantRidge * (2.8 + folds) +
+    northernRise * northernCrest;
+  const districtEdge = Math.max(Math.abs(x) / 15.8, Math.abs(z) / 12.6);
+  const plateau = 1 - THREE.MathUtils.smoothstep(districtEdge, 1, 1.9);
+  return THREE.MathUtils.lerp(meadow, 0.39, plateau);
+}
+
+function LandscapePath() {
+  const geometry = useMemo(() => {
+    const positions: number[] = [];
+    const indices: number[] = [];
+    for (let i = 0; i <= 34; i++) {
+      const z = -10.2 - i * 2.35;
+      const center = 4.4 * Math.sin(i * 0.17) + i * 0.16;
+      const previous = 4.4 * Math.sin((i - 1) * 0.17) + (i - 1) * 0.16;
+      const next = 4.4 * Math.sin((i + 1) * 0.17) + (i + 1) * 0.16;
+      const lateral = (next - previous) / 4.7;
+      for (const side of [-1, 1]) {
+        const x = center + side * 1.15;
+        const edgeZ = z + side * lateral * 1.15;
+        positions.push(x, landscapeHeight(x, edgeZ) + 0.045, edgeZ);
+      }
+      if (i) {
+        const a = (i - 1) * 2;
+        indices.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
+      }
+    }
+    const path = new THREE.BufferGeometry();
+    path.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    path.setIndex(indices);
+    path.computeVertexNormals();
+    return path;
+  }, []);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  return (
+    <mesh name="decorative-meadow-trail" geometry={geometry} receiveShadow>
+      <meshStandardMaterial color="#c6bc94" roughness={1} side={THREE.DoubleSide} />
+    </mesh>
+  );
+}
+
+function Landscape() {
+  const geometry = useMemo(() => {
+    // Put the mesh boundary well beyond the fog so no rectangular edge enters view.
+    const ground = new THREE.PlaneGeometry(600, 600, 128, 128);
+    ground.rotateX(-Math.PI / 2);
+    const positions = ground.getAttribute('position');
+    const colors = new Float32Array(positions.count * 3);
+    const meadow = new THREE.Color('#82a171');
+    const field = new THREE.Color('#acb78d');
+    const ridge = new THREE.Color('#90a397');
+    const color = new THREE.Color();
+    for (let i = 0; i < positions.count; i++) {
+      const x = positions.getX(i);
+      const z = positions.getZ(i);
+      const y = landscapeHeight(x, z);
+      positions.setY(i, y);
+      const fieldPatch =
+        (Math.sin(x * 0.082 + Math.sin(z * 0.04)) * Math.cos(z * 0.11 - x * 0.025) + 1) * 0.5;
+      color
+        .copy(meadow)
+        .lerp(field, fieldPatch * 0.42)
+        .lerp(ridge, THREE.MathUtils.clamp((y - 2.5) / 12, 0, 0.85));
+      colors[i * 3] = color.r;
+      colors[i * 3 + 1] = color.g;
+      colors[i * 3 + 2] = color.b;
+    }
+    ground.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    ground.computeVertexNormals();
+    return ground;
+  }, []);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  return (
+    <group name="distant-landscape">
+      <mesh geometry={geometry} receiveShadow>
+        <meshStandardMaterial vertexColors roughness={1} side={THREE.DoubleSide} />
+      </mesh>
+      <LandscapePath />
+      <LandscapeGroves />
+    </group>
+  );
+}
+
+function LandscapeGroves() {
+  const quality = useWorld((s) => s.quality);
+  const trunks = useRef<THREE.InstancedMesh>(null);
+  const crowns = useRef<THREE.InstancedMesh>(null);
+  const tips = useRef<THREE.InstancedMesh>(null);
+  const understory = useRef<THREE.InstancedMesh>(null);
+  const placements = useMemo(() => {
+    const count = quality === 'high' ? 168 : 84;
+    const clusters: [number, number][] = [
+      [-43, -30],
+      [-29, -49],
+      [-46, -68],
+      [39, -29],
+      [31, -52],
+      [45, -72],
+      [-31, 29],
+      [29, 31],
+      [-51, 49],
+      [51, 47],
+      [-18, -78],
+      [35, -84],
+    ];
+    return Array.from({ length: count }, (_, i) => {
+      const [cx, cz] = clusters[i % clusters.length];
+      const ring = Math.floor(i / clusters.length);
+      const spread = Math.sqrt((ring + 0.5) / (count / clusters.length)) * 13;
+      const angle = i * 2.399963;
+      const x = cx + Math.cos(angle) * spread;
+      const z = cz + Math.sin(angle) * spread;
+      const size = 1.15 + ((i * 13) % 17) * 0.1;
+      return { x, y: landscapeHeight(x, z), z, size, shade: i % 3 };
+    });
+  }, [quality]);
+  useEffect(() => {
+    if (!trunks.current || !crowns.current || !tips.current || !understory.current) return;
+    const matrix = new THREE.Matrix4();
+    const position = new THREE.Vector3();
+    const scale = new THREE.Vector3();
+    const rotation = new THREE.Quaternion();
+    const greens = ['#5a7656', '#6e895f', '#78936c'].map((shade) => new THREE.Color(shade));
+    placements.forEach(({ x, y, z, size, shade }, i) => {
+      matrix.compose(
+        position.set(x, y + size * 0.62, z),
+        rotation,
+        scale.set(size, size * 1.25, size),
+      );
+      trunks.current!.setMatrixAt(i, matrix);
+      matrix.compose(position.set(x, y + size * 1.7, z), rotation, scale.setScalar(size));
+      crowns.current!.setMatrixAt(i, matrix);
+      crowns.current!.setColorAt(i, greens[shade]);
+      matrix.compose(position.set(x, y + size * 2.25, z), rotation, scale.setScalar(size * 0.73));
+      tips.current!.setMatrixAt(i, matrix);
+      tips.current!.setColorAt(i, greens[(shade + 1) % greens.length]);
+      matrix.compose(
+        position.set(x, y + size * 0.12, z),
+        rotation,
+        scale.set(size * 0.8, size * 0.24, size * 0.85),
+      );
+      understory.current!.setMatrixAt(i, matrix);
+      understory.current!.setColorAt(i, greens[(shade + 2) % greens.length]);
+    });
+    for (const mesh of [trunks.current, crowns.current, tips.current, understory.current]) {
+      mesh.instanceMatrix.needsUpdate = true;
+      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    }
+  }, [placements]);
+  return (
+    <group name="distant-groves">
+      <instancedMesh ref={trunks} args={[undefined, undefined, placements.length]}>
+        <cylinderGeometry args={[0.09, 0.15, 1, 5]} />
+        <meshStandardMaterial color="#786d55" roughness={1} />
+      </instancedMesh>
+      <instancedMesh ref={crowns} args={[undefined, undefined, placements.length]}>
+        <coneGeometry args={[0.8, 1.7, 6]} />
+        <meshStandardMaterial roughness={1} flatShading />
+      </instancedMesh>
+      <instancedMesh ref={tips} args={[undefined, undefined, placements.length]}>
+        <coneGeometry args={[0.57, 1.35, 6]} />
+        <meshStandardMaterial roughness={1} flatShading />
+      </instancedMesh>
+      <instancedMesh ref={understory} args={[undefined, undefined, placements.length]}>
+        <sphereGeometry args={[1, 6, 4]} />
+        <meshStandardMaterial roughness={1} flatShading />
+      </instancedMesh>
+    </group>
+  );
+}
 
 function Floor({ zone, color, map }: { zone: ZoneName; color: string; map?: THREE.Texture }) {
   const {
@@ -337,6 +520,30 @@ function Garden({ stoneMap }: { stoneMap: THREE.Texture }) {
   return (
     <group name="garden">
       <Floor zone="garden" color="#bfb88f" map={stoneMap} />
+      {/* The pale spine follows the authored aisle without adding a collision obstacle. */}
+      {Array.from({ length: 8 }, (_, i) => (
+        <Box
+          key={`spine-${i}`}
+          pos={[6.8, 0.557, 2.05 + i * 0.65]}
+          size={[1.12, 0.012, 0.49]}
+          color={i % 2 ? '#d6ccaa' : '#ded4b3'}
+          radius={0.025}
+        />
+      ))}
+      {[2.22, 11.78].map((x) => (
+        <group key={`bed-${x}`}>
+          <Box pos={[x, 0.7, 5.05]} size={[0.4, 0.3, 4.9]} color="#b78361" radius={0.04} />
+          <Box pos={[x, 0.855, 5.05]} size={[0.32, 0.018, 4.75]} color="#574f39" radius={0} />
+          {[3.25, 4.7, 6.25].map((z, i) => (
+            <Sphere
+              key={`${x}-${z}`}
+              pos={[x, 0.94, z]}
+              scale={[0.29, 0.2, 0.41]}
+              color={i % 2 ? '#6d8b57' : '#809967'}
+            />
+          ))}
+        </group>
+      ))}
       {[2.5, 11.5].flatMap((x) =>
         [1.4, 8.6].map((z) => (
           <Cylinder key={`${x},${z}`} pos={[x, 2.6, z]} r={0.095} h={4.1} color="#9e855f" />
@@ -372,6 +579,18 @@ function Garden({ stoneMap }: { stoneMap: THREE.Texture }) {
       <Pot pos={[2.8, 0.55, 8.2]} scale={1.7} />
       <Pot pos={[11.1, 0.55, 8.2]} scale={1.7} />
       <DetailLayer zone="garden">
+        {[2.22, 11.78].flatMap((x) =>
+          Array.from({ length: 9 }, (_, i) => (
+            <group key={`flower-${x}-${i}`} position={[x, 0.91, 2.95 + i * 0.52]}>
+              <Cylinder pos={[0, 0.16, 0]} r={0.014} h={0.32} color="#627d4e" />
+              <Sphere
+                pos={[0, 0.32, 0]}
+                scale={[0.085, 0.07, 0.085]}
+                color={i % 3 === 0 ? '#e8c991' : i % 2 ? '#f1dfbd' : '#cf9d85'}
+              />
+            </group>
+          )),
+        )}
         {[2.5, 11.5].flatMap((x) =>
           Array.from({ length: 8 }, (_, i) => (
             <Sphere
@@ -400,6 +619,34 @@ function Courtyard() {
   return (
     <group name="courtyard">
       <Floor zone="courtyard" color="#b8c395" />
+      {/* Ground ribbons describe the branch toward the bench and the basin. */}
+      {Array.from({ length: 7 }, (_, i) => (
+        <Box
+          key={`court-path-${i}`}
+          pos={[-6.2, 0.496, 3.45 + i * 0.68]}
+          size={[0.94, 0.012, 0.51]}
+          color={i % 2 ? '#d9d0ad' : '#e2d8b8'}
+          radius={0.045}
+        />
+      ))}
+      <Box pos={[-8.17, 0.496, 3.4]} size={[2.65, 0.012, 0.7]} color="#ddd2b1" radius={0.045} />
+      <Box pos={[-4.9, 0.496, 7.7]} size={[2.5, 0.012, 0.7]} color="#ddd2b1" radius={0.045} />
+      <Box pos={[-6.8, 0.62, 8.67]} size={[8.1, 0.26, 0.48]} color="#beaa82" radius={0.045} />
+      <Box pos={[-6.8, 0.755, 8.67]} size={[7.95, 0.012, 0.37]} color="#5f6845" radius={0} />
+      {[-11.12, -0.9].map((x) => (
+        <group key={`court-border-${x}`}>
+          <Box pos={[x, 0.64, 5.53]} size={[0.34, 0.3, 4.45]} color="#b4a47f" radius={0.04} />
+          <Box pos={[x, 0.796, 5.53]} size={[0.25, 0.012, 4.3]} color="#526543" radius={0} />
+          {[4.2, 5.45, 6.7].map((z, i) => (
+            <Sphere
+              key={`${x}-${z}`}
+              pos={[x, 0.88, z]}
+              scale={[0.28, 0.17, 0.42]}
+              color={i % 2 ? '#749059' : '#648252'}
+            />
+          ))}
+        </group>
+      ))}
       <group position={[-10.6, 0.49, 3.4]} rotation={[0, Math.PI / 2, 0]}>
         <Box pos={[0, 0.55, 0]} size={[2.1, 0.15, 0.6]} color={wood} />
         <Box pos={[0, 0.91, -0.3]} size={[2.1, 0.6, 0.1]} color={wood} />
@@ -412,6 +659,18 @@ function Courtyard() {
       <Cylinder pos={[-2.2, 1.1, 8]} r={0.18} h={0.6} color="#b7bda0" />
       <Cylinder pos={[-2.2, 1.41, 8]} r={0.4} h={0.08} color="#d5d3b6" />
       <DetailLayer zone="courtyard">
+        {[-11.12, -0.9].flatMap((x) =>
+          Array.from({ length: 7 }, (_, i) => (
+            <group key={`court-flower-${x}-${i}`} position={[x, 0.8, 3.9 + i * 0.55]}>
+              <Cylinder pos={[0, 0.14, 0]} r={0.014} h={0.28} color="#68804e" />
+              <Sphere
+                pos={[0, 0.29, 0]}
+                scale={[0.075, 0.065, 0.075]}
+                color={i % 2 ? '#efd5a0' : '#d59389'}
+              />
+            </group>
+          )),
+        )}
         {Array.from({ length: 13 }, (_, i) => (
           <group key={i} position={[-10.5 + i * 0.62, 0.49, 8.6]}>
             <Cylinder pos={[0, 0.16, 0]} r={0.02} h={0.32} color="#71894e" />
@@ -431,13 +690,7 @@ export const Environment = memo(function Environment() {
   const surfaces = useSurfaceTextures();
   return (
     <group>
-      <Box
-        pos={[0, -0.28, 0]}
-        size={[WORLD.width, 1.1, WORLD.depth]}
-        color="#668065"
-        radius={0.5}
-      />
-      <Box pos={[0, 0.2, 0]} size={[WORLD.width, 0.4, WORLD.depth]} color="#9fb482" radius={0.18} />
+      <Landscape />
       <Box
         pos={[0, 0.43, 0.85]}
         size={[27.4, 0.06, 1.7]}
@@ -499,17 +752,6 @@ export const Environment = memo(function Environment() {
       <Lamp pos={[-0.9, 0.4, 1.2]} />
       <Lamp pos={[-12.5, 0.4, 1.2]} />
       <Lamp pos={[12.5, 0.4, 0.8]} />
-      <Sign
-        text="A G E N T A R I U M"
-        pos={[0, -0.16, WORLD.depth / 2 + 0.014]}
-        size={[3.6, 0.42]}
-        color="#e0e8ce"
-        background="#668065"
-      />
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.87, 0]} receiveShadow>
-        <planeGeometry args={[200, 200]} />
-        <shadowMaterial transparent opacity={0.16} />
-      </mesh>
     </group>
   );
 });
