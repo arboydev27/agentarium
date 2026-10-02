@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { initialAgents } from '../state';
-import { LOOKOUT, SEATS, WORLD } from './layout';
+import { LOOKOUT, ORCHARD, SEATS, WORLD } from './layout';
 import { DESTINATIONS, NODES, EDGES, planRoute, NavigationTraffic } from './navigation';
 import { ResidentJourney } from './journey';
 import { residentStyle, ACCESSORIES } from './personality';
@@ -11,6 +11,30 @@ const agent = (seat = 0, status: ReturnType<typeof initialAgents>[number]['statu
   status,
   updatedAt: 10000,
 });
+function landscapeMeshHeight(x: number, z: number) {
+  const step = 600 / 128;
+  const gx = (x + 300) / step,
+    gz = (z + 300) / step;
+  const ix = Math.floor(gx),
+    iz = Math.floor(gz),
+    tx = gx - ix,
+    tz = gz - iz;
+  const x0 = ix * step - 300,
+    z0 = iz * step - 300;
+  const h00 = terrainHeight(x0, z0),
+    h10 = terrainHeight(x0 + step, z0),
+    h01 = terrainHeight(x0, z0 + step),
+    h11 = terrainHeight(x0 + step, z0 + step);
+  const diagonalA =
+    tx + tz <= 1
+      ? h00 + tx * (h10 - h00) + tz * (h01 - h00)
+      : h11 + (1 - tx) * (h01 - h11) + (1 - tz) * (h10 - h11);
+  const diagonalB =
+    tx >= tz
+      ? h00 + tx * (h10 - h00) + tz * (h11 - h10)
+      : h00 + tz * (h01 - h00) + tx * (h11 - h01);
+  return Math.max(diagonalA, diagonalB);
+}
 function advance(motion: ResidentJourney, a = agent(), seconds = 1, overrides = {}) {
   for (let i = 0; i < seconds * 60; i++) motion.update(a, 1 / 60, { ...options, ...overrides });
 }
@@ -26,10 +50,10 @@ describe('navigation graph', () => {
         );
         expect(route.lengths.at(-1)).toBeGreaterThan(0);
         for (const [index, [x, y, z]] of route.points.entries()) {
-          if (route.ids[index].startsWith('meadow:')) {
+          if (route.ids[index].startsWith('meadow:') || route.ids[index].startsWith('orchard:')) {
             expect(z).toBeLessThan(-10);
             expect(y - terrainHeight(x, z)).toBeGreaterThanOrEqual(0.04);
-            expect(y - terrainHeight(x, z)).toBeLessThanOrEqual(0.11);
+            expect(y - terrainHeight(x, z)).toBeLessThanOrEqual(0.13);
             continue;
           }
           expect(Math.abs(x)).toBeLessThan(WORLD.width / 2);
@@ -84,6 +108,56 @@ describe('navigation graph', () => {
     expect(highestClearance).toBeLessThan(0.2);
     expect(closestPost).toBeGreaterThan(0.65);
   });
+  it('branches to Orchard Commons after trail sample 22 without changing the lookout route', () => {
+    const orchard = planRoute('center', 'orchard:commons'),
+      lookout = planRoute('center', 'meadow:lookout');
+    expect(orchard.ids).toContain('meadow:trail-22');
+    expect(lookout.ids).toContain('meadow:trail-12');
+    expect(lookout.ids).not.toContain('meadow:trail-13');
+    expect(lookout.ids).not.toContain('orchard:branch-1');
+    for (let index = 1; index <= 7; index++)
+      expect(orchard.ids).toContain(`orchard:branch-${index}`);
+    expect(orchard.ids.at(-1)).toBe('orchard:commons');
+    expect(NODES['orchard:commons']).toEqual([
+      ORCHARD.x,
+      terrainHeight(ORCHARD.x, ORCHARD.z) + 0.12,
+      ORCHARD.z,
+    ]);
+    let lowestBranchClearance = Infinity,
+      lowestPadClearance = Infinity;
+    for (let index = 1; index < orchard.points.length; index++) {
+      const from = orchard.points[index - 1],
+        to = orchard.points[index];
+      if (orchard.ids[index] !== 'meadow:trail-0')
+        expect(orchard.lengths[index] - orchard.lengths[index - 1]).toBeLessThan(5.5);
+      for (let step = 0; step <= 10; step++) {
+        const t = step / 10,
+          x = from[0] + (to[0] - from[0]) * t,
+          y = from[1] + (to[1] - from[1]) * t,
+          z = from[2] + (to[2] - from[2]) * t;
+        expect(
+          y - terrainHeight(x, z),
+          `${orchard.ids[index - 1]} → ${orchard.ids[index]}`,
+        ).toBeGreaterThan(0.01);
+        expect(y - terrainHeight(x, z)).toBeLessThan(0.3);
+        if (orchard.ids[index].startsWith('orchard:'))
+          lowestBranchClearance = Math.min(lowestBranchClearance, y - landscapeMeshHeight(x, z));
+        if (orchard.ids[index] === 'orchard:commons')
+          lowestPadClearance = Math.min(lowestPadClearance, y - landscapeMeshHeight(x, z));
+      }
+    }
+    // The landscape uses a 128×128 grid. Sample both possible cell diagonals
+    // conservatively, so the new branch and pad do not sink into its mesh.
+    expect(lowestBranchClearance).toBeGreaterThan(0.03);
+    expect(lowestPadClearance).toBeGreaterThan(0.08);
+    for (const [x, z] of [
+      [ORCHARD.x - 3, ORCHARD.z],
+      [ORCHARD.x + 3, ORCHARD.z],
+      [ORCHARD.x, ORCHARD.z - 3],
+      [ORCHARD.x, ORCHARD.z + 3],
+    ])
+      expect(terrainHeight(x, z)).toBeCloseTo(terrainHeight(ORCHARD.x, ORCHARD.z));
+  });
   it('keeps transit lanes outside desk and chair footprints with body clearance', () => {
     for (const [from, to] of EDGES) {
       const a = NODES[from],
@@ -135,6 +209,18 @@ describe('navigation graph', () => {
     expect(traffic.acquire('window', windowLane.ids)).toBe(false);
     traffic.releasePassed('home', homeLane.lengths.at(-1)! + 1);
     expect(traffic.acquire('window', windowLane.ids)).toBe(true);
+  });
+  it('allows a lookout trip after an orchard walker clears the shared trail junction', () => {
+    const traffic = new NavigationTraffic(),
+      orchard = planRoute('home-0', 'orchard:commons'),
+      lookout = planRoute('home-1', 'meadow:lookout');
+    expect(traffic.acquire('orchard', orchard.ids)).toBe(true);
+    expect(traffic.acquire('lookout', lookout.ids)).toBe(false);
+    traffic.releasePassed('orchard', orchard.lengths[orchard.ids.indexOf('meadow:trail-16')] + 1);
+    expect(traffic.acquire('lookout', lookout.ids)).toBe(true);
+    expect(traffic.acquire('orchard', orchard.ids, true)).toBe(false);
+    traffic.release('lookout');
+    expect(traffic.acquire('orchard', orchard.ids, true)).toBe(true);
   });
 });
 
@@ -244,6 +330,37 @@ describe('resident journeys', () => {
     advance(motion, waiting, 150);
     expect(motion.activity).toBe('At desk');
     expect(motion.clip(waiting)).toBe('DeskWait');
+  });
+  it('reaches Orchard Commons and retraces the long route when work interrupts the visit', () => {
+    const traffic = new NavigationTraffic(),
+      motion = new ResidentJourney(3, 'demo-3', traffic);
+    for (const destination of DESTINATIONS)
+      if (destination.id !== 'orchard:commons') traffic.reserveDestination('scene', destination.id);
+    let arrived = false,
+      previous = motion.position;
+    for (let frame = 0; frame < 240 * 60; frame++) {
+      motion.update(agent(3), 1 / 60, options);
+      const next = motion.position;
+      expect(Math.hypot(...next.map((value, axis) => value - previous[axis]))).toBeLessThan(0.06);
+      previous = next;
+      if (motion.activity === 'Resting at orchard commons') {
+        arrived = true;
+        break;
+      }
+    }
+    expect(arrived).toBe(true);
+    expect(motion.position[0]).toBeCloseTo(ORCHARD.x);
+    expect(motion.position[2]).toBeCloseTo(ORCHARD.z);
+    const working = agent(3, 'working'),
+      before = motion.position;
+    motion.update(working, 1 / 60, options);
+    expect(Math.hypot(...motion.position.map((value, axis) => value - before[axis]))).toBeLessThan(
+      0.05,
+    );
+    advance(motion, working, 240);
+    expect(motion.activity).toBe('At desk');
+    expect(working.status).toBe('working');
+    expect(traffic.reserveDestination('next', 'orchard:commons')).toBe(true);
   });
   it('does not roam from unknown, disconnected, stale, paused, or reduced states', () => {
     for (const state of [
@@ -533,8 +650,17 @@ it('keeps eight mixed-status residents moving without collisions or indefinite r
   }
   expect(visited.size).toBe(8);
   expect(interruptions).toBeGreaterThan(0);
-  expect(completedReturns).toBe(interruptions);
+  expect(completedReturns).toBeGreaterThan(0);
+  const longestDirectReturn =
+    Math.max(
+      ...SEATS.map((_, seat) => planRoute('orchard:commons', `home-${seat}`).lengths.at(-1)!),
+    ) / 1.08;
+  const returnBudget = longestDirectReturn + 20;
+  const pendingReturns = returningSince.filter((since) => since >= 0);
   expect(maxWait).toBeLessThan(90);
-  expect(longestReturn).toBeLessThan(90);
+  expect(longestReturn).toBeLessThan(returnBudget);
+  expect(interruptions - completedReturns).toBe(pendingReturns.length);
+  expect(pendingReturns.length).toBeLessThanOrEqual(1);
+  for (const since of pendingReturns) expect(960 - since).toBeLessThan(returnBudget);
   expect(closest).toBeGreaterThan(0.6);
 });

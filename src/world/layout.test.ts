@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { WORLD, ZONES, SEATS, CAMERA_VIEWS } from './layout';
+import { WORLD, ZONES, SEATS, CAMERA_VIEWS, ORCHARD, WORLD_VIEWS } from './layout';
 import { routeForSeat } from './motion';
 import { showFineDetail } from './detail';
 
@@ -45,6 +45,15 @@ describe('expanded world layout', () => {
   it('bookmarks the first outside lookout beyond the original district', () => {
     expect(CAMERA_VIEWS.lookout.look[2]).toBeLessThan(-WORLD.depth / 2);
     expect(CAMERA_VIEWS.lookout.span.every((value) => value > 0)).toBe(true);
+  });
+  it('bookmarks Orchard Commons in the finite outer terrain', () => {
+    expect(WORLD_VIEWS).toContain('orchard');
+    expect(ORCHARD).toMatchObject({ x: 36, z: -70 });
+    expect(ORCHARD.clearingRadius).toBeGreaterThan(3);
+    expect(ORCHARD.focusRadius).toBeGreaterThan(ORCHARD.clearingRadius);
+    expect(CAMERA_VIEWS.orchard.look[0]).toBe(ORCHARD.x);
+    expect(CAMERA_VIEWS.orchard.look[2]).toBe(ORCHARD.z);
+    expect(CAMERA_VIEWS.orchard.span.every((value) => value > 0)).toBe(true);
   });
 });
 

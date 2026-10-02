@@ -1,5 +1,5 @@
 import { routeForSeat, routeLengths, type Point } from './motion';
-import { LOOKOUT } from './layout';
+import { LOOKOUT, ORCHARD } from './layout';
 import { meadowTrailPoint, terrainHeight } from './terrain';
 
 export type Destination = {
@@ -40,6 +40,13 @@ export const DESTINATIONS: Destination[] = [
     clip: 'GardenLook',
   },
   { id: 'promenade', label: 'tree-lined path', node: 'promenade', facing: 0, clip: 'GardenLook' },
+  {
+    id: 'orchard:commons',
+    label: 'orchard commons',
+    node: 'orchard:commons',
+    facing: 0.7,
+    clip: 'GardenLook',
+  },
 ];
 // Authored walkable lanes, including elevation changes at stairs and floor edges.
 // Destinations are terminal branches so resting residents never occupy through routes.
@@ -77,11 +84,26 @@ export const NODES: Record<string, Point> = {
   'meadow:branch-1': [8, terrainHeight(8, -38.25) + 0.07, -38.25],
   'meadow:branch-2': [10.5, terrainHeight(10.5, -38.1) + 0.08, -38.1],
   'meadow:lookout': [LOOKOUT.x, terrainHeight(LOOKOUT.x, LOOKOUT.z) + 0.1, LOOKOUT.z],
+  'orchard:commons': [ORCHARD.x, terrainHeight(ORCHARD.x, ORCHARD.z) + 0.12, ORCHARD.z],
 };
-for (let index = 0; index <= 12; index++) {
+for (let index = 0; index <= 22; index++) {
   const [x, y, z] = meadowTrailPoint(index);
   // A little clearance keeps the straight movement chords above uneven ground.
   NODES[`meadow:trail-${index}`] = [x, y + 0.025, z];
+}
+const orchardOrigin = meadowTrailPoint(22);
+const orchardBranch: [number, number][] = [
+  [(orchardOrigin[0] + 10) / 2, (orchardOrigin[2] - 64) / 2],
+  [10, -64],
+  [15, -65.25],
+  [20, -66.5],
+  [24.5, -67.5],
+  [29, -68.5],
+  [32.5, -69.25],
+];
+for (let index = 0; index < orchardBranch.length; index++) {
+  const [x, z] = orchardBranch[index];
+  NODES[`orchard:branch-${index + 1}`] = [x, terrainHeight(x, z) + 0.105, z];
 }
 const chains = [
   ['west', 'center', 'east'],
@@ -104,12 +126,12 @@ const chains = [
   ['west', 'court-door', 'court-aisle', 'court-front', 'basin'],
   ['court-aisle', 'bench-approach', 'bench'],
   ['center', 'promenade'],
+  ['center', ...Array.from({ length: 23 }, (_, index) => `meadow:trail-${index}`)],
+  ['meadow:trail-12', 'meadow:branch-1', 'meadow:branch-2', 'meadow:lookout'],
   [
-    'center',
-    ...Array.from({ length: 13 }, (_, index) => `meadow:trail-${index}`),
-    'meadow:branch-1',
-    'meadow:branch-2',
-    'meadow:lookout',
+    'meadow:trail-22',
+    ...orchardBranch.map((_, index) => `orchard:branch-${index + 1}`),
+    'orchard:commons',
   ],
 ];
 for (let seat = 0; seat < 8; seat++) {

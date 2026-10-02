@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { Point } from './motion';
-import { LOOKOUT } from './layout';
+import { LOOKOUT, ORCHARD } from './layout';
 
 function meadowHeight(x: number, z: number) {
   const distance = Math.hypot(x, z);
@@ -20,15 +20,23 @@ function meadowHeight(x: number, z: number) {
 }
 
 export function terrainHeight(x: number, z: number) {
-  const ground = meadowHeight(x, z);
-  const clearing =
+  let ground = meadowHeight(x, z);
+  const lookoutClearing =
     1 -
     THREE.MathUtils.smoothstep(
       Math.hypot(x - LOOKOUT.x, z - LOOKOUT.z),
       LOOKOUT.clearingRadius,
       LOOKOUT.clearingRadius + 4.3,
     );
-  return THREE.MathUtils.lerp(ground, meadowHeight(LOOKOUT.x, LOOKOUT.z), clearing);
+  ground = THREE.MathUtils.lerp(ground, meadowHeight(LOOKOUT.x, LOOKOUT.z), lookoutClearing);
+  const orchardClearing =
+    1 -
+    THREE.MathUtils.smoothstep(
+      Math.hypot(x - ORCHARD.x, z - ORCHARD.z),
+      ORCHARD.clearingRadius,
+      ORCHARD.clearingRadius + 4.3,
+    );
+  return THREE.MathUtils.lerp(ground, meadowHeight(ORCHARD.x, ORCHARD.z), orchardClearing);
 }
 
 // Samples lie along the center of the visible meadow trail, numbered from the

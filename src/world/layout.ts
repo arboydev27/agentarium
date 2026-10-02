@@ -10,6 +10,7 @@ export const ZONES = {
 };
 export type ZoneName = keyof typeof ZONES;
 export const LOOKOUT = { x: 13.5, z: -38, clearingRadius: 3.2, focusRadius: 7 } as const;
+export const ORCHARD = { x: 36, z: -70, clearingRadius: 3.4, focusRadius: 8 } as const;
 export const WORLD_VIEWS = [
   'overview',
   'café',
@@ -17,6 +18,7 @@ export const WORLD_VIEWS = [
   'studio',
   'courtyard',
   'lookout',
+  'orchard',
   'horizon',
 ] as const;
 export type WorldView = (typeof WORLD_VIEWS)[number];
@@ -38,5 +40,6 @@ export const CAMERA_VIEWS: Record<WorldView, { pos: Point; look: Point; span: [n
     studio: { pos: [15, 12, 9], look: [7, 2.2, -5], span: [16, 12] },
     courtyard: { pos: [1, 11, 18], look: [-6, 1.5, 5.5], span: [16, 12] },
     lookout: { pos: [27, 16, -16], look: [LOOKOUT.x, 4, LOOKOUT.z], span: [24, 17] },
+    orchard: { pos: [53, 24, -51], look: [ORCHARD.x, 9.7, ORCHARD.z], span: [28, 20] },
     horizon: { pos: [0, 12, 35], look: [0, 2, -22], span: [50, 28] },
   };
