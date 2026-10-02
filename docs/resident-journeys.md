@@ -50,7 +50,7 @@ When a session is removed near its desk, the existing walk-out/fade remains. Whe
 
 Select a resident to see its cosmetic activity in its world label—for example, Walking to café counter, Resting at courtyard bench, or Returning to desk. All resident-label tooltips expose that activity. The inspector identifies the assigned zone as **Home**, which remains stable while the resident travels. Follow resident tracks actual moving position; camera presets, including WebMCP view changes, cancel follow. The raised follow angle reduces foreground obstruction but does not guarantee an unobstructed view from every direction.
 
-Demo automatic ticks leave idle residents alone for at least 60 seconds while outings are enabled so visits can be seen. Manual task/status controls remain immediate, and live telemetry has no such delay. Simulation speed controls event scheduling; walking pace remains measured in real seconds. Outing preferences and positions are temporary, not saved journeys.
+Demo automatic ticks leave idle residents alone for at least 60 seconds while outings are enabled so visits can be seen. One demo resident now prefers Meadow Lookout on its first outing, making the distant route observable during ordinary simulation; other destinations remain in rotation. Manual task/status controls remain immediate, and live telemetry has no such delay. Simulation speed controls event scheduling; walking pace remains measured in real seconds. Outing preferences and positions are temporary, not saved journeys.
 
 ## Expanding safely
 

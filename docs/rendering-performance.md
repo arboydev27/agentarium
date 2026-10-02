@@ -20,6 +20,10 @@ September 28, 2026; development server, Codex in-app browser, 1280 × 720 viewpo
 
 The hundreds of draw calls indicate that repeated base scenery is a useful future optimization target. The new leaves share one instanced draw; ripple rings add three small meshes, and five evening halos use small sprites. Tree sway adds transforms but no geometry. There is no added full-screen post-processing pass, shadow-casting light, or external texture download.
 
+## Expanded-world spot check
+
+October 2, 2026; development server, Codex in-app browser, 1280 × 720 viewport, eight simulated residents, daylight, high quality. One settled Horizon sample after the meadow detail pass read **60 fps, p95 17.5 ms, 838 draw calls, 268,250 triangles, 705 geometries, and 42 textures**. The browser was display-limited to about 60 fps. Resident poses and statuses differed from earlier observations, so these figures are a current reference point, not a before/after performance claim. The new instanced meadow groups and oak add six scene drawables in high quality and five in low quality; renderer totals still depend heavily on visible residents and zone detail.
+
 ## Repeatable review procedure
 
 1. Use the same browser, viewport, display, camera preset, quality, and resident state. Prefer a production build with `npm run build` and `npm run preview` for formal profiling.

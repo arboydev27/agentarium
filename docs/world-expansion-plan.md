@@ -20,7 +20,7 @@ The spatial model should have three layers:
 
 Extend the visible ground well beyond the current island, keep the existing desk/navigation geometry clear, and give users an explicit horizon view. Use inexpensive geometry and instance repeated trees. Match fog to the terrain edge so zooming or panning does not expose an abrupt empty border. Test day/night, low/high quality, reduced motion, watch/follow, and different window sizes.
 
-The current implementation uses a finite 600 × 600 landscape. A raised plateau blends the original district into meadow, with a winding trail, clustered groves, and a northern rise. Horizon now uses perspective to show a lower skyline and far land. Terrain and tree placements are deterministic; no background generation or streaming runs yet. One route along the trail carries residents to the lookout.
+The current implementation uses a finite 600 × 600 landscape. A raised plateau blends the original district into meadow, with a winding trail, clustered groves, meadow groundcover, a distinctive amber oak, and a northern rise. Horizon now uses perspective to show a lower skyline and far land. Terrain and placement are deterministic; no background generation or streaming runs yet. One route along the trail carries residents to the lookout.
 
 ### 2. Make the first outside area truly traversable
 
@@ -36,7 +36,7 @@ A chunk is an implementation boundary, not an agent-session boundary. A travelin
 
 ### 4. Broaden navigation and camera controls
 
-When more than eight residents or multiple active districts are visible, revisit seat allocation and traffic priorities. Support camera navigation between landmarks, region search, and a compact minimap once spatial scale warrants it. Keep a list-based route to every task needing attention. Add local avoidance or passing lanes where authored paths become busy; do not assume visual terrain alone is traversable.
+When more than eight residents or multiple active districts are visible, revisit seat allocation and traffic priorities. A first optional schematic now jumps among Overview, Lookout, and Horizon; add camera navigation between future landmarks, region search, and a position-aware minimap once spatial scale warrants it. Keep a list-based route to every task needing attention. Add local avoidance or passing lanes where authored paths become busy; do not assume visual terrain alone is traversable.
 
 ### 5. Set a performance budget and ship gates
 
