@@ -42,6 +42,10 @@ describe('expanded world layout', () => {
     expect(CAMERA_VIEWS.horizon.look[2]).toBeLessThan(-WORLD.depth / 2);
     expect(CAMERA_VIEWS.horizon.span[0]).toBeGreaterThan(WORLD.width * 1.5);
   });
+  it('bookmarks the first outside lookout beyond the original district', () => {
+    expect(CAMERA_VIEWS.lookout.look[2]).toBeLessThan(-WORLD.depth / 2);
+    expect(CAMERA_VIEWS.lookout.span.every((value) => value > 0)).toBe(true);
+  });
 });
 
 describe('decorative detail selection', () => {

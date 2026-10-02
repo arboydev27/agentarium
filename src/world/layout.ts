@@ -9,6 +9,17 @@ export const ZONES = {
   courtyard: { center: [-6, 0.49, 5.5] as Point, size: [11, 7], seats: [6, 7] },
 };
 export type ZoneName = keyof typeof ZONES;
+export const LOOKOUT = { x: 13.5, z: -38, clearingRadius: 3.2, focusRadius: 7 } as const;
+export const WORLD_VIEWS = [
+  'overview',
+  'café',
+  'garden',
+  'studio',
+  'courtyard',
+  'lookout',
+  'horizon',
+] as const;
+export type WorldView = (typeof WORLD_VIEWS)[number];
 export const SEATS: Point[] = [
   [-8.8, 0.68, -2.5],
   [-4.8, 0.68, -2.5],
@@ -19,14 +30,13 @@ export const SEATS: Point[] = [
   [-8.5, 0.49, 6],
   [-4.5, 0.49, 6],
 ];
-export const CAMERA_VIEWS: Record<
-  'overview' | 'horizon' | ZoneName,
-  { pos: Point; look: Point; span: [number, number] }
-> = {
-  overview: { pos: [27, 26, 35], look: [0, 2.8, 0], span: [40, 32] },
-  café: { pos: [-0.5, 12, 11], look: [-7, 2, -4.5], span: [17, 13] },
-  garden: { pos: [15, 12, 18], look: [7, 1.8, 5], span: [16, 12] },
-  studio: { pos: [15, 12, 9], look: [7, 2.2, -5], span: [16, 12] },
-  courtyard: { pos: [1, 11, 18], look: [-6, 1.5, 5.5], span: [16, 12] },
-  horizon: { pos: [0, 17, 40], look: [0, 2, -23], span: [50, 28] },
-};
+export const CAMERA_VIEWS: Record<WorldView, { pos: Point; look: Point; span: [number, number] }> =
+  {
+    overview: { pos: [27, 26, 35], look: [0, 2.8, 0], span: [40, 32] },
+    café: { pos: [-0.5, 12, 11], look: [-7, 2, -4.5], span: [17, 13] },
+    garden: { pos: [15, 12, 18], look: [7, 1.8, 5], span: [16, 12] },
+    studio: { pos: [15, 12, 9], look: [7, 2.2, -5], span: [16, 12] },
+    courtyard: { pos: [1, 11, 18], look: [-6, 1.5, 5.5], span: [16, 12] },
+    lookout: { pos: [27, 16, -16], look: [LOOKOUT.x, 3, LOOKOUT.z], span: [20, 14] },
+    horizon: { pos: [0, 12, 35], look: [0, 2, -22], span: [50, 28] },
+  };

@@ -4,46 +4,27 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useWorld } from '../state';
 import { Box, Cylinder, Sphere, Sign, Tree, Pot, Lamp } from './primitives';
-import { ZONES, type ZoneName } from './layout';
+import { LOOKOUT, ZONES, type ZoneName } from './layout';
 import { DetailLayer } from './DetailLayer';
 import { useSurfaceTextures } from './surfaces';
+import { meadowTrailPoint, terrainHeight } from './terrain';
 
 const wood = '#b98b60';
 const green = '#365d4a';
-
-// The landscape is scenery beneath this district. Future walkable districts can
-// replace sections of it without changing the current authored resident routes.
-function landscapeHeight(x: number, z: number) {
-  const distance = Math.hypot(x, z);
-  const beyondDistrict = THREE.MathUtils.smoothstep(distance, 16, 34);
-  const distantRidge = THREE.MathUtils.smoothstep(distance, 38, 105);
-  const northernRise = THREE.MathUtils.smoothstep(-z, 16, 68);
-  const folds = Math.sin(x * 0.085) * Math.cos(z * 0.061) * 0.8 + Math.sin((x + z) * 0.044) * 0.55;
-  const northernCrest = 7.2 + Math.sin(x * 0.061) * 2.3 + Math.sin(x * 0.135 + 0.8) * 1.1;
-  const meadow =
-    -1.55 +
-    beyondDistrict * (0.55 + folds * 0.45) +
-    distantRidge * (2.8 + folds) +
-    northernRise * northernCrest;
-  const districtEdge = Math.max(Math.abs(x) / 15.8, Math.abs(z) / 12.6);
-  const plateau = 1 - THREE.MathUtils.smoothstep(districtEdge, 1, 1.9);
-  return THREE.MathUtils.lerp(meadow, 0.39, plateau);
-}
 
 function LandscapePath() {
   const geometry = useMemo(() => {
     const positions: number[] = [];
     const indices: number[] = [];
     for (let i = 0; i <= 34; i++) {
-      const z = -10.2 - i * 2.35;
-      const center = 4.4 * Math.sin(i * 0.17) + i * 0.16;
-      const previous = 4.4 * Math.sin((i - 1) * 0.17) + (i - 1) * 0.16;
-      const next = 4.4 * Math.sin((i + 1) * 0.17) + (i + 1) * 0.16;
+      const [center, , z] = meadowTrailPoint(i);
+      const previous = meadowTrailPoint(i - 1)[0];
+      const next = meadowTrailPoint(i + 1)[0];
       const lateral = (next - previous) / 4.7;
       for (const side of [-1, 1]) {
         const x = center + side * 1.15;
         const edgeZ = z + side * lateral * 1.15;
-        positions.push(x, landscapeHeight(x, edgeZ) + 0.045, edgeZ);
+        positions.push(x, terrainHeight(x, edgeZ) + 0.045, edgeZ);
       }
       if (i) {
         const a = (i - 1) * 2;
@@ -64,6 +45,121 @@ function LandscapePath() {
   );
 }
 
+function LookoutBranch() {
+  const geometry = useMemo(() => {
+    const [startX, , startZ] = meadowTrailPoint(12);
+    const positions: number[] = [];
+    const indices: number[] = [];
+    for (let i = 0; i <= 20; i++) {
+      const t = i / 20;
+      const x = THREE.MathUtils.lerp(startX, LOOKOUT.x, t);
+      const z = THREE.MathUtils.lerp(startZ, LOOKOUT.z, t);
+      for (const side of [-1, 1]) {
+        const edgeZ = z + side * 0.78;
+        positions.push(x, terrainHeight(x, edgeZ) + 0.05 + t * 0.05, edgeZ);
+      }
+      if (i) {
+        const a = (i - 1) * 2;
+        indices.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
+      }
+    }
+    const branch = new THREE.BufferGeometry();
+    branch.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    branch.setIndex(indices);
+    branch.computeVertexNormals();
+    return branch;
+  }, []);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  return (
+    <mesh name="lookout-branch" geometry={geometry} receiveShadow>
+      <meshStandardMaterial color="#c6bc94" roughness={1} side={THREE.DoubleSide} />
+    </mesh>
+  );
+}
+
+function LookoutCanopy() {
+  const geometry = useMemo(() => {
+    // The southeast face is open toward the lookout camera and the arriving
+    // resident. The raised rear roof still reads as a landmark from the meadow.
+    const positions: number[] = [];
+    const indices: number[] = [];
+    for (let i = 0; i <= 6; i++) {
+      const angle = (3 * Math.PI) / 4 + (i / 6) * Math.PI;
+      positions.push(Math.cos(angle) * 3.6, 3.03, Math.sin(angle) * 3.6);
+      positions.push(Math.cos(angle) * 0.95, 3.62, Math.sin(angle) * 0.95);
+      if (i) {
+        const a = (i - 1) * 2;
+        indices.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
+      }
+    }
+    const roof = new THREE.BufferGeometry();
+    roof.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    roof.setIndex(indices);
+    roof.computeVertexNormals();
+    return roof;
+  }, []);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  return (
+    <mesh geometry={geometry} castShadow>
+      <meshStandardMaterial color="#3f6c58" roughness={0.85} flatShading side={THREE.DoubleSide} />
+    </mesh>
+  );
+}
+
+function MeadowLookout() {
+  const ground = terrainHeight(LOOKOUT.x, LOOKOUT.z);
+  return (
+    <group name="meadow-lookout" position={[LOOKOUT.x, ground, LOOKOUT.z]}>
+      <Cylinder pos={[0, 0, 0]} r={LOOKOUT.clearingRadius} h={0.2} color="#bfb391" />
+      <mesh position={[0, 0.112, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[2.9, 3.12, 32]} />
+        <meshStandardMaterial color="#d8cca7" roughness={1} side={THREE.DoubleSide} />
+      </mesh>
+      {[-2.35, 2.35].flatMap((x) =>
+        [-2.2, 2.2].map((z) => (
+          <group key={`${x},${z}`}>
+            <Cylinder pos={[x, 1.4, z]} r={0.105} h={2.6} color="#82674c" />
+            <Cylinder pos={[x, 0.17, z]} r={0.24} h={0.14} color="#d4c7a4" />
+          </group>
+        )),
+      )}
+      {[-2.2, 2.2].map((z) => (
+        <Box key={z} pos={[0, 2.69, z]} size={[5.15, 0.15, 0.17]} color="#82674c" />
+      ))}
+      <LookoutCanopy />
+      <Sign
+        text="MEADOW LOOKOUT"
+        pos={[0, 2.44, 2.33]}
+        size={[2.9, 0.34]}
+        color="#eee5ce"
+        background="#476c58"
+      />
+      <Box pos={[2.7, 0.62, 0]} size={[0.12, 0.62, 2.15]} color="#8c7456" />
+      <Box pos={[0, 0.62, -2.55]} size={[2.4, 0.62, 0.12]} color="#8c7456" />
+      {[
+        [4.4, -1.9],
+        [4.7, 1.6],
+        [1.5, -4.7],
+        [-1.6, -4.6],
+        [1.2, 4.6],
+      ].map(([x, z], i) => (
+        <group key={i}>
+          <Sphere
+            pos={[x, terrainHeight(LOOKOUT.x + x, LOOKOUT.z + z) - ground + 0.18, z]}
+            scale={[0.66, 0.31, 0.6]}
+            color={i % 2 ? '#74905f' : '#8ca573'}
+          />
+          <Sphere
+            pos={[x + 0.32, terrainHeight(LOOKOUT.x + x, LOOKOUT.z + z) - ground + 0.39, z]}
+            scale={[0.17, 0.13, 0.17]}
+            color={i % 2 ? '#e5c890' : '#d3988a'}
+          />
+        </group>
+      ))}
+    </group>
+  );
+}
+
 function Landscape() {
   const geometry = useMemo(() => {
     // Put the mesh boundary well beyond the fog so no rectangular edge enters view.
@@ -78,7 +174,7 @@ function Landscape() {
     for (let i = 0; i < positions.count; i++) {
       const x = positions.getX(i);
       const z = positions.getZ(i);
-      const y = landscapeHeight(x, z);
+      const y = terrainHeight(x, z);
       positions.setY(i, y);
       const fieldPatch =
         (Math.sin(x * 0.082 + Math.sin(z * 0.04)) * Math.cos(z * 0.11 - x * 0.025) + 1) * 0.5;
@@ -101,6 +197,8 @@ function Landscape() {
         <meshStandardMaterial vertexColors roughness={1} side={THREE.DoubleSide} />
       </mesh>
       <LandscapePath />
+      <LookoutBranch />
+      <MeadowLookout />
       <LandscapeGroves />
     </group>
   );
@@ -136,7 +234,7 @@ function LandscapeGroves() {
       const x = cx + Math.cos(angle) * spread;
       const z = cz + Math.sin(angle) * spread;
       const size = 1.15 + ((i * 13) % 17) * 0.1;
-      return { x, y: landscapeHeight(x, z), z, size, shade: i % 3 };
+      return { x, y: terrainHeight(x, z), z, size, shade: i % 3 };
     });
   }, [quality]);
   useEffect(() => {

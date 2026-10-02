@@ -1,4 +1,6 @@
 import { routeForSeat, routeLengths, type Point } from './motion';
+import { LOOKOUT } from './layout';
+import { meadowTrailPoint, terrainHeight } from './terrain';
 
 export type Destination = {
   id: string;
@@ -30,6 +32,13 @@ export const DESTINATIONS: Destination[] = [
   { id: 'basin', label: 'courtyard basin', node: 'basin', facing: Math.PI / 2, clip: 'GardenLook' },
   { id: 'studio-break', label: 'studio terrace', node: 'studio-break', facing: 0, clip: 'Rest' },
   { id: 'promenade', label: 'tree-lined path', node: 'promenade', facing: 0, clip: 'GardenLook' },
+  {
+    id: 'meadow:lookout',
+    label: 'meadow lookout',
+    node: 'meadow:lookout',
+    facing: 0.7,
+    clip: 'GardenLook',
+  },
 ];
 // Authored walkable lanes, including elevation changes at stairs and floor edges.
 // Destinations are terminal branches so resting residents never occupy through routes.
@@ -64,7 +73,15 @@ export const NODES: Record<string, Point> = {
   'court-front': [-6.2, 0.49, 7.7],
   basin: [-3.7, 0.49, 7.7],
   promenade: [0.1, 0.46, 8],
+  'meadow:branch-1': [8, terrainHeight(8, -38.25) + 0.07, -38.25],
+  'meadow:branch-2': [10.5, terrainHeight(10.5, -38.1) + 0.08, -38.1],
+  'meadow:lookout': [LOOKOUT.x, terrainHeight(LOOKOUT.x, LOOKOUT.z) + 0.1, LOOKOUT.z],
 };
+for (let index = 0; index <= 12; index++) {
+  const [x, y, z] = meadowTrailPoint(index);
+  // A little clearance keeps the straight movement chords above uneven ground.
+  NODES[`meadow:trail-${index}`] = [x, y + 0.025, z];
+}
 const chains = [
   ['west', 'center', 'east'],
   ['west', 'cafe-step', 'cafe-door', 'cafe-aisle'],
@@ -86,6 +103,13 @@ const chains = [
   ['west', 'court-door', 'court-aisle', 'court-front', 'basin'],
   ['court-aisle', 'bench-approach', 'bench'],
   ['center', 'promenade'],
+  [
+    'center',
+    ...Array.from({ length: 13 }, (_, index) => `meadow:trail-${index}`),
+    'meadow:branch-1',
+    'meadow:branch-2',
+    'meadow:lookout',
+  ],
 ];
 for (let seat = 0; seat < 8; seat++) {
   const p = routeForSeat(seat)[1];

@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { initialAgents } from '../state';
-import { SEATS, WORLD } from './layout';
+import { LOOKOUT, SEATS, WORLD } from './layout';
 import { DESTINATIONS, NODES, EDGES, planRoute, NavigationTraffic } from './navigation';
 import { ResidentJourney } from './journey';
 import { residentStyle, ACCESSORIES } from './personality';
+import { meadowTrailPoint, terrainHeight } from './terrain';
 const options = { reduced: false, playing: true, leaving: false, now: 10000, outings: true };
 const agent = (seat = 0, status: ReturnType<typeof initialAgents>[number]['status'] = 'idle') => ({
   ...initialAgents()[seat],
@@ -24,13 +25,64 @@ describe('navigation graph', () => {
           [...route.points].reverse(),
         );
         expect(route.lengths.at(-1)).toBeGreaterThan(0);
-        for (const [x, y, z] of route.points) {
+        for (const [index, [x, y, z]] of route.points.entries()) {
+          if (route.ids[index].startsWith('meadow:')) {
+            expect(z).toBeLessThan(-10);
+            expect(y - terrainHeight(x, z)).toBeGreaterThanOrEqual(0.04);
+            expect(y - terrainHeight(x, z)).toBeLessThanOrEqual(0.11);
+            continue;
+          }
           expect(Math.abs(x)).toBeLessThan(WORLD.width / 2);
           expect(Math.abs(z)).toBeLessThan(WORLD.depth / 2);
           expect(y).toBeGreaterThanOrEqual(0.4);
           expect(y).toBeLessThanOrEqual(1.1);
         }
       }
+  });
+  it('follows the meadow trail and stays above its terrain through the lookout branch', () => {
+    const route = planRoute('center', 'meadow:lookout');
+    expect(route.ids[0]).toBe('center');
+    for (let index = 0; index <= 12; index++) {
+      const node = `meadow:trail-${index}`;
+      expect(route.ids).toContain(node);
+      const trail = meadowTrailPoint(index);
+      expect(NODES[node][0]).toBe(trail[0]);
+      expect(NODES[node][2]).toBe(trail[2]);
+      expect(NODES[node][1] - trail[1]).toBeCloseTo(0.025);
+    }
+    expect(route.ids.at(-1)).toBe('meadow:lookout');
+    expect(NODES['meadow:lookout'][0]).toBe(LOOKOUT.x);
+    expect(NODES['meadow:lookout'][2]).toBe(LOOKOUT.z);
+    let lowestClearance = Infinity,
+      highestClearance = -Infinity,
+      lowestAt = '',
+      closestPost = Infinity;
+    for (let index = 1; index < route.points.length; index++) {
+      const from = route.points[index - 1],
+        to = route.points[index];
+      for (let step = 0; step <= 10; step++) {
+        const t = step / 10,
+          x = from[0] + (to[0] - from[0]) * t,
+          y = from[1] + (to[1] - from[1]) * t,
+          z = from[2] + (to[2] - from[2]) * t;
+        const clearance = y - terrainHeight(x, z);
+        if (clearance < lowestClearance) {
+          lowestClearance = clearance;
+          lowestAt = `${route.ids[index - 1]} → ${route.ids[index]} at ${t}`;
+        }
+        highestClearance = Math.max(highestClearance, clearance);
+        if (route.ids[index].startsWith('meadow:branch') || route.ids[index] === 'meadow:lookout')
+          for (const postX of [-2.35, 2.35])
+            for (const postZ of [-2.2, 2.2])
+              closestPost = Math.min(
+                closestPost,
+                Math.hypot(x - LOOKOUT.x - postX, z - LOOKOUT.z - postZ),
+              );
+      }
+    }
+    expect(lowestClearance, lowestAt).toBeGreaterThan(0.01);
+    expect(highestClearance).toBeLessThan(0.2);
+    expect(closestPost).toBeGreaterThan(0.65);
   });
   it('keeps transit lanes outside desk and chair footprints with body clearance', () => {
     for (const [from, to] of EDGES) {
@@ -143,6 +195,56 @@ describe('resident journeys', () => {
     advance(motion, agent(0, 'working'), 70);
     expect(motion.activity).toBe('At desk');
   });
+  it('walks to the distant meadow lookout and returns along the trail for work', () => {
+    const traffic = new NavigationTraffic(),
+      motion = new ResidentJourney(0, 'demo-2', traffic);
+    for (const destination of DESTINATIONS)
+      if (destination.id !== 'meadow:lookout')
+        expect(traffic.reserveDestination('scene', destination.id)).toBe(true);
+    let arrived = false,
+      previous = motion.position;
+    for (let frame = 0; frame < 180 * 60; frame++) {
+      motion.update(agent(), 1 / 60, options);
+      const next = motion.position;
+      expect(Math.hypot(...next.map((value, axis) => value - previous[axis]))).toBeLessThan(0.06);
+      previous = next;
+      if (motion.activity === 'Resting at meadow lookout') {
+        arrived = true;
+        break;
+      }
+    }
+    expect(arrived).toBe(true);
+    expect(motion.position[0]).toBeCloseTo(LOOKOUT.x);
+    expect(motion.position[2]).toBeCloseTo(LOOKOUT.z);
+    advance(motion, agent(0, 'working'), 180);
+    expect(motion.activity).toBe('At desk');
+    expect(traffic.reserveDestination('another-resident', 'meadow:lookout')).toBe(true);
+  });
+  it('reverses continuously from the meadow trail when a task needs input', () => {
+    const traffic = new NavigationTraffic(),
+      motion = new ResidentJourney(0, 'demo-2', traffic);
+    for (const destination of DESTINATIONS)
+      if (destination.id !== 'meadow:lookout') traffic.reserveDestination('scene', destination.id);
+    let reachedMeadow = false;
+    for (let frame = 0; frame < 130 * 60; frame++) {
+      motion.update(agent(), 1 / 60, options);
+      if (motion.position[2] < -27) {
+        reachedMeadow = true;
+        break;
+      }
+    }
+    expect(reachedMeadow).toBe(true);
+    const before = motion.position,
+      waiting = agent(0, 'waiting');
+    motion.update(waiting, 1 / 60, options);
+    expect(motion.activity).toBe('Returning to desk');
+    expect(Math.hypot(...motion.position.map((value, axis) => value - before[axis]))).toBeLessThan(
+      0.05,
+    );
+    advance(motion, waiting, 150);
+    expect(motion.activity).toBe('At desk');
+    expect(motion.clip(waiting)).toBe('DeskWait');
+  });
   it('does not roam from unknown, disconnected, stale, paused, or reduced states', () => {
     for (const state of [
       agent(0, 'unknown'),
@@ -229,13 +331,22 @@ it('protects the café communal table, counter, planters, studio bookcase, and b
 it('lets eight residents share destinations without body overlaps or starvation', () => {
   const traffic = new NavigationTraffic();
   const motions = Array.from({ length: 8 }, (_, i) => new ResidentJourney(i, `demo-${i}`, traffic));
+  for (const destination of DESTINATIONS)
+    if (destination.id !== 'meadow:lookout') traffic.reserveDestination('scene', destination.id);
   const visited = new Set<number>();
+  let lookoutVisited = false,
+    sceneReleased = false;
   let closest = Infinity,
     closestAt = '';
-  for (let frame = 0; frame < 300 * 30; frame++) {
+  for (let frame = 0; frame < 420 * 30; frame++) {
     motions.forEach((m, i) => {
       m.update(agent(i), 1 / 30, options);
       if (m.activity.startsWith('Resting at')) visited.add(i);
+      if (m.activity === 'Resting at meadow lookout') lookoutVisited = true;
+      if (!sceneReleased && m.activity === 'Walking to meadow lookout') {
+        traffic.release('scene');
+        sceneReleased = true;
+      }
     });
     for (let i = 0; i < 8; i++)
       for (let j = i + 1; j < 8; j++) {
@@ -250,6 +361,7 @@ it('lets eight residents share destinations without body overlaps or starvation'
   }
   expect(closest, closestAt).toBeGreaterThan(0.6);
   expect(visited.size).toBe(8);
+  expect(lookoutVisited).toBe(true);
 });
 
 it('fades an offsite removal in place without waiting for a frozen corridor', () => {
