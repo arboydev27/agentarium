@@ -4,7 +4,7 @@ import { NavigationTraffic } from './world/navigation';
 import { residentStyle } from './world/personality';
 import { dressResident } from './world/appearance';
 import { RenderStats } from './world/RenderStats';
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, useGLTF, Line } from '@react-three/drei';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
@@ -435,23 +435,62 @@ function Camera({ positions }: { positions: Positions }) {
     if (follow && !followVisible) useWorld.setState({ followAgent: null });
   }, [follow, followVisible]);
   const reduced = useWorld((s) => s.reducedMotion);
-  const { camera, size } = useThree();
+  const { camera, size, set } = useThree();
+  // Canvas owns this orthographic camera for its whole lifetime. Only Horizon
+  // swaps the active camera; the Canvas, residents, and scenery stay mounted.
+  const orthographic = useRef(camera as THREE.OrthographicCamera);
+  const perspective = useMemo(() => new THREE.PerspectiveCamera(48, 1, 0.1, 420), []);
+  const activeCamera = view === 'horizon' ? perspective : orthographic.current;
+  const orthographicLook = useRef(new THREE.Vector3());
+  const switchingCamera = useRef(false);
   const moving = useRef(true);
   const targetPos = useRef(new THREE.Vector3());
   const targetLook = useRef(new THREE.Vector3());
   const zoom = useRef(30);
+  useLayoutEffect(() => {
+    // Fiber resizes only its active camera. Keep the parked orthographic
+    // projection current too, so returning from Horizon after a resize works.
+    const ortho = orthographic.current;
+    ortho.left = -size.width / 2;
+    ortho.right = size.width / 2;
+    ortho.top = size.height / 2;
+    ortho.bottom = -size.height / 2;
+    ortho.updateProjectionMatrix();
+    perspective.aspect = size.width / size.height;
+    perspective.updateProjectionMatrix();
+  }, [perspective, size.width, size.height]);
+  useLayoutEffect(() => {
+    if (camera === activeCamera) return;
+    if (view === 'horizon') {
+      perspective.position.fromArray(CAMERA_VIEWS.horizon.pos);
+      perspective.lookAt(new THREE.Vector3(...CAMERA_VIEWS.horizon.look));
+    }
+    switchingCamera.current = true;
+    set({ camera: activeCamera });
+  }, [activeCamera, camera, perspective, set, view]);
+  useLayoutEffect(() => {
+    if (!switchingCamera.current || camera !== activeCamera || !controls.current) return;
+    controls.current.target.copy(
+      view === 'horizon'
+        ? new THREE.Vector3(...CAMERA_VIEWS.horizon.look)
+        : orthographicLook.current,
+    );
+    controls.current.update();
+    switchingCamera.current = false;
+  }, [activeCamera, camera, view]);
   useEffect(() => {
     const preset = CAMERA_VIEWS[view];
     zoom.current = Math.min(size.width / preset.span[0], size.height / preset.span[1]);
     targetPos.current.fromArray(preset.pos);
     targetLook.current.fromArray(preset.look);
-    if (view === 'horizon') {
-      // A narrow canvas shows more vertical world space at the same zoom. Keep
-      // the camera above that entire slice so its lower rays still meet land.
-      targetPos.current.y = Math.max(preset.pos[1], (size.height / zoom.current) * 0.62);
-    }
     moving.current = true;
-  }, [view, version, size.width, size.height, follow]);
+  }, [view, version]);
+  useEffect(() => {
+    if (view === 'horizon' || useWorld.getState().followAgent) return;
+    const preset = CAMERA_VIEWS[view];
+    zoom.current = Math.min(size.width / preset.span[0], size.height / preset.span[1]);
+    moving.current = true;
+  }, [view, size.width, size.height]);
   useFrame((_, d) => {
     const point = follow && followVisible ? positions.get(follow) : null;
     if (point) {
@@ -464,16 +503,20 @@ function Camera({ positions }: { positions: Positions }) {
       const alpha = reduced ? 1 : 1 - Math.exp(-4 * d);
       camera.position.lerp(targetPos.current, alpha);
       controls.current.target.lerp(targetLook.current, alpha);
-      camera.zoom = THREE.MathUtils.lerp(camera.zoom, zoom.current, alpha);
+      if (camera instanceof THREE.OrthographicCamera)
+        camera.zoom = THREE.MathUtils.lerp(camera.zoom, zoom.current, alpha);
       camera.updateProjectionMatrix();
       controls.current.update();
       if (
         camera.position.distanceTo(targetPos.current) < 0.02 &&
-        Math.abs(camera.zoom - zoom.current) < 0.02
+        controls.current.target.distanceTo(targetLook.current) < 0.02 &&
+        (!(camera instanceof THREE.OrthographicCamera) ||
+          Math.abs(camera.zoom - zoom.current) < 0.02)
       )
         moving.current = false;
     }
     if (controls.current) {
+      if (camera === orthographic.current) orthographicLook.current.copy(controls.current.target);
       const location = districtAt(controls.current.target.x, controls.current.target.z);
       if (useWorld.getState().worldLocation !== location)
         useWorld.setState({ worldLocation: location });
@@ -485,10 +528,12 @@ function Camera({ positions }: { positions: Positions }) {
       makeDefault
       enableDamping
       dampingFactor={0.07}
-      maxPolarAngle={Math.PI / 2.12}
+      maxPolarAngle={view === 'horizon' ? Math.PI / 2 + 0.13 : Math.PI / 2.12}
       minPolarAngle={0.2}
       minZoom={5}
       maxZoom={150}
+      minDistance={5}
+      maxDistance={190}
       autoRotate={cinematic && !reduced && !follow}
       autoRotateSpeed={0.35}
       onStart={() => {

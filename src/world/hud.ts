@@ -1,6 +1,6 @@
 import type { Agent } from '../state';
 import { attentionFor } from '../shared/work.mjs';
-import { WORLD, ZONES, type ZoneName } from './layout';
+import { LOOKOUT, WORLD, ZONES, type WorldView, type ZoneName } from './layout';
 export type WorkFilter = 'working' | 'completed' | 'unknown' | 'here';
 export function matchesWorkFilter(agent: Agent, filter: WorkFilter, paused = false) {
   if (filter === 'here') return agent.seat >= 0 && agent.seat < 8;
@@ -21,7 +21,7 @@ export function worldCounts(agents: Agent[], paused = false) {
   };
 }
 const districts = Object.entries(ZONES) as [ZoneName, (typeof ZONES)[ZoneName]][];
-export function districtAt(x: number, z: number): ZoneName | 'overview' | 'horizon' {
+export function districtAt(x: number, z: number): WorldView {
   for (const [name, zone] of districts) {
     if (
       Math.abs(x - zone.center[0]) <= zone.size[0] / 2 &&
@@ -29,6 +29,7 @@ export function districtAt(x: number, z: number): ZoneName | 'overview' | 'horiz
     )
       return name;
   }
+  if (Math.hypot(x - LOOKOUT.x, z - LOOKOUT.z) <= LOOKOUT.focusRadius) return 'lookout';
   return Math.abs(x) > WORLD.width / 2 + 5 || Math.abs(z) > WORLD.depth / 2 + 5
     ? 'horizon'
     : 'overview';

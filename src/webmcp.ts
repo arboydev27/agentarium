@@ -1,5 +1,7 @@
 import { useWorld, STATUS_LABEL } from './state';
 import type { Status } from './state';
+import { WORLD_VIEWS } from './world/layout';
+import type { WorldView } from './world/layout';
 type Tool = {
   name: string;
   description: string;
@@ -101,7 +103,7 @@ export function registerWorldTools() {
         properties: {
           view: {
             type: 'string',
-            enum: ['overview', 'café', 'garden', 'studio', 'courtyard', 'horizon'],
+            enum: [...WORLD_VIEWS],
           },
         },
         required: ['view'],
@@ -110,12 +112,7 @@ export function registerWorldTools() {
       annotations: { readOnlyHint: false },
       execute: (input) => {
         const p = object(input);
-        if (
-          !['overview', 'café', 'garden', 'studio', 'courtyard', 'horizon'].includes(
-            p.view as string,
-          )
-        )
-          throw new Error('Unknown view');
+        if (!WORLD_VIEWS.includes(p.view as WorldView)) throw new Error('Unknown view');
         useWorld.setState((s) => ({
           camera: p.view as typeof s.camera,
           cameraVersion: s.cameraVersion + 1,

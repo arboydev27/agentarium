@@ -1317,6 +1317,7 @@ h1 span {
   }
   .camera-presets {
     left: calc((100% - 290px) / 2);
+    max-width: calc(100% - 314px);
   }
   .world-heading {
     pointer-events: none;
@@ -1352,6 +1353,15 @@ h1 span {
   }
   .world-stats {
     font-size: 12px;
+  }
+}
+@media (min-width: 801px) and (max-width: 1100px) {
+  .camera-presets button {
+    width: 39px;
+    padding: 8px;
+  }
+  .camera-presets button span {
+    display: none;
   }
 }
 @media (min-width: 1600px) {

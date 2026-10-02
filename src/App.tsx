@@ -36,9 +36,11 @@ import {
   Volume2,
   VolumeX,
   Eye,
+  MapPin,
   ScanEye,
 } from 'lucide-react';
 import { useWorld, STATUS_LABEL } from './state';
+import { WORLD_VIEWS } from './world/layout';
 import { registerWorldTools } from './webmcp';
 import { agentSessionId, summarizeSessions, sessionKey } from './sessions';
 import { SessionActions, SessionManager } from './SessionControls';
@@ -856,32 +858,32 @@ export default function App() {
         )}
       </aside>
       <div className="camera-presets" aria-label="Camera views">
-        {(['overview', 'café', 'garden', 'studio', 'courtyard', 'horizon'] as const).map(
-          (view, i) => (
-            <button
-              className={camera === view && !followAgent ? 'active' : ''}
-              key={view}
-              onClick={() => changeCamera(view)}
-            >
-              {i === 0 ? (
-                <Focus size={15} />
-              ) : i === 1 ? (
-                <Coffee size={15} />
-              ) : i === 2 ? (
-                <Leaf size={15} />
-              ) : i === 3 ? (
-                <Laptop size={15} />
-              ) : i === 4 ? (
-                <Sprout size={15} />
-              ) : (
-                <Eye size={15} />
-              )}
-              <span>
-                {view === 'overview' ? 'Overview' : view[0].toUpperCase() + view.slice(1)}
-              </span>
-            </button>
-          ),
-        )}
+        {WORLD_VIEWS.map((view) => (
+          <button
+            className={camera === view && !followAgent ? 'active' : ''}
+            key={view}
+            onClick={() => changeCamera(view)}
+            aria-label={`${view === 'overview' ? 'Overview' : view[0].toUpperCase() + view.slice(1)} view`}
+            title={`${view === 'overview' ? 'Overview' : view[0].toUpperCase() + view.slice(1)} view`}
+          >
+            {view === 'overview' ? (
+              <Focus size={15} />
+            ) : view === 'café' ? (
+              <Coffee size={15} />
+            ) : view === 'garden' ? (
+              <Leaf size={15} />
+            ) : view === 'studio' ? (
+              <Laptop size={15} />
+            ) : view === 'courtyard' ? (
+              <Sprout size={15} />
+            ) : view === 'lookout' ? (
+              <MapPin size={15} />
+            ) : (
+              <Eye size={15} />
+            )}
+            <span>{view === 'overview' ? 'Overview' : view[0].toUpperCase() + view.slice(1)}</span>
+          </button>
+        ))}
       </div>
       <footer className="world-bottom">
         <div className="orbit-hint">

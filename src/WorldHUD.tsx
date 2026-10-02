@@ -1,6 +1,6 @@
 import type { Agent } from './state';
 import { worldCounts, type WorkFilter } from './world/hud';
-type View = 'overview' | 'café' | 'garden' | 'studio' | 'courtyard' | 'horizon';
+import type { WorldView } from './world/layout';
 export function WorldHUD({
   agents,
   paused,
@@ -14,8 +14,8 @@ export function WorldHUD({
   paused: boolean;
   demo: boolean;
   compact: boolean;
-  location: View;
-  navigate: (view: View) => void;
+  location: WorldView;
+  navigate: (view: WorldView) => void;
   filter: (view: WorkFilter | 'attention') => void;
 }) {
   const counts = worldCounts(agents, paused);
@@ -27,13 +27,14 @@ export function WorldHUD({
         <select
           aria-label="Explore district"
           value={location}
-          onChange={(e) => navigate(e.target.value as View)}
+          onChange={(e) => navigate(e.target.value as WorldView)}
         >
           <option value="overview">Overview</option>
           <option value="café">Café</option>
           <option value="garden">Garden</option>
           <option value="studio">Studio</option>
           <option value="courtyard">Courtyard</option>
+          <option value="lookout">Lookout</option>
           <option value="horizon">Horizon</option>
         </select>
       </div>

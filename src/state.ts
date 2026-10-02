@@ -3,6 +3,7 @@ import { loadPreferences, savePreferences, validSessionKey } from './preferences
 import type { SessionPreferences } from './preferences';
 import { sessionKey, seatLatestSessions } from './shared/live.mjs';
 import { reduceAgentEvent, validateEvent, agentKey, normalizeAgent } from './shared/protocol.mjs';
+import type { WorldView } from './world/layout';
 export { reduceAgentEvent } from './shared/protocol.mjs';
 export type Status =
   'idle' | 'working' | 'tool' | 'waiting' | 'completed' | 'failed' | 'disconnected' | 'unknown';
@@ -136,8 +137,8 @@ type State = {
   quality: 'high' | 'low';
   labels: boolean;
   residentOutings: boolean;
-  worldLocation: 'overview' | 'café' | 'garden' | 'studio' | 'courtyard' | 'horizon';
-  camera: 'overview' | 'café' | 'garden' | 'studio' | 'courtyard' | 'horizon';
+  worldLocation: WorldView;
+  camera: WorldView;
   cameraVersion: number;
   cinematic: boolean;
   watchMode: boolean;
