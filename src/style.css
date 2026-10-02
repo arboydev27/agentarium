@@ -58,6 +58,23 @@ a {
   position: absolute;
   inset: 0;
 }
+.world-canvas:focus-visible {
+  outline: 3px solid #8db676;
+  outline-offset: -5px;
+}
+.world-canvas:focus-visible::after {
+  content: 'Arrow keys pan · Shift moves farther';
+  position: absolute;
+  left: 16px;
+  bottom: 12px;
+  z-index: 5;
+  padding: 6px 9px;
+  border-radius: 8px;
+  background: #f8f9eff0;
+  color: #405e41;
+  font-size: 11px;
+  pointer-events: none;
+}
 .topbar {
   height: 80px;
   position: absolute;
@@ -2059,6 +2076,11 @@ h1 span {
   .camera-presets {
     left: calc(50% + 41px);
     max-width: calc(100% - 100px);
+  }
+}
+@media (max-width: 800px) {
+  .world-canvas:focus-visible::after {
+    display: none;
   }
 }
 @media (max-width: 600px) {

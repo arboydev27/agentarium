@@ -18,6 +18,7 @@ import { createCharacterClips, ROBOT_SCALE } from './world/rig';
 import { Box, Cylinder, Pot } from './world/primitives';
 import { Environment } from './world/Environment';
 import { CAMERA_VIEWS } from './world/layout';
+import { CAMERA_PAN_BOUNDS, clampPanDelta, isPanKey, keyboardPanDelta } from './world/cameraPan';
 export { SEATS } from './world/motion';
 const statusColors = {
   idle: '#98aaa0',
@@ -435,7 +436,7 @@ function Camera({ positions }: { positions: Positions }) {
     if (follow && !followVisible) useWorld.setState({ followAgent: null });
   }, [follow, followVisible]);
   const reduced = useWorld((s) => s.reducedMotion);
-  const { camera, size, set } = useThree();
+  const { camera, size, set, gl } = useThree();
   // Canvas owns this orthographic camera for its whole lifetime. Only Horizon
   // swaps the active camera; the Canvas, residents, and scenery stay mounted.
   const orthographic = useRef(camera as THREE.OrthographicCamera);
@@ -444,6 +445,7 @@ function Camera({ positions }: { positions: Positions }) {
   const orthographicLook = useRef(new THREE.Vector3());
   const switchingCamera = useRef(false);
   const moving = useRef(true);
+  const keyboardPanning = useRef(false);
   const targetPos = useRef(new THREE.Vector3());
   const targetLook = useRef(new THREE.Vector3());
   const zoom = useRef(30);
@@ -484,6 +486,7 @@ function Camera({ positions }: { positions: Positions }) {
     targetPos.current.fromArray(preset.pos);
     targetLook.current.fromArray(preset.look);
     moving.current = true;
+    keyboardPanning.current = false;
   }, [view, version]);
   useEffect(() => {
     if (view === 'horizon' || useWorld.getState().followAgent) return;
@@ -491,8 +494,48 @@ function Camera({ positions }: { positions: Positions }) {
     zoom.current = Math.min(size.width / preset.span[0], size.height / preset.span[1]);
     moving.current = true;
   }, [view, size.width, size.height]);
+  useEffect(() => {
+    const world = gl.domElement.closest('.world-canvas') as HTMLElement | null;
+    if (!world) return;
+    const pan = (event: KeyboardEvent) => {
+      if (
+        event.target !== world ||
+        !isPanKey(event.key) ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey
+      )
+        return;
+      event.preventDefault();
+      const control = controls.current;
+      if (!control) return;
+      if (!keyboardPanning.current) {
+        targetPos.current.copy(camera.position);
+        targetLook.current.copy(control.target);
+      }
+      const distance = event.shiftKey ? 8 : 3;
+      const step = keyboardPanDelta(
+        camera.position,
+        control.target,
+        targetLook.current,
+        event.key,
+        distance,
+      );
+      useWorld.setState({ followAgent: null, cinematic: false });
+      if (step.lengthSq() === 0) return;
+      targetPos.current.add(step);
+      targetLook.current.add(step);
+      keyboardPanning.current = true;
+      moving.current = true;
+    };
+    world.addEventListener('keydown', pan);
+    return () => world.removeEventListener('keydown', pan);
+  }, [camera, gl]);
   useFrame((_, d) => {
-    const point = follow && followVisible ? positions.get(follow) : null;
+    const point =
+      follow && followVisible && useWorld.getState().followAgent === follow
+        ? positions.get(follow)
+        : null;
     if (point) {
       targetLook.current.set(point.x, point.y + 1, point.z);
       targetPos.current.set(point.x + 5, point.y + 8.5, point.z + 7);
@@ -512,10 +555,28 @@ function Camera({ positions }: { positions: Positions }) {
         controls.current.target.distanceTo(targetLook.current) < 0.02 &&
         (!(camera instanceof THREE.OrthographicCamera) ||
           Math.abs(camera.zoom - zoom.current) < 0.02)
-      )
+      ) {
         moving.current = false;
+        keyboardPanning.current = false;
+      }
     }
     if (controls.current) {
+      const target = controls.current.target;
+      if (
+        target.x < CAMERA_PAN_BOUNDS.minX ||
+        target.x > CAMERA_PAN_BOUNDS.maxX ||
+        target.z < CAMERA_PAN_BOUNDS.minZ ||
+        target.z > CAMERA_PAN_BOUNDS.maxZ
+      ) {
+        const correction = clampPanDelta(target);
+        target.add(correction);
+        camera.position.add(correction);
+        if (moving.current) {
+          targetLook.current.add(correction);
+          targetPos.current.add(correction);
+        }
+        controls.current.update();
+      }
       if (camera === orthographic.current) orthographicLook.current.copy(controls.current.target);
       const location = districtAt(controls.current.target.x, controls.current.target.z);
       if (useWorld.getState().worldLocation !== location)
@@ -538,6 +599,7 @@ function Camera({ positions }: { positions: Positions }) {
       autoRotateSpeed={0.35}
       onStart={() => {
         moving.current = false;
+        keyboardPanning.current = false;
         useWorld.setState({ cinematic: false, followAgent: null });
       }}
     />

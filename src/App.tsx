@@ -314,7 +314,14 @@ export default function App() {
     <main className={'app ' + (night ? 'night ' : '') + (watchMode ? 'watch-mode' : '')}>
       <div
         className="world-canvas"
-        aria-label="Interactive 3D agent world. Drag to orbit, scroll to zoom. Use the residents list to select characters."
+        role="region"
+        tabIndex={0}
+        aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight"
+        aria-label="Interactive 3D agent world. Click or Tab here, then use arrow keys to pan; hold Shift for larger steps. Drag to orbit, scroll to zoom. Use the residents list to select characters."
+        onPointerDown={(event) => {
+          if (event.target instanceof HTMLCanvasElement)
+            event.currentTarget.focus({ preventScroll: true });
+        }}
       >
         <SceneBoundary>
           <Suspense
@@ -919,7 +926,7 @@ export default function App() {
         <div className="orbit-hint">
           <span className="mouse-icon" />
           <span>
-            Drag to explore <b>·</b> Scroll to get closer
+            Drag to orbit <b>·</b> Scroll to zoom <b>·</b> Click world, then arrows pan
           </span>
         </div>
         <div className="simulation-toolbar">
@@ -1048,7 +1055,8 @@ export default function App() {
               <Focus />
               <strong>Explore</strong>
               <p>
-                Drag to orbit. Scroll or pinch to zoom. Jump between places with the view buttons.
+                Drag to orbit. Scroll or pinch to zoom. Click the world or Tab to it, then use arrow
+                keys to pan; hold Shift for larger steps. Jump between places with the view buttons.
               </p>
             </div>
             <div>
