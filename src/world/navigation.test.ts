@@ -4,42 +4,71 @@ import { LOOKOUT, ORCHARD, SEATS, WORLD } from './layout';
 import { DESTINATIONS, NODES, EDGES, planRoute, NavigationTraffic } from './navigation';
 import { ResidentJourney } from './journey';
 import { residentStyle, ACCESSORIES } from './personality';
-import { meadowTrailPoint, terrainHeight } from './terrain';
+import {
+  LANDSCAPE_SEGMENTS,
+  LANDSCAPE_SIZE,
+  meadowTrailPoint,
+  renderedTerrainHeight,
+  terrainHeight,
+  walkwayHeight,
+} from './terrain';
 const options = { reduced: false, playing: true, leaving: false, now: 10000, outings: true };
 const agent = (seat = 0, status: ReturnType<typeof initialAgents>[number]['status'] = 'idle') => ({
   ...initialAgents()[seat],
   status,
   updatedAt: 10000,
 });
-function landscapeMeshHeight(x: number, z: number) {
-  const step = 600 / 128;
-  const gx = (x + 300) / step,
-    gz = (z + 300) / step;
-  const ix = Math.floor(gx),
-    iz = Math.floor(gz),
-    tx = gx - ix,
-    tz = gz - iz;
-  const x0 = ix * step - 300,
-    z0 = iz * step - 300;
-  const h00 = terrainHeight(x0, z0),
-    h10 = terrainHeight(x0 + step, z0),
-    h01 = terrainHeight(x0, z0 + step),
-    h11 = terrainHeight(x0 + step, z0 + step);
-  const diagonalA =
-    tx + tz <= 1
-      ? h00 + tx * (h10 - h00) + tz * (h01 - h00)
-      : h11 + (1 - tx) * (h01 - h11) + (1 - tz) * (h10 - h11);
-  const diagonalB =
-    tx >= tz
-      ? h00 + tx * (h10 - h00) + tz * (h11 - h10)
-      : h00 + tz * (h01 - h00) + tx * (h11 - h01);
-  return Math.max(diagonalA, diagonalB);
-}
 function advance(motion: ResidentJourney, a = agent(), seconds = 1, overrides = {}) {
   for (let i = 0; i < seconds * 60; i++) motion.update(a, 1 / 60, { ...options, ...overrides });
 }
 
 describe('navigation graph', () => {
+  it('samples the actual coarse landscape triangles at vertices and within both faces', () => {
+    const step = LANDSCAPE_SIZE / LANDSCAPE_SEGMENTS;
+    const x0 = -LANDSCAPE_SIZE / 2 + 67 * step;
+    const z0 = -LANDSCAPE_SIZE / 2 + 55 * step;
+    const h00 = terrainHeight(x0, z0);
+    const h10 = terrainHeight(x0 + step, z0);
+    const h01 = terrainHeight(x0, z0 + step);
+    const h11 = terrainHeight(x0 + step, z0 + step);
+    expect(renderedTerrainHeight(x0, z0)).toBeCloseTo(h00);
+    expect(renderedTerrainHeight(x0 + step * 0.2, z0 + step * 0.3)).toBeCloseTo(
+      h00 + 0.2 * (h10 - h00) + 0.3 * (h01 - h00),
+    );
+    expect(renderedTerrainHeight(x0 + step * 0.7, z0 + step * 0.6)).toBeCloseTo(
+      h11 + 0.3 * (h01 - h11) + 0.4 * (h10 - h11),
+    );
+    expect(walkwayHeight(x0, z0, 0.045)).toBeCloseTo(h00 + 0.045);
+  });
+  it('keeps every outside route chord above the rendered landscape without high floating', () => {
+    let min = Infinity,
+      max = -Infinity,
+      minAt = '',
+      maxAt = '';
+    for (const [start, end] of EDGES) {
+      if (![start, end].some((id) => id.startsWith('meadow:') || id.startsWith('orchard:')))
+        continue;
+      const from = NODES[start],
+        to = NODES[end];
+      for (let step = 0; step <= 50; step++) {
+        const t = step / 50;
+        const x = from[0] + (to[0] - from[0]) * t;
+        const y = from[1] + (to[1] - from[1]) * t;
+        const z = from[2] + (to[2] - from[2]) * t;
+        const c = y - renderedTerrainHeight(x, z);
+        if (c < min) {
+          min = c;
+          minAt = `${start} → ${end} at ${t.toFixed(2)}`;
+        }
+        if (c > max) {
+          max = c;
+          maxAt = `${start} → ${end} at ${t.toFixed(2)}`;
+        }
+      }
+    }
+    expect(min, minAt).toBeGreaterThan(0.015);
+    expect(max, maxAt).toBeLessThan(0.22);
+  });
   it('connects every seat to every destination with reversible, bounded routes', () => {
     for (let seat = 0; seat < 8; seat++)
       for (const destination of DESTINATIONS) {
@@ -52,8 +81,8 @@ describe('navigation graph', () => {
         for (const [index, [x, y, z]] of route.points.entries()) {
           if (route.ids[index].startsWith('meadow:') || route.ids[index].startsWith('orchard:')) {
             expect(z).toBeLessThan(-10);
-            expect(y - terrainHeight(x, z)).toBeGreaterThanOrEqual(0.04);
-            expect(y - terrainHeight(x, z)).toBeLessThanOrEqual(0.13);
+            expect(y - renderedTerrainHeight(x, z)).toBeGreaterThanOrEqual(0.04);
+            expect(y - renderedTerrainHeight(x, z)).toBeLessThanOrEqual(0.22);
             continue;
           }
           expect(Math.abs(x)).toBeLessThan(WORLD.width / 2);
@@ -89,7 +118,7 @@ describe('navigation graph', () => {
           x = from[0] + (to[0] - from[0]) * t,
           y = from[1] + (to[1] - from[1]) * t,
           z = from[2] + (to[2] - from[2]) * t;
-        const clearance = y - terrainHeight(x, z);
+        const clearance = y - renderedTerrainHeight(x, z);
         if (clearance < lowestClearance) {
           lowestClearance = clearance;
           lowestAt = `${route.ids[index - 1]} → ${route.ids[index]} at ${t}`;
@@ -105,7 +134,7 @@ describe('navigation graph', () => {
       }
     }
     expect(lowestClearance, lowestAt).toBeGreaterThan(0.01);
-    expect(highestClearance).toBeLessThan(0.2);
+    expect(highestClearance).toBeLessThan(0.22);
     expect(closestPost).toBeGreaterThan(0.65);
   });
   it('branches to Orchard Commons after trail sample 22 without changing the lookout route', () => {
@@ -141,13 +170,13 @@ describe('navigation graph', () => {
         ).toBeGreaterThan(0.01);
         expect(y - terrainHeight(x, z)).toBeLessThan(0.3);
         if (orchard.ids[index].startsWith('orchard:'))
-          lowestBranchClearance = Math.min(lowestBranchClearance, y - landscapeMeshHeight(x, z));
+          lowestBranchClearance = Math.min(lowestBranchClearance, y - renderedTerrainHeight(x, z));
         if (orchard.ids[index] === 'orchard:commons')
-          lowestPadClearance = Math.min(lowestPadClearance, y - landscapeMeshHeight(x, z));
+          lowestPadClearance = Math.min(lowestPadClearance, y - renderedTerrainHeight(x, z));
       }
     }
-    // The landscape uses a 128×128 grid. Sample both possible cell diagonals
-    // conservatively, so the new branch and pad do not sink into its mesh.
+    // Sample the renderer's actual 128×128 triangle grid so the branch and
+    // arrival pad do not sink into the visible landscape.
     expect(lowestBranchClearance).toBeGreaterThan(0.03);
     expect(lowestPadClearance).toBeGreaterThan(0.08);
     for (const [x, z] of [

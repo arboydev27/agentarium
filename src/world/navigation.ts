@@ -1,6 +1,6 @@
 import { routeForSeat, routeLengths, type Point } from './motion';
 import { LOOKOUT, ORCHARD } from './layout';
-import { meadowTrailPoint, terrainHeight } from './terrain';
+import { meadowTrailPoint, terrainHeight, walkwayHeight } from './terrain';
 
 export type Destination = {
   id: string;
@@ -81,8 +81,8 @@ export const NODES: Record<string, Point> = {
   'court-front': [-6.2, 0.49, 7.7],
   basin: [-3.7, 0.49, 7.7],
   promenade: [0.1, 0.46, 8],
-  'meadow:branch-1': [8, terrainHeight(8, -38.25) + 0.07, -38.25],
-  'meadow:branch-2': [10.5, terrainHeight(10.5, -38.1) + 0.08, -38.1],
+  'meadow:branch-1': [8, walkwayHeight(8, -38.25, 0.09), -38.25],
+  'meadow:branch-2': [10.5, walkwayHeight(10.5, -38.1, 0.09), -38.1],
   'meadow:lookout': [LOOKOUT.x, terrainHeight(LOOKOUT.x, LOOKOUT.z) + 0.1, LOOKOUT.z],
   'orchard:commons': [ORCHARD.x, terrainHeight(ORCHARD.x, ORCHARD.z) + 0.12, ORCHARD.z],
 };
@@ -103,7 +103,7 @@ const orchardBranch: [number, number][] = [
 ];
 for (let index = 0; index < orchardBranch.length; index++) {
   const [x, z] = orchardBranch[index];
-  NODES[`orchard:branch-${index + 1}`] = [x, terrainHeight(x, z) + 0.105, z];
+  NODES[`orchard:branch-${index + 1}`] = [x, walkwayHeight(x, z, 0.105), z];
 }
 const chains = [
   ['west', 'center', 'east'],
