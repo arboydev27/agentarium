@@ -8,6 +8,7 @@ import { LOOKOUT, ZONES, type ZoneName } from './layout';
 import { DetailLayer } from './DetailLayer';
 import { useSurfaceTextures } from './surfaces';
 import { meadowTrailPoint, terrainHeight } from './terrain';
+import { MeadowScenery } from './scenery/Meadow';
 
 const wood = '#b98b60';
 const green = '#365d4a';
@@ -200,6 +201,7 @@ function Landscape() {
       <LookoutBranch />
       <MeadowLookout />
       <LandscapeGroves />
+      <MeadowScenery />
     </group>
   );
 }
@@ -268,6 +270,7 @@ function LandscapeGroves() {
     for (const mesh of [trunks.current, crowns.current, tips.current, understory.current]) {
       mesh.instanceMatrix.needsUpdate = true;
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+      mesh.computeBoundingSphere();
     }
   }, [placements]);
   return (

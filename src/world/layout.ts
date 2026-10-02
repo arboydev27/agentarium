@@ -37,6 +37,6 @@ export const CAMERA_VIEWS: Record<WorldView, { pos: Point; look: Point; span: [n
     garden: { pos: [15, 12, 18], look: [7, 1.8, 5], span: [16, 12] },
     studio: { pos: [15, 12, 9], look: [7, 2.2, -5], span: [16, 12] },
     courtyard: { pos: [1, 11, 18], look: [-6, 1.5, 5.5], span: [16, 12] },
-    lookout: { pos: [27, 16, -16], look: [LOOKOUT.x, 3, LOOKOUT.z], span: [20, 14] },
+    lookout: { pos: [27, 16, -16], look: [LOOKOUT.x, 4, LOOKOUT.z], span: [24, 17] },
     horizon: { pos: [0, 12, 35], look: [0, 2, -22], span: [50, 28] },
   };
