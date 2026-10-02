@@ -18,6 +18,7 @@ Implementation guides describe the current code; planning documents are explicit
 | [World layout and rendering](world-layout.md)          | Zone dimensions, seat placement, detail levels, and expansion guidance               |
 | [Resident identity and journeys](resident-journeys.md) | Accessories, personalities, cross-zone routing, reservations, and interruption rules |
 | [Rendering performance](rendering-performance.md)      | Local frame timing, scene cost, quality checks, and measurement limits               |
+| [Spatial scenery chunks](spatial-streaming.md)         | Stable scenery-cell boundaries and future streaming requirements                     |
 | [Development](development.md)                          | Commands, formatting, tests, extension workflow, and deployment boundaries           |
 | [Troubleshooting](troubleshooting.md)                  | Common startup, connection, attribution, and rendering problems                      |
 | [Roadmap](roadmap.md)                                  | Current limitations and proposed next milestones                                     |
