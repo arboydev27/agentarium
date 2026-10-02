@@ -304,7 +304,7 @@ export default function App() {
     <main className={'app ' + (night ? 'night ' : '') + (watchMode ? 'watch-mode' : '')}>
       <div
         className="world-canvas"
-        aria-label="Interactive 3D café island. Drag to orbit, scroll to zoom. Use the residents list to select characters."
+        aria-label="Interactive 3D agent world. Drag to orbit, scroll to zoom. Use the residents list to select characters."
       >
         <SceneBoundary>
           <Suspense

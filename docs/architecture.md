@@ -80,13 +80,13 @@ Authenticated viewers enable discovery on the bridge. Bounded scans run approxim
 
 ## World rendering boundary
 
-The expanded island has four zones and eight seats. Only decorative children belong to camera-aware detail layers; residents, bridge ingestion, session selection, and freshness handling stay outside them. Panning or zooming never pauses agent tracking. The finite world loads together, with individual offscreen meshes culled by Three.js and fine decorations conditionally mounted. There is no chunk loader or background terrain generation. See [World layout and rendering](world-layout.md).
+The inhabited district has four zones and eight seats, surrounded by deterministic scenic terrain and groves. Only decorative children belong to camera-aware detail layers; residents, bridge ingestion, session selection, and freshness handling stay outside them. Panning or zooming never pauses agent tracking. The finite world loads together, with individual offscreen meshes culled by Three.js and fine decorations conditionally mounted. There is no chunk loader or asynchronous terrain generation. See [World layout and rendering](world-layout.md).
 
 Ambient effects in `world/Ambience.tsx` use mutable Three.js objects and do not subscribe to session activity. `world/ambient.ts` contains bounded animation stepping, leaf positions, and frame-statistic calculations. `world/RenderStats.tsx` is opt-in via `?renderStats=1` and publishes only a local diagnostic overlay, with no bridge or analytics transmission.
 
 ## Resident identity and navigation
 
-`world/personality.ts` maps identity to stable accessory, palette, pace, and leisure timing. `world/appearance.ts` creates owned accessory meshes attached to the shared rig. `world/journey.ts` layers outings over the existing desk movement controller. `world/navigation.ts` owns an authored waypoint graph, shortest-path planning, destination leases, and atomic corridor reservations. A coordinator is scoped to the mounted Residents world and cleaned up with its residents; no navigation state is sent to the bridge. Graph travel and character animation remain outside decorative detail layers. See [Resident identity and journeys](resident-journeys.md).
+`world/personality.ts` maps identity to stable accessory, palette, pace, and leisure timing. `world/appearance.ts` creates owned accessory meshes attached to the shared rig. `world/journey.ts` layers outings over the existing desk movement controller. `world/navigation.ts` owns an authored waypoint graph, shortest-path planning, destination leases, and atomic route-ahead reservations that release cleared lanes. A coordinator is scoped to the mounted Residents world and cleaned up with its residents; no navigation state is sent to the bridge. Graph travel and character animation remain outside decorative detail layers. See [Resident identity and journeys](resident-journeys.md).
 
 ## Real-work projection
 

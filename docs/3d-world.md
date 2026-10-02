@@ -4,7 +4,7 @@ The scene is assembled in [World.tsx](../src/World.tsx), with scenery in [world/
 
 ## Scene composition
 
-The island is 29.25 × 22.2 world units, 1.5× wider and deeper than the original (2.25× its area). Four explicit zones share layout data in `src/world/layout.ts`. The café has a cutaway roof, framed windows, a fluted espresso counter, bakery display, shared table, terrace tables/chairs, umbrella, planters, pendant lights, and subtle steam. Studio, garden/pergola, and courtyard have expanded floors and landscaping. The courtyard includes a bench and decorative basin.
+The inhabited district is 29.25 × 22.2 world units, 1.5× wider and deeper than the original (2.25× its area), within a 600 × 600 scenic landscape. Four explicit zones share layout data in `src/world/layout.ts`. The café has a cutaway roof, framed windows, a fluted espresso counter, bakery display, shared table, terrace tables/chairs, umbrella, planters, pendant lights, and subtle steam. Studio, garden/pergola, and courtyard have expanded floors and landscaping. The courtyard includes a bench and decorative basin.
 
 Reusable primitives construct scenery. Original deterministic canvas textures add wood grain, stone speckling, and plaster variation; signage uses canvas text. Owned textures are disposed on unmount. The environment component is memoized. See [World layout and rendering](world-layout.md) for coordinates, detail levels, and extension boundaries.
 
