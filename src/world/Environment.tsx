@@ -9,6 +9,8 @@ import { DetailLayer } from './DetailLayer';
 import { useSurfaceTextures } from './surfaces';
 import { meadowTrailPoint, terrainHeight } from './terrain';
 import { MeadowScenery } from './scenery/Meadow';
+import { OrchardCommons } from './scenery/Orchard';
+import { clearOfOrchard, clearOfOrchardView } from './scenery/orchardPlacement';
 
 const wood = '#b98b60';
 const green = '#365d4a';
@@ -202,6 +204,7 @@ function Landscape() {
       <MeadowLookout />
       <LandscapeGroves />
       <MeadowScenery />
+      <OrchardCommons />
     </group>
   );
 }
@@ -237,7 +240,7 @@ function LandscapeGroves() {
       const z = cz + Math.sin(angle) * spread;
       const size = 1.15 + ((i * 13) % 17) * 0.1;
       return { x, y: terrainHeight(x, z), z, size, shade: i % 3 };
-    });
+    }).filter(({ x, z }) => clearOfOrchard(x, z, 1.8) && clearOfOrchardView(x, z));
   }, [quality]);
   useEffect(() => {
     if (!trunks.current || !crowns.current || !tips.current || !understory.current) return;

@@ -5,6 +5,7 @@ import { useWorld } from '../../state';
 import { detailChunkAt, selectDetailChunks } from '../chunks';
 import { LOOKOUT } from '../layout';
 import { meadowTrailPoint, terrainHeight } from '../terrain';
+import { clearOfOrchard } from './orchardPlacement';
 
 const PATCH_CENTERS: [number, number][] = [
   [-15, -22],
@@ -25,7 +26,9 @@ function clearOfRoutes(x: number, z: number) {
   const index = Math.max(0, Math.min(34, Math.round((-10.2 - z) / 2.35)));
   const trail = meadowTrailPoint(index);
   if (Math.abs(x - trail[0]) < 3.1 && Math.abs(z - trail[2]) < 2.6) return false;
-  return Math.hypot(x - LOOKOUT.x, z - LOOKOUT.z) >= LOOKOUT.focusRadius + 1.6;
+  return (
+    Math.hypot(x - LOOKOUT.x, z - LOOKOUT.z) >= LOOKOUT.focusRadius + 1.6 && clearOfOrchard(x, z)
+  );
 }
 
 function buildPieces(quality: 'high' | 'low') {
