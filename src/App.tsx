@@ -1,4 +1,5 @@
 import { WorldHUD } from './WorldHUD';
+import { LandmarkMap } from './LandmarkMap';
 import { Recap } from './Recap';
 import { TaskBrief, attentionMessage } from './TaskBrief';
 import { attentionFor } from './shared/work.mjs';
@@ -214,6 +215,7 @@ export default function App() {
   const [tab, setTab] = useState<'residents' | 'activity' | 'recap'>('residents');
   const [modal, setModal] = useState<'settings' | 'connections' | 'help' | 'sessions' | null>(null);
   const [collapsed, setCollapsed] = useState(() => window.innerWidth < 801);
+  const mapPreviousCollapsed = useRef<boolean | null>(null);
   const [toast, setToast] = useState('');
   const [fullscreen, setFullscreen] = useState(false);
   const [sound, setSound] = useState(false);
@@ -237,6 +239,12 @@ export default function App() {
     document.addEventListener('fullscreenchange', handler);
     return () => document.removeEventListener('fullscreenchange', handler);
   }, []);
+  useEffect(() => {
+    if (watchMode && mapPreviousCollapsed.current !== null) {
+      setCollapsed(mapPreviousCollapsed.current);
+      mapPreviousCollapsed.current = null;
+    }
+  }, [watchMode]);
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && !(e.target as HTMLElement).closest('dialog')) {
@@ -857,6 +865,28 @@ export default function App() {
           </>
         )}
       </aside>
+      {!watchMode && (
+        <LandmarkMap
+          view={camera}
+          following={!!followAgent}
+          navigate={(view) => {
+            changeCamera(view);
+            set({ cinematic: false });
+          }}
+          onOpen={() => {
+            if (window.innerWidth <= 600) {
+              mapPreviousCollapsed.current = collapsed;
+              setCollapsed(true);
+            }
+          }}
+          onClose={() => {
+            if (mapPreviousCollapsed.current !== null) {
+              setCollapsed(mapPreviousCollapsed.current);
+              mapPreviousCollapsed.current = null;
+            }
+          }}
+        />
+      )}
       <div className="camera-presets" aria-label="Camera views">
         {WORLD_VIEWS.map((view) => (
           <button
