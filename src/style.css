@@ -2097,20 +2097,6 @@ h1 span {
   stroke-width: 1.25;
   opacity: 0.55;
 }
-.landmark-grove {
-  fill: #84aa79;
-  opacity: 0.65;
-}
-.landmark-clearing {
-  fill: #f1e6bf;
-  stroke: #9aa984;
-  stroke-width: 1.5;
-}
-.landmark-orchard {
-  fill: #638c64;
-  stroke: #e4e7c9;
-  stroke-width: 1;
-}
 .landmark-north {
   position: absolute;
   top: 7px;
@@ -2147,10 +2133,22 @@ h1 span {
   background: #325f47;
   box-shadow: 0 0 0 1px #f9faec;
 }
+.landmark-shortcut-label {
+  margin: 0 2px 6px;
+  color: #63745c;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
 .landmark-viewpoints {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 5px;
+}
+.landmark-viewpoints .landmark-pin:last-child {
+  grid-column: 1 / -1;
+  justify-content: center;
 }
 .landmark-pin {
   display: flex;

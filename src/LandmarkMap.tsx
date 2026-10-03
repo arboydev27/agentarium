@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { Eye, Focus, Map, MapPin, Trees, X } from 'lucide-react';
+import { Eye, Focus, Map, MapPin, Telescope, Trees, X } from 'lucide-react';
 import { useWorld } from './state';
 import type { WorldView } from './world/layout';
 import {
@@ -14,6 +14,7 @@ const LANDMARKS = [
   { view: 'overview', label: 'Overview', icon: Focus, detail: 'The resident grove' },
   { view: 'lookout', label: 'Lookout', icon: MapPin, detail: 'Northern clearing' },
   { view: 'orchard', label: 'Orchard', icon: Trees, detail: 'Orchard Commons' },
+  { view: 'observatory', label: 'Observatory', icon: Telescope, detail: 'Cedar Observatory' },
   { view: 'horizon', label: 'Horizon', icon: Eye, detail: 'Ridge and sky' },
 ] as const;
 
@@ -166,7 +167,7 @@ export function LandmarkMap({
           <header>
             <div>
               <strong>Explore the world</strong>
-              <small>Choose a viewpoint</small>
+              <small>Live positions · illustrated terrain</small>
             </div>
             <button className="landmark-close" aria-label="Close landmark map" onClick={close}>
               <X size={16} aria-hidden="true" />
@@ -175,7 +176,7 @@ export function LandmarkMap({
           <div
             className="landmark-map-art"
             role="group"
-            aria-label="Live position map. North is up. Markers show only residents occupying the eight visible world seats."
+            aria-label="Live position locator. North is up. Markers show only residents occupying the eight visible world seats; illustrated terrain is decorative."
           >
             <svg
               viewBox="0 0 280 170"
@@ -191,14 +192,6 @@ export function LandmarkMap({
                 className="landmark-contour"
                 d="M-6 73C35 57 66 67 100 54s61-12 87 2 63 9 102-8M-8 94c35-13 70-17 104-7s60-2 92-14 65-7 100 4M-9 118c42-11 79-3 118-9s66-3 91-13 53-4 90 4M-5 143c45-10 74-3 107-5s61-10 94-4 58 8 92-4"
               />
-              <path
-                className="landmark-grove"
-                d="M29 120c13-9 26-11 43-6l21 12 19-7 31 10 4 20-28 17-66-2-27-20Z"
-              />
-              <circle className="landmark-clearing" cx="206" cy="86" r="17" />
-              <circle className="landmark-orchard" cx="228" cy="38" r="7" />
-              <circle className="landmark-orchard" cx="243" cy="45" r="6" />
-              <circle className="landmark-orchard" cx="216" cy="51" r="6" />
             </svg>
             <span className="landmark-north" aria-hidden="true">
               N ↑
@@ -220,6 +213,7 @@ export function LandmarkMap({
               <i className="landmark-legend-resident" /> Visible resident
             </span>
           </div>
+          <div className="landmark-shortcut-label">Viewpoints</div>
           <div className="landmark-viewpoints" role="group" aria-label="Viewpoint shortcuts">
             {LANDMARKS.map(({ view: landmark, label, icon: Icon, detail }) => (
               <button
