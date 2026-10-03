@@ -2149,6 +2149,11 @@ h1 span {
   stroke-width: 1.25;
   opacity: 0.55;
 }
+.landmark-mere {
+  fill: #74aca8;
+  stroke: #e4dbb8;
+  stroke-width: 3;
+}
 .landmark-north {
   position: absolute;
   top: 7px;

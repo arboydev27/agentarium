@@ -7,11 +7,13 @@ import { residentStyle, ACCESSORIES } from './personality';
 import {
   LANDSCAPE_SEGMENTS,
   LANDSCAPE_SIZE,
+  SOUTHWIND_WATER_Y,
   meadowTrailPoint,
   renderedTerrainHeight,
   terrainHeight,
   walkwayHeight,
 } from './terrain';
+import { SOUTHWIND_MERE, clearOfSouthwindMere, waterRadiusAt } from './scenery/merePlacement';
 const options = { reduced: false, playing: true, leaving: false, now: 10000, outings: true };
 const agent = (seat = 0, status: ReturnType<typeof initialAgents>[number]['status'] = 'idle') => ({
   ...initialAgents()[seat],
@@ -23,6 +25,20 @@ function advance(motion: ResidentJourney, a = agent(), seconds = 1, overrides = 
 }
 
 describe('navigation graph', () => {
+  it('keeps the scenic southern water above its rendered basin and away from routes', () => {
+    for (let step = 0; step < 36; step++) {
+      const angle = (step / 36) * Math.PI * 2;
+      for (let radius = 0; radius <= waterRadiusAt(angle); radius += 0.5) {
+        const x = SOUTHWIND_MERE.x + Math.cos(angle) * radius;
+        const z = SOUTHWIND_MERE.z + Math.sin(angle) * radius;
+        expect(renderedTerrainHeight(x, z)).toBeLessThan(SOUTHWIND_WATER_Y - 0.01);
+      }
+    }
+    for (const [start, end] of EDGES) {
+      for (const id of [start, end])
+        expect(clearOfSouthwindMere(NODES[id][0], NODES[id][2])).toBe(true);
+    }
+  });
   it('samples the actual coarse landscape triangles at vertices and within both faces', () => {
     const step = LANDSCAPE_SIZE / LANDSCAPE_SEGMENTS;
     const x0 = -LANDSCAPE_SIZE / 2 + 67 * step;

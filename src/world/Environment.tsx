@@ -22,6 +22,8 @@ import { FarRidge } from './scenery/FarRidge';
 import { CedarObservatory } from './scenery/Observatory';
 import { SlateReach } from './scenery/SlateReach';
 import { clearOfSlateReach } from './scenery/slatePlacement';
+import { SouthwindMere } from './scenery/SouthwindMere';
+import { clearOfSouthwindMere } from './scenery/merePlacement';
 
 const wood = '#b98b60';
 const green = '#365d4a';
@@ -223,6 +225,7 @@ function Landscape() {
       <OrchardCommons />
       <CedarObservatory />
       <SlateReach />
+      <SouthwindMere />
       <FarRidge />
     </group>
   );
@@ -265,7 +268,8 @@ function LandscapeGroves() {
         clearOfOrchardView(x, z) &&
         clearOfObservatory(x, z, 1.8) &&
         clearOfObservatoryView(x, z) &&
-        clearOfSlateReach(x, z, 2),
+        clearOfSlateReach(x, z, 2) &&
+        clearOfSouthwindMere(x, z, 1.5),
     );
   }, [quality]);
   useEffect(() => {

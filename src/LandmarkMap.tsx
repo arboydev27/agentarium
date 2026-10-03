@@ -222,6 +222,7 @@ export function LandmarkMap({
                 className="landmark-contour"
                 d="M-6 73C35 57 66 67 100 54s61-12 87 2 63 9 102-8M-8 94c35-13 70-17 104-7s60-2 92-14 65-7 100 4M-9 118c42-11 79-3 118-9s66-3 91-13 53-4 90 4M-5 143c45-10 74-3 107-5s61-10 94-4 58 8 92-4"
               />
+              <ellipse className="landmark-mere" cx="44" cy="132" rx="11" ry="6" />
             </svg>
             <span className="landmark-north" aria-hidden="true">
               N ↑

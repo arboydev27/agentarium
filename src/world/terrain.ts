@@ -1,12 +1,14 @@
 import * as THREE from 'three';
 import type { Point } from './motion';
 import { LOOKOUT, OBSERVATORY, ORCHARD } from './layout';
+import { distanceToSouthwindMere } from './scenery/merePlacement';
 
 // Match Landscape's PlaneGeometry dimensions and subdivisions. The mesh is
 // sampled only at vertices, so its rendered surface differs from terrainHeight
 // between vertices.
 export const LANDSCAPE_SIZE = 600;
 export const LANDSCAPE_SEGMENTS = 128;
+export const SOUTHWIND_WATER_Y = -0.06;
 
 function meadowHeight(x: number, z: number) {
   const distance = Math.hypot(x, z);
@@ -27,6 +29,17 @@ function meadowHeight(x: number, z: number) {
 
 export function terrainHeight(x: number, z: number) {
   let ground = meadowHeight(x, z);
+  const mereDistance = distanceToSouthwindMere(x, z);
+  if (mereDistance < 16) {
+    const bottom = SOUTHWIND_WATER_Y - 0.23;
+    const rim = Math.max(ground, SOUTHWIND_WATER_Y + 0.17);
+    ground =
+      mereDistance <= 8.5
+        ? Math.min(ground, bottom)
+        : mereDistance <= 12
+          ? THREE.MathUtils.lerp(bottom, rim, THREE.MathUtils.smoothstep(mereDistance, 8.5, 12))
+          : THREE.MathUtils.lerp(rim, ground, THREE.MathUtils.smoothstep(mereDistance, 12, 16));
+  }
   const lookoutClearing =
     1 -
     THREE.MathUtils.smoothstep(
