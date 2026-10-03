@@ -32,7 +32,7 @@ Acceptance: characters transition without snapping or furniture intersections, r
 
 ## 4. Expand visual capacity
 
-The spatial expansion now includes a 29.25 × 22.2 inhabited district, four explicit zones, a richer café/terrace, eight camera presets including a perspective Horizon, and connected routes to Meadow Lookout and Orchard Commons. Optional meadow groundcover mounts in nearby spatial chunks, while the terrain, landmarks, and resident state remain continuously available. Arrow-key panning offers bounded travel through the finite 600 × 600 world. The visible capacity remains eight, and most distant landscape remains decorative. Asynchronous asset streaming and infinite terrain are not implemented.
+The spatial expansion now includes a 29.25 × 22.2 inhabited district, four explicit zones, a richer café/terrace, nine camera presets including a perspective Horizon, and connected routes to Meadow Lookout, Orchard Commons, and Cedar Observatory. Optional meadow groundcover mounts in nearby spatial chunks, while the terrain, landmarks, and resident state remain continuously available. Arrow-key panning offers bounded travel through the finite 600 × 600 world. The visible capacity remains eight, and most distant landscape remains decorative. Asynchronous asset streaming and infinite terrain are not implemented.
 
 The ambient-life pass adds tree sway, instanced perimeter leaves, basin ripples, evening halos, and surface refinements. An opt-in diagnostic overlay now exposes local frame intervals and renderer counters; initial observations are in [Rendering performance](rendering-performance.md).
 
