@@ -36,6 +36,7 @@ export function WorldHUD({
           <option value="courtyard">Courtyard</option>
           <option value="lookout">Lookout</option>
           <option value="orchard">Orchard Commons</option>
+          <option value="observatory">Cedar Observatory</option>
           <option value="horizon">Horizon</option>
         </select>
       </div>
