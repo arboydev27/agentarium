@@ -542,8 +542,8 @@ function Camera({ positions }: { positions: Positions }) {
         event.key,
         distance,
       );
-      useWorld.setState({ followAgent: null, cinematic: false });
       if (step.lengthSq() === 0) return;
+      useWorld.setState({ followAgent: null, cinematic: false, cameraCustomized: true });
       targetPos.current.add(step);
       targetLook.current.add(step);
       keyboardPanning.current = true;
@@ -633,7 +633,7 @@ function Camera({ positions }: { positions: Positions }) {
       onStart={() => {
         moving.current = false;
         keyboardPanning.current = false;
-        useWorld.setState({ cinematic: false, followAgent: null });
+        useWorld.setState({ cinematic: false, followAgent: null, cameraCustomized: true });
       }}
     />
   );

@@ -6,7 +6,7 @@ import {
   ORCHARD,
   WORLD,
   ZONES,
-  type WorldView,
+  type WorldLocation,
   type ZoneName,
 } from './layout';
 export type WorkFilter = 'working' | 'completed' | 'unknown' | 'here';
@@ -29,7 +29,7 @@ export function worldCounts(agents: Agent[], paused = false) {
   };
 }
 const districts = Object.entries(ZONES) as [ZoneName, (typeof ZONES)[ZoneName]][];
-export function districtAt(x: number, z: number): WorldView {
+export function districtAt(x: number, z: number): WorldLocation {
   for (const [name, zone] of districts) {
     if (
       Math.abs(x - zone.center[0]) <= zone.size[0] / 2 &&
@@ -41,7 +41,7 @@ export function districtAt(x: number, z: number): WorldView {
   if (Math.hypot(x - ORCHARD.x, z - ORCHARD.z) <= ORCHARD.focusRadius) return 'orchard';
   if (Math.hypot(x - OBSERVATORY.x, z - OBSERVATORY.z) <= OBSERVATORY.focusRadius)
     return 'observatory';
-  return Math.abs(x) > WORLD.width / 2 + 5 || Math.abs(z) > WORLD.depth / 2 + 5
-    ? 'horizon'
-    : 'overview';
+  return Math.abs(x) <= WORLD.width / 2 + 5 && Math.abs(z) <= WORLD.depth / 2 + 5
+    ? 'overview'
+    : 'open-landscape';
 }

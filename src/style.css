@@ -1842,9 +1842,17 @@ h1 span {
   color: inherit;
   white-space: nowrap;
 }
-.world-location select {
+.world-location-name {
   min-width: 0;
-  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+.world-jump {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
   border: 0;
   background: transparent;
   color: inherit;

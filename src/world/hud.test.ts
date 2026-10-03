@@ -27,7 +27,7 @@ it('treats stale/paused activity as unknown without clearing reported attention'
   expect(filterResidents(agents, [], 'unknown', '', true)).toHaveLength(8);
   expect(paused.here).toBe(8);
 });
-it('identifies focused districts, the central overview, and the outer horizon', () => {
+it('identifies named places and ordinary open terrain independently of the camera preset', () => {
   expect(districtAt(-7, -4.5)).toBe('café');
   expect(districtAt(7, 5)).toBe('garden');
   expect(districtAt(7, -5)).toBe('studio');
@@ -36,10 +36,11 @@ it('identifies focused districts, the central overview, and the outer horizon', 
   expect(districtAt(13.5, -38)).toBe('lookout');
   expect(districtAt(36, -70)).toBe('orchard');
   expect(districtAt(44, -70)).toBe('orchard');
-  expect(districtAt(45, -70)).toBe('horizon');
+  expect(districtAt(45, -70)).toBe('open-landscape');
   expect(districtAt(-30, -50)).toBe('observatory');
   expect(districtAt(-38, -50)).toBe('observatory');
-  expect(districtAt(-39, -50)).toBe('horizon');
-  expect(districtAt(25, 0)).toBe('horizon');
-  expect(districtAt(99, 99)).toBe('horizon');
+  expect(districtAt(-39, -50)).toBe('open-landscape');
+  expect(districtAt(0, -50)).toBe('open-landscape');
+  expect(districtAt(25, 0)).toBe('open-landscape');
+  expect(districtAt(99, 99)).toBe('open-landscape');
 });

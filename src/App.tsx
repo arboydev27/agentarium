@@ -169,6 +169,7 @@ export default function App() {
     speed = useWorld((s) => s.speed),
     night = useWorld((s) => s.night),
     camera = useWorld((s) => s.camera),
+    cameraCustomized = useWorld((s) => s.cameraCustomized),
     cinematic = useWorld((s) => s.cinematic),
     watchMode = useWorld((s) => s.watchMode),
     followAgent = useWorld((s) => s.followAgent),
@@ -304,7 +305,12 @@ export default function App() {
     }
   };
   const changeCamera = (view: typeof camera) =>
-    set({ camera: view, cameraVersion: useWorld.getState().cameraVersion + 1, followAgent: null });
+    set({
+      camera: view,
+      cameraCustomized: false,
+      cameraVersion: useWorld.getState().cameraVersion + 1,
+      followAgent: null,
+    });
   const spawn = () => {
     if (idle === 0) {
       setToast('Everyone is busy. Complete a task to free a resident.');
@@ -878,6 +884,7 @@ export default function App() {
         <LandmarkMap
           view={camera}
           following={!!followAgent}
+          customized={cameraCustomized}
           navigate={(view) => {
             changeCamera(view);
             set({ cinematic: false });
@@ -899,7 +906,7 @@ export default function App() {
       <div className="camera-presets" aria-label="Camera views">
         {WORLD_VIEWS.map((view) => (
           <button
-            className={camera === view && !followAgent ? 'active' : ''}
+            className={camera === view && !followAgent && !cameraCustomized ? 'active' : ''}
             key={view}
             onClick={() => changeCamera(view)}
             aria-label={`${WORLD_VIEW_LABELS[view]} view`}

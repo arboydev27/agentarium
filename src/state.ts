@@ -3,7 +3,7 @@ import { loadPreferences, savePreferences, validSessionKey } from './preferences
 import type { SessionPreferences } from './preferences';
 import { sessionKey, seatLatestSessions } from './shared/live.mjs';
 import { reduceAgentEvent, validateEvent, agentKey, normalizeAgent } from './shared/protocol.mjs';
-import type { WorldView } from './world/layout';
+import type { WorldLocation, WorldView } from './world/layout';
 export { reduceAgentEvent } from './shared/protocol.mjs';
 export type Status =
   'idle' | 'working' | 'tool' | 'waiting' | 'completed' | 'failed' | 'disconnected' | 'unknown';
@@ -137,8 +137,9 @@ type State = {
   quality: 'high' | 'low';
   labels: boolean;
   residentOutings: boolean;
-  worldLocation: WorldView;
+  worldLocation: WorldLocation;
   camera: WorldView;
+  cameraCustomized: boolean;
   cameraVersion: number;
   cinematic: boolean;
   watchMode: boolean;
@@ -237,6 +238,7 @@ export const useWorld = create<State>((set, get) => ({
   residentOutings: true,
   worldLocation: 'overview',
   camera: 'overview',
+  cameraCustomized: false,
   cameraVersion: 0,
   cinematic: false,
   watchMode: false,

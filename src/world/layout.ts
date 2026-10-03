@@ -24,6 +24,7 @@ export const WORLD_VIEWS = [
   'horizon',
 ] as const;
 export type WorldView = (typeof WORLD_VIEWS)[number];
+export type WorldLocation = Exclude<WorldView, 'horizon'> | 'open-landscape';
 export const WORLD_VIEW_LABELS: Record<WorldView, string> = {
   overview: 'Overview',
   café: 'Café',

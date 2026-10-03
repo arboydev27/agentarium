@@ -1,6 +1,6 @@
 import type { Agent } from './state';
 import { worldCounts, type WorkFilter } from './world/hud';
-import { WORLD_VIEWS, WORLD_VIEW_LABELS, type WorldView } from './world/layout';
+import { WORLD_VIEWS, WORLD_VIEW_LABELS, type WorldLocation, type WorldView } from './world/layout';
 export function WorldHUD({
   agents,
   paused,
@@ -14,7 +14,7 @@ export function WorldHUD({
   paused: boolean;
   demo: boolean;
   compact: boolean;
-  location: WorldView;
+  location: WorldLocation;
   navigate: (view: WorldView) => void;
   filter: (view: WorkFilter | 'attention') => void;
 }) {
@@ -24,18 +24,25 @@ export function WorldHUD({
       <div className="world-location">
         <h1>The Grove</h1>
         <span aria-hidden="true">/</span>
-        <select
-          aria-label="Explore district"
-          value={location}
-          onChange={(e) => navigate(e.target.value as WorldView)}
-        >
-          {WORLD_VIEWS.map((view) => (
-            <option key={view} value={view}>
-              {WORLD_VIEW_LABELS[view]}
-            </option>
-          ))}
-        </select>
+        <span className="world-location-name">
+          {location === 'open-landscape' ? 'Open landscape' : WORLD_VIEW_LABELS[location]}
+        </span>
       </div>
+      <select
+        className="world-jump"
+        aria-label="Jump to viewpoint"
+        value=""
+        onChange={(event) => navigate(event.target.value as WorldView)}
+      >
+        <option value="" disabled>
+          Jump to viewpoint…
+        </option>
+        {WORLD_VIEWS.map((view) => (
+          <option key={view} value={view}>
+            {WORLD_VIEW_LABELS[view]}
+          </option>
+        ))}
+      </select>
       {!compact && (
         <>
           <div className="hud-counts" aria-label="Task filters">

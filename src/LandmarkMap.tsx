@@ -97,12 +97,14 @@ function LiveMapLayer({ onFind }: { onFind: (id: string) => void }) {
 export function LandmarkMap({
   view,
   following,
+  customized,
   navigate,
   onOpen,
   onClose,
 }: {
   view: WorldView;
   following: boolean;
+  customized: boolean;
   navigate: (view: WorldView) => void;
   onOpen?: () => void;
   onClose?: () => void;
@@ -220,7 +222,7 @@ export function LandmarkMap({
                 key={landmark}
                 className={`landmark-pin ${landmark}`}
                 aria-label={`${label} view, ${detail}`}
-                aria-pressed={!following && view === landmark}
+                aria-pressed={!following && !customized && view === landmark}
                 title={detail}
                 onClick={() => {
                   navigate(landmark);
