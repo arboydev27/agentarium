@@ -28,6 +28,8 @@ In a later 1280 × 720 development-browser spot check with the simulator paused,
 
 With the distant ridge and stone arch added, the same paused Horizon setup showed about **875 draws, 279,464 triangles, 733 geometries, and 43 textures** at 60 fps with p95 around 17.4 ms. Its settled Orchard view showed **38 draws and 65,746 triangles**. These snapshots suggest a modest scene-counter increase over the prior local reading; they do not establish a frame-time improvement or device-wide budget.
 
+On October 3, after meadow detail expanded across camera-reachable cells, a paused Horizon spot check in the 1280 × 720 development browser showed about **912 draws, 284,626 triangles, 757 geometries, and 44 textures** in daylight/high quality (p95 9.3 ms on a 120 Hz display). Returning through Observatory and Orchard to Horizon yielded **918 draws, 285,518 triangles, 757 geometries, and 44 textures**. An evening/low-quality snapshot read **897 draws, 261,866 triangles, 747 geometries, and 44 textures**. Resident poses and both lighting and quality differed, so these are scene-counter and resource-stability observations, not controlled performance comparisons. Repeat with a production build before setting a budget.
+
 ## Repeatable review procedure
 
 1. Use the same browser, viewport, display, camera preset, quality, and resident state. Prefer a production build with `npm run build` and `npm run preview` for formal profiling.

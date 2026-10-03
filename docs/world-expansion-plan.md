@@ -20,7 +20,7 @@ The spatial model should have three layers:
 
 Extend the visible ground well beyond the current island, keep the existing desk/navigation geometry clear, and give users an explicit horizon view. Use inexpensive geometry and instance repeated trees. Match fog to the terrain edge so zooming or panning does not expose an abrupt empty border. Test day/night, low/high quality, reduced motion, watch/follow, and different window sizes.
 
-The current implementation uses a finite 600 × 600 landscape. A raised plateau blends the original district into meadow, with a winding trail, clustered groves, meadow groundcover, a distinctive amber oak, and a northern rise. A low-poly ridge and ruined arch add depth behind the orchard. Horizon uses perspective to show a lower skyline and far land. Terrain and placement are deterministic; no background generation or streaming runs yet. Authored routes along the trail carry residents to the lookout and Orchard Commons. Route nodes and visible ribbons share a height rule checked against the actual rendered terrain triangles.
+The current implementation uses a finite 600 × 600 landscape. A raised plateau blends the original district into meadow, with a winding trail, clustered groves, meadow groundcover, a distinctive amber oak, and a northern rise. A low-poly ridge and ruined arch add depth behind the orchard. Horizon uses perspective to show a lower skyline and far land. Terrain and placement are deterministic; selected meadow-detail cells generate locally on mount, while the base terrain and distant silhouettes remain continuously mounted. No background asset loading or terrain streaming runs yet. Authored routes along the trail carry residents to the lookout, Orchard Commons, and Cedar Observatory. Route nodes and visible ribbons share a height rule checked against the actual rendered terrain triangles.
 
 ### 2. Make the first outside area truly traversable
 
@@ -34,7 +34,7 @@ Partition the world into bounded chunks with explicit ownership of terrain, prop
 
 A chunk is an implementation boundary, not an agent-session boundary. A traveling resident must keep route and reservation state even if the camera moves away. Plan transitions so roads and elevations meet at chunk edges. Provide deterministic placement and stable IDs so a remount does not move landmarks.
 
-The first implementation partitions optional meadow hummocks, flowers, and stones into deterministic 60-unit cells, selecting at most 24 near the camera with hysteresis. The terrain, trails, landmarks, groves, and resident state remain outside those cells. This is spatial mounting of in-memory detail, not asynchronous asset streaming or terrain eviction.
+Optional meadow hummocks, flowers, and stones now generate per selected 60-unit cell across the camera-reachable landscape. At most 24 cells mount near the camera with hysteresis; each returns with the same placement after unloading. The terrain, trails, landmarks, groves, and resident state remain outside those cells. This is local detail generation and spatial mounting, not asynchronous asset streaming or terrain eviction.
 
 ### 4. Broaden navigation and camera controls
 
