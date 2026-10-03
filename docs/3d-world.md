@@ -34,7 +34,7 @@ When a visible session leaves near its desk, its character walks out and fades. 
 
 Completion celebrations last about 1.8 seconds once the character reaches rest, require evidence less than 30 seconds old, and are not restarted by repeated snapshots. Unknown status and restored stale telemetry never trigger them. Demo behavior is explicitly simulated. Ambient gestures do not imply tool actions or task progress.
 
-Reduced motion places characters immediately, uses still destination poses, and disables orbit; it skips walking, fades, and celebrations. Simulation pause and bridge loss freeze ordinary movement and animation. Cosmetic departures may finish while updates are paused so hidden sessions do not remain indefinitely. A snapshot loaded while paused is shown at its destination instead of invisible at an entry point.
+Reduced motion places characters immediately, uses still destination poses, and disables orbit; it skips walking, fades, and celebrations. Simulation pause and bridge loss freeze ordinary movement and animation. Cosmetic departures and already-started blocked-return fades may finish while updates are paused so they can release corridor leases; a resident relocated home remains invisible until playback resumes. A snapshot loaded while paused is shown at its destination instead of invisible at an entry point.
 
 Cloned materials and skeleton resources are disposed at unmount; shared model geometry is preserved. Per-frame movement uses mutable scene objects rather than React state updates. Frame deltas are bounded to prevent a long background-tab gap from jumping a character across its route.
 
