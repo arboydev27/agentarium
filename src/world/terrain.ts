@@ -37,7 +37,11 @@ export function terrainHeight(x: number, z: number) {
       mereDistance <= 8.5
         ? Math.min(ground, bottom)
         : mereDistance <= 12
-          ? THREE.MathUtils.lerp(bottom, rim, THREE.MathUtils.smoothstep(mereDistance, 8.5, 12))
+          ? THREE.MathUtils.lerp(
+              Math.min(ground, bottom),
+              rim,
+              THREE.MathUtils.smoothstep(mereDistance, 8.5, 12),
+            )
           : THREE.MathUtils.lerp(rim, ground, THREE.MathUtils.smoothstep(mereDistance, 12, 16));
   }
   const lookoutClearing =

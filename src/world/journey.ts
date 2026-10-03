@@ -14,6 +14,7 @@ export class ResidentJourney extends ResidentMotion {
   readonly style;
   private idleTime = 0;
   private visit = 0;
+  private rejoiningHome = false;
   private trip: {
     path: ReturnType<typeof planRoute>;
     destination: Destination;
@@ -51,6 +52,7 @@ export class ResidentJourney extends ResidentMotion {
       options.outings !== false;
     if (options.reduced) {
       this.trip = null;
+      this.rejoiningHome = false;
       this.traffic.release(this.identity);
       this.idleTime = 0;
       super.update(agent, delta, options);
@@ -69,10 +71,6 @@ export class ResidentJourney extends ResidentMotion {
         return;
       }
       this.exited = false;
-      if (!options.playing && !options.leaving) {
-        this.moving = false;
-        return;
-      }
       if (trip.fadingHome) {
         this.opacity = Math.max(0, this.opacity - dt * 3);
         this.moving = false;
@@ -85,7 +83,12 @@ export class ResidentJourney extends ResidentMotion {
           this.idleTime = 0;
           this.distance = this.lengths[1];
           this.sitting = 0;
+          this.rejoiningHome = true;
         }
+        return;
+      }
+      if (!options.playing) {
+        this.moving = false;
         return;
       }
       this.opacity = Math.min(1, this.opacity + dt * 3);
@@ -151,6 +154,18 @@ export class ResidentJourney extends ResidentMotion {
         this.idleTime = 0;
       }
       return;
+    }
+    if (this.rejoiningHome) {
+      if (options.leaving) {
+        this.exited = true;
+        this.moving = false;
+        return;
+      }
+      if (!options.playing) {
+        this.moving = false;
+        return;
+      }
+      this.rejoiningHome = false;
     }
     super.update(agent, delta, options);
     this.activity =

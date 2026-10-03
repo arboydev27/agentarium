@@ -49,7 +49,7 @@ function Shoreline() {
     const segments = 48;
     for (let i = 0; i <= segments; i++) {
       const angle = (i / segments) * Math.PI * 2;
-      for (const radius of [waterRadiusAt(angle) + 0.08, 10.6 + 0.35 * Math.sin(angle * 3 + 0.5)]) {
+      for (const radius of [waterRadiusAt(angle) - 0.05, 10.6 + 0.35 * Math.sin(angle * 3 + 0.5)]) {
         const x = SOUTHWIND_MERE.x + Math.cos(angle) * radius;
         const z = SOUTHWIND_MERE.z + Math.sin(angle) * radius;
         vertices.push(x, Math.max(renderedTerrainHeight(x, z), SOUTHWIND_WATER_Y) + 0.025, z);

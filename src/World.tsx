@@ -178,6 +178,8 @@ function Resident({
   useEffect(() => () => motion.dispose(), [motion]);
   const outings = useWorld((s) => s.residentOutings);
   const root = useRef<THREE.Group>(null);
+  const selectedRing = useRef<THREE.Mesh>(null);
+  const selectedRingMaterial = useRef<THREE.MeshBasicMaterial>(null);
   const worldPosition = useMemo(() => new THREE.Vector3(), []);
   const positionEntry = useMemo(
     () => ({ point: worldPosition, seat: agent.seat }),
@@ -219,6 +221,7 @@ function Resident({
   useFrame((_, delta) => {
     if (!root.current) return;
     motion.update(agent, delta, { reduced, playing, leaving, now: Date.now(), outings });
+    root.current.visible = motion.opacity > 0.15;
     root.current.position.fromArray(motion.position);
     root.current.rotation.y = motion.facing;
     if (!leaving && motion.opacity > 0.2) {
@@ -228,6 +231,8 @@ function Resident({
       positions.delete(agent.id);
     }
     for (const material of materials) material.opacity = motion.opacity;
+    if (selectedRing.current) selectedRing.current.visible = motion.opacity > 0.15;
+    if (selectedRingMaterial.current) selectedRingMaterial.current.opacity = motion.opacity * 0.95;
     const name = motion.clip(agent);
     if (name !== currentClip.current) {
       const clip = clips.find((c) => c.name === name)!;
@@ -255,11 +260,12 @@ function Resident({
       ref={root}
       position={motion.position}
       onClick={(e) => {
+        if (leaving || motion.opacity <= 0.15) return;
         e.stopPropagation();
-        if (!leaving) select(agent.id);
+        select(agent.id);
       }}
       onPointerOver={() => {
-        document.body.style.cursor = leaving ? 'auto' : 'pointer';
+        document.body.style.cursor = leaving || motion.opacity <= 0.15 ? 'auto' : 'pointer';
       }}
       onPointerOut={() => {
         document.body.style.cursor = 'auto';
@@ -267,9 +273,14 @@ function Resident({
     >
       <primitive object={model} scale={ROBOT_SCALE} dispose={null} />
       {selected && !leaving && (
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.025, 0]}>
+        <mesh ref={selectedRing} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.025, 0]}>
           <ringGeometry args={[0.63, 0.69, 48]} />
-          <meshBasicMaterial color="#f8d888" transparent opacity={0.95} />
+          <meshBasicMaterial
+            ref={selectedRingMaterial}
+            color="#f8d888"
+            transparent
+            opacity={0.95}
+          />
         </mesh>
       )}
       {!leaving && ((labels && !watch) || selected) && (

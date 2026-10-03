@@ -33,6 +33,11 @@ describe('navigation graph', () => {
         const z = SOUTHWIND_MERE.z + Math.sin(angle) * radius;
         expect(renderedTerrainHeight(x, z)).toBeLessThan(SOUTHWIND_WATER_Y - 0.01);
       }
+      const x = SOUTHWIND_MERE.x + Math.cos(angle) * 8.5;
+      const z = SOUTHWIND_MERE.z + Math.sin(angle) * 8.5;
+      const inside = terrainHeight(x - Math.cos(angle) * 0.001, z - Math.sin(angle) * 0.001);
+      const outside = terrainHeight(x + Math.cos(angle) * 0.001, z + Math.sin(angle) * 0.001);
+      expect(Math.abs(inside - outside)).toBeLessThan(0.02);
     }
     for (const [start, end] of EDGES) {
       for (const id of [start, end])
@@ -660,10 +665,13 @@ it('rejoins home invisibly when an interrupted meadow return stays blocked', () 
   advance(motion, waiting, 30, { playing: false });
   expect(motion.position).toEqual(pausedPosition);
   expect(motion.opacity).toBe(1);
+  advance(motion, waiting, 5.1);
+  expect(motion.opacity).toBeGreaterThan(0);
+  expect(motion.opacity).toBeLessThan(1);
   let lastVisible: typeof motion.position | null = motion.position;
   let becameInvisible = false;
-  for (let frame = 0; frame < 12 * 60; frame++) {
-    motion.update(waiting, 1 / 60, options);
+  for (let frame = 0; frame < 2 * 60; frame++) {
+    motion.update(waiting, 1 / 60, { ...options, playing: false });
     const next = motion.position;
     if (motion.opacity > 0.15) {
       if (lastVisible)
@@ -677,7 +685,12 @@ it('rejoins home invisibly when an interrupted meadow return stays blocked', () 
     }
   }
   expect(becameInvisible).toBe(true);
+  expect(motion.opacity).toBe(0);
   expect(motion.position[2]).toBeGreaterThan(-10);
+  advance(motion, waiting, 1, { playing: false });
+  expect(motion.opacity).toBe(0);
+  advance(motion, waiting, 1);
+  expect(motion.opacity).toBe(1);
   expect(waiting.status).toBe('working');
   expect(traffic.reserveDestination('next', 'orchard:commons')).toBe(true);
   traffic.release('follower');
