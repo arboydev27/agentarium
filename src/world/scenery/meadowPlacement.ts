@@ -4,6 +4,7 @@ import { LOOKOUT } from '../layout';
 import { meadowTrailPoint, renderedTerrainHeight } from '../terrain';
 import { clearOfObservatory } from './observatoryPlacement';
 import { clearOfOrchard } from './orchardPlacement';
+import { clearOfSlateReach } from './slatePlacement';
 
 export type MeadowPiece = { x: number; y: number; z: number; size: number; shade: number };
 export type MeadowPieces = {
@@ -40,6 +41,7 @@ export function clearOfMeadowRoutes(x: number, z: number, radius = 0) {
   if (Math.abs(x) < 18 + radius && Math.abs(z) < 15 + radius) return false;
   if (Math.hypot(x - LOOKOUT.x, z - LOOKOUT.z) < LOOKOUT.focusRadius + 1.6 + radius) return false;
   if (Math.hypot(x - OAK.x, z - OAK.z) < 3.5 + radius) return false;
+  if (!clearOfSlateReach(x, z, radius)) return false;
   if (!clearOfOrchard(x, z, radius) || !clearOfObservatory(x, z, radius)) return false;
   if (z < -83 && Math.abs(x) < 107) return false;
   for (let index = 1; index < TRAIL.length; index++) {

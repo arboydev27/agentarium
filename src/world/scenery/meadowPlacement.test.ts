@@ -32,6 +32,7 @@ describe('spatial meadow placement', () => {
       [ORCHARD.x, ORCHARD.z],
       [OBSERVATORY.x, OBSERVATORY.z],
       [18.5, -44],
+      [-20, -79],
     ]) {
       expect(clearOfMeadowRoutes(x, z)).toBe(false);
     }
