@@ -1,5 +1,5 @@
 import { routeForSeat, routeLengths, type Point } from './motion';
-import { LOOKOUT, ORCHARD } from './layout';
+import { LOOKOUT, OBSERVATORY, ORCHARD } from './layout';
 import { meadowTrailPoint, terrainHeight, walkwayHeight } from './terrain';
 
 export type Destination = {
@@ -47,6 +47,13 @@ export const DESTINATIONS: Destination[] = [
     facing: 0.7,
     clip: 'GardenLook',
   },
+  {
+    id: 'observatory:cedar',
+    label: 'cedar observatory',
+    node: 'observatory:cedar',
+    facing: -0.7,
+    clip: 'GardenLook',
+  },
 ];
 // Authored walkable lanes, including elevation changes at stairs and floor edges.
 // Destinations are terminal branches so resting residents never occupy through routes.
@@ -85,6 +92,11 @@ export const NODES: Record<string, Point> = {
   'meadow:branch-2': [10.5, walkwayHeight(10.5, -38.1, 0.09), -38.1],
   'meadow:lookout': [LOOKOUT.x, terrainHeight(LOOKOUT.x, LOOKOUT.z) + 0.1, LOOKOUT.z],
   'orchard:commons': [ORCHARD.x, terrainHeight(ORCHARD.x, ORCHARD.z) + 0.12, ORCHARD.z],
+  'observatory:cedar': [
+    OBSERVATORY.x,
+    terrainHeight(OBSERVATORY.x, OBSERVATORY.z) + 0.12,
+    OBSERVATORY.z,
+  ],
 };
 for (let index = 0; index <= 22; index++) {
   const [x, y, z] = meadowTrailPoint(index);
@@ -104,6 +116,20 @@ const orchardBranch: [number, number][] = [
 for (let index = 0; index < orchardBranch.length; index++) {
   const [x, z] = orchardBranch[index];
   NODES[`orchard:branch-${index + 1}`] = [x, walkwayHeight(x, z, 0.105), z];
+}
+const observatoryBranch: [number, number][] = [
+  [0, -47.8],
+  [-4, -47.8],
+  [-8, -48.4],
+  [-12, -49],
+  [-16, -49.5],
+  [-20, -50],
+  [-23.5, -50],
+  [-27, -50],
+];
+for (let index = 0; index < observatoryBranch.length; index++) {
+  const [x, z] = observatoryBranch[index];
+  NODES[`observatory:branch-${index + 1}`] = [x, walkwayHeight(x, z, 0.105), z];
 }
 const chains = [
   ['west', 'center', 'east'],
@@ -132,6 +158,11 @@ const chains = [
     'meadow:trail-22',
     ...orchardBranch.map((_, index) => `orchard:branch-${index + 1}`),
     'orchard:commons',
+  ],
+  [
+    'meadow:trail-16',
+    ...observatoryBranch.map((_, index) => `observatory:branch-${index + 1}`),
+    'observatory:cedar',
   ],
 ];
 for (let seat = 0; seat < 8; seat++) {

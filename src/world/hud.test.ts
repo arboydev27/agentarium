@@ -37,6 +37,9 @@ it('identifies focused districts, the central overview, and the outer horizon', 
   expect(districtAt(36, -70)).toBe('orchard');
   expect(districtAt(44, -70)).toBe('orchard');
   expect(districtAt(45, -70)).toBe('horizon');
+  expect(districtAt(-30, -50)).toBe('observatory');
+  expect(districtAt(-38, -50)).toBe('observatory');
+  expect(districtAt(-39, -50)).toBe('horizon');
   expect(districtAt(25, 0)).toBe('horizon');
   expect(districtAt(99, 99)).toBe('horizon');
 });

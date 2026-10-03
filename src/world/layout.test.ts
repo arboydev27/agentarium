@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { WORLD, ZONES, SEATS, CAMERA_VIEWS, ORCHARD, WORLD_VIEWS } from './layout';
+import { WORLD, ZONES, SEATS, CAMERA_VIEWS, OBSERVATORY, ORCHARD, WORLD_VIEWS } from './layout';
 import { routeForSeat } from './motion';
 import { showFineDetail } from './detail';
 
@@ -54,6 +54,15 @@ describe('expanded world layout', () => {
     expect(CAMERA_VIEWS.orchard.look[0]).toBe(ORCHARD.x);
     expect(CAMERA_VIEWS.orchard.look[2]).toBe(ORCHARD.z);
     expect(CAMERA_VIEWS.orchard.span.every((value) => value > 0)).toBe(true);
+  });
+  it('bookmarks Cedar Observatory west of the meadow trail', () => {
+    expect(WORLD_VIEWS).toContain('observatory');
+    expect(WORLD_VIEWS).toHaveLength(9);
+    expect(OBSERVATORY).toMatchObject({ x: -30, z: -50 });
+    expect(OBSERVATORY.focusRadius).toBeGreaterThan(OBSERVATORY.clearingRadius);
+    expect(CAMERA_VIEWS.observatory.look[0]).toBe(OBSERVATORY.x);
+    expect(CAMERA_VIEWS.observatory.look[2]).toBe(OBSERVATORY.z);
+    expect(CAMERA_VIEWS.observatory.span.every((value) => value > 0)).toBe(true);
   });
 });
 

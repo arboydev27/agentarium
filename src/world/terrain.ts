@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { Point } from './motion';
-import { LOOKOUT, ORCHARD } from './layout';
+import { LOOKOUT, OBSERVATORY, ORCHARD } from './layout';
 
 // Match Landscape's PlaneGeometry dimensions and subdivisions. The mesh is
 // sampled only at vertices, so its rendered surface differs from terrainHeight
@@ -42,7 +42,19 @@ export function terrainHeight(x: number, z: number) {
       ORCHARD.clearingRadius,
       ORCHARD.clearingRadius + 4.3,
     );
-  return THREE.MathUtils.lerp(ground, meadowHeight(ORCHARD.x, ORCHARD.z), orchardClearing);
+  ground = THREE.MathUtils.lerp(ground, meadowHeight(ORCHARD.x, ORCHARD.z), orchardClearing);
+  const observatoryClearing =
+    1 -
+    THREE.MathUtils.smoothstep(
+      Math.hypot(x - OBSERVATORY.x, z - OBSERVATORY.z),
+      OBSERVATORY.clearingRadius,
+      OBSERVATORY.clearingRadius + 4.3,
+    );
+  return THREE.MathUtils.lerp(
+    ground,
+    meadowHeight(OBSERVATORY.x, OBSERVATORY.z),
+    observatoryClearing,
+  );
 }
 
 // Exact height of Landscape's indexed triangles at a point. Keep this in sync

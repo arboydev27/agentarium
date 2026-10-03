@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { initialAgents } from '../state';
-import { LOOKOUT, ORCHARD, SEATS, WORLD } from './layout';
+import { LOOKOUT, OBSERVATORY, ORCHARD, SEATS, WORLD } from './layout';
 import { DESTINATIONS, NODES, EDGES, planRoute, NavigationTraffic } from './navigation';
 import { ResidentJourney } from './journey';
 import { residentStyle, ACCESSORIES } from './personality';
@@ -46,7 +46,12 @@ describe('navigation graph', () => {
       minAt = '',
       maxAt = '';
     for (const [start, end] of EDGES) {
-      if (![start, end].some((id) => id.startsWith('meadow:') || id.startsWith('orchard:')))
+      if (
+        ![start, end].some(
+          (id) =>
+            id.startsWith('meadow:') || id.startsWith('orchard:') || id.startsWith('observatory:'),
+        )
+      )
         continue;
       const from = NODES[start],
         to = NODES[end];
@@ -79,7 +84,11 @@ describe('navigation graph', () => {
         );
         expect(route.lengths.at(-1)).toBeGreaterThan(0);
         for (const [index, [x, y, z]] of route.points.entries()) {
-          if (route.ids[index].startsWith('meadow:') || route.ids[index].startsWith('orchard:')) {
+          if (
+            route.ids[index].startsWith('meadow:') ||
+            route.ids[index].startsWith('orchard:') ||
+            route.ids[index].startsWith('observatory:')
+          ) {
             expect(z).toBeLessThan(-10);
             expect(y - renderedTerrainHeight(x, z)).toBeGreaterThanOrEqual(0.04);
             expect(y - renderedTerrainHeight(x, z)).toBeLessThanOrEqual(0.22);
@@ -187,6 +196,46 @@ describe('navigation graph', () => {
     ])
       expect(terrainHeight(x, z)).toBeCloseTo(terrainHeight(ORCHARD.x, ORCHARD.z));
   });
+  it('branches west to Cedar Observatory after trail sample 16 with clear terrain chords', () => {
+    const cedar = planRoute('center', 'observatory:cedar');
+    const lookout = planRoute('center', 'meadow:lookout');
+    const orchard = planRoute('center', 'orchard:commons');
+    expect(cedar.ids).toContain('meadow:trail-16');
+    expect(cedar.ids).not.toContain('meadow:trail-17');
+    expect(lookout.ids).not.toContain('observatory:branch-1');
+    expect(orchard.ids).not.toContain('observatory:branch-1');
+    expect(orchard.ids).toContain('meadow:trail-22');
+    for (let index = 1; index <= 8; index++)
+      expect(cedar.ids).toContain(`observatory:branch-${index}`);
+    expect(cedar.ids.at(-1)).toBe('observatory:cedar');
+    expect(NODES['observatory:cedar']).toEqual([
+      OBSERVATORY.x,
+      terrainHeight(OBSERVATORY.x, OBSERVATORY.z) + 0.12,
+      OBSERVATORY.z,
+    ]);
+    let branchClearance = Infinity;
+    for (let index = 1; index < cedar.points.length; index++) {
+      if (!cedar.ids[index].startsWith('observatory:')) continue;
+      const from = cedar.points[index - 1];
+      const to = cedar.points[index];
+      expect(cedar.lengths[index] - cedar.lengths[index - 1]).toBeLessThan(5.5);
+      for (let step = 0; step <= 20; step++) {
+        const t = step / 20;
+        const x = from[0] + (to[0] - from[0]) * t;
+        const y = from[1] + (to[1] - from[1]) * t;
+        const z = from[2] + (to[2] - from[2]) * t;
+        branchClearance = Math.min(branchClearance, y - renderedTerrainHeight(x, z));
+      }
+    }
+    expect(branchClearance).toBeGreaterThan(0.015);
+    for (const [x, z] of [
+      [OBSERVATORY.x - 3, OBSERVATORY.z],
+      [OBSERVATORY.x + 3, OBSERVATORY.z],
+      [OBSERVATORY.x, OBSERVATORY.z - 3],
+      [OBSERVATORY.x, OBSERVATORY.z + 3],
+    ])
+      expect(terrainHeight(x, z)).toBeCloseTo(terrainHeight(OBSERVATORY.x, OBSERVATORY.z));
+  });
   it('keeps transit lanes outside desk and chair footprints with body clearance', () => {
     for (const [from, to] of EDGES) {
       const a = NODES[from],
@@ -250,6 +299,27 @@ describe('navigation graph', () => {
     expect(traffic.acquire('orchard', orchard.ids, true)).toBe(false);
     traffic.release('lookout');
     expect(traffic.acquire('orchard', orchard.ids, true)).toBe(true);
+  });
+  it('shares Cedar trail safely with Lookout and Orchard trips and prioritizes its return', () => {
+    const traffic = new NavigationTraffic();
+    const cedar = planRoute('home-0', 'observatory:cedar');
+    const lookout = planRoute('home-1', 'meadow:lookout');
+    const orchard = planRoute('home-2', 'orchard:commons');
+    expect(traffic.reserveDestination('cedar', 'observatory:cedar')).toBe(true);
+    expect(traffic.reserveDestination('other', 'observatory:cedar')).toBe(false);
+    expect(traffic.acquire('cedar', cedar.ids)).toBe(true);
+    expect(traffic.acquire('lookout', lookout.ids)).toBe(false);
+    expect(traffic.acquire('orchard', orchard.ids)).toBe(false);
+    traffic.releasePassed('cedar', cedar.lengths[cedar.ids.indexOf('observatory:branch-3')] + 1);
+    expect(traffic.acquire('lookout', lookout.ids)).toBe(true);
+    expect(traffic.acquire('orchard', orchard.ids)).toBe(false);
+    const returnTrip = planRoute('observatory:cedar', 'home-0');
+    expect(traffic.acquire('cedar', returnTrip.ids, true)).toBe(false);
+    traffic.release('lookout');
+    expect(traffic.acquire('orchard', orchard.ids)).toBe(false);
+    expect(traffic.acquire('cedar', returnTrip.ids, true)).toBe(true);
+    traffic.release('cedar');
+    expect(traffic.acquire('orchard', orchard.ids)).toBe(true);
   });
 });
 
@@ -390,6 +460,38 @@ describe('resident journeys', () => {
     expect(motion.activity).toBe('At desk');
     expect(working.status).toBe('working');
     expect(traffic.reserveDestination('next', 'orchard:commons')).toBe(true);
+  });
+  it('visits Cedar Observatory continuously and retraces its route when work starts', () => {
+    const traffic = new NavigationTraffic();
+    const motion = new ResidentJourney(2, 'demo-2', traffic);
+    for (const destination of DESTINATIONS)
+      if (destination.id !== 'observatory:cedar')
+        expect(traffic.reserveDestination('scene', destination.id)).toBe(true);
+    let arrived = false;
+    let previous = motion.position;
+    for (let frame = 0; frame < 220 * 60; frame++) {
+      motion.update(agent(2), 1 / 60, options);
+      const next = motion.position;
+      expect(Math.hypot(...next.map((value, axis) => value - previous[axis]))).toBeLessThan(0.06);
+      previous = next;
+      if (motion.activity === 'Resting at cedar observatory') {
+        arrived = true;
+        break;
+      }
+    }
+    expect(arrived).toBe(true);
+    expect(motion.position[0]).toBeCloseTo(OBSERVATORY.x);
+    expect(motion.position[2]).toBeCloseTo(OBSERVATORY.z);
+    const working = agent(2, 'working');
+    const before = motion.position;
+    motion.update(working, 1 / 60, options);
+    expect(Math.hypot(...motion.position.map((value, axis) => value - before[axis]))).toBeLessThan(
+      0.05,
+    );
+    advance(motion, working, 220);
+    expect(motion.activity).toBe('At desk');
+    expect(working.status).toBe('working');
+    expect(traffic.reserveDestination('next', 'observatory:cedar')).toBe(true);
   });
   it('does not roam from unknown, disconnected, stale, paused, or reduced states', () => {
     for (const state of [
