@@ -24,7 +24,8 @@ export const WORLD_VIEWS = [
   'horizon',
 ] as const;
 export type WorldView = (typeof WORLD_VIEWS)[number];
-export type WorldLocation = Exclude<WorldView, 'horizon'> | 'open-landscape';
+export type WorldLocation =
+  Exclude<WorldView, 'horizon'> | 'meadow:rest-west' | 'meadow:rest-east' | 'open-landscape';
 export const WORLD_VIEW_LABELS: Record<WorldView, string> = {
   overview: 'Overview',
   café: 'Café',
@@ -35,6 +36,12 @@ export const WORLD_VIEW_LABELS: Record<WorldView, string> = {
   orchard: 'Orchard Commons',
   observatory: 'Cedar Observatory',
   horizon: 'Horizon',
+};
+export const WORLD_LOCATION_LABELS: Record<WorldLocation, string> = {
+  ...WORLD_VIEW_LABELS,
+  'meadow:rest-west': 'Western Trail Rest',
+  'meadow:rest-east': 'Eastern Trail Rest',
+  'open-landscape': 'Open landscape',
 };
 export const SEATS: Point[] = [
   [-8.8, 0.68, -2.5],

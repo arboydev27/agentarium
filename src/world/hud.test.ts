@@ -2,6 +2,7 @@ import { expect, it } from 'vitest';
 import { initialAgents } from '../state';
 import { districtAt, worldCounts } from './hud';
 import { filterResidents, sessionKey } from '../sessions';
+import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
 it('keeps counts and task filters aligned, including hidden and unseated work', () => {
   const agents = initialAgents().map((a, i) => ({
     ...a,
@@ -41,6 +42,10 @@ it('identifies named places and ordinary open terrain independently of the camer
   expect(districtAt(-38, -50)).toBe('observatory');
   expect(districtAt(-39, -50)).toBe('open-landscape');
   expect(districtAt(0, -50)).toBe('open-landscape');
+  for (const turnout of TRAIL_TURNOUTS) {
+    const [x, , z] = turnoutPoint(turnout.trailIndex, turnout.side, 4.8);
+    expect(districtAt(x, z)).toBe(turnout.id);
+  }
   expect(districtAt(25, 0)).toBe('open-landscape');
   expect(districtAt(99, 99)).toBe('open-landscape');
 });

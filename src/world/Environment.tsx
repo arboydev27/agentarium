@@ -24,6 +24,8 @@ import { SlateReach } from './scenery/SlateReach';
 import { clearOfSlateReach } from './scenery/slatePlacement';
 import { SouthwindMere } from './scenery/SouthwindMere';
 import { clearOfSouthwindMere } from './scenery/merePlacement';
+import { TrailTurnouts } from './scenery/TrailTurnouts';
+import { clearOfTurnouts } from './scenery/turnoutPlacement';
 
 const wood = '#b98b60';
 const green = '#365d4a';
@@ -218,6 +220,7 @@ function Landscape() {
         <meshStandardMaterial vertexColors roughness={1} side={THREE.DoubleSide} />
       </mesh>
       <LandscapePath />
+      <TrailTurnouts />
       <LookoutBranch />
       <MeadowLookout />
       <LandscapeGroves />
@@ -269,7 +272,8 @@ function LandscapeGroves() {
         clearOfObservatory(x, z, 1.8) &&
         clearOfObservatoryView(x, z) &&
         clearOfSlateReach(x, z, 2) &&
-        clearOfSouthwindMere(x, z, 1.5),
+        clearOfSouthwindMere(x, z, 1.5) &&
+        clearOfTurnouts(x, z, 1.5),
     );
   }, [quality]);
   useEffect(() => {

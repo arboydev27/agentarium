@@ -1,6 +1,7 @@
 import { routeForSeat, routeLengths, type Point } from './motion';
 import { LOOKOUT, OBSERVATORY, ORCHARD } from './layout';
 import { meadowTrailPoint, terrainHeight, walkwayHeight } from './terrain';
+import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
 
 export type Destination = {
   id: string;
@@ -54,6 +55,13 @@ export const DESTINATIONS: Destination[] = [
     facing: -0.7,
     clip: 'GardenLook',
   },
+  ...TRAIL_TURNOUTS.map<Destination>((turnout) => ({
+    id: turnout.id,
+    label: turnout.label,
+    node: turnout.id,
+    facing: (turnout.side * Math.PI) / 2,
+    clip: turnout.side < 0 ? 'GardenLook' : 'Rest',
+  })),
 ];
 // Authored walkable lanes, including elevation changes at stairs and floor edges.
 // Destinations are terminal branches so resting residents never occupy through routes.
@@ -102,6 +110,10 @@ for (let index = 0; index <= 22; index++) {
   const [x, y, z] = meadowTrailPoint(index);
   // A little clearance keeps the straight movement chords above uneven ground.
   NODES[`meadow:trail-${index}`] = [x, y + 0.025, z];
+}
+for (const turnout of TRAIL_TURNOUTS) {
+  NODES[`${turnout.id}:approach`] = [...turnoutPoint(turnout.trailIndex, turnout.side, 2.5)];
+  NODES[turnout.id] = [...turnoutPoint(turnout.trailIndex, turnout.side, 4.8)];
 }
 const orchardOrigin = meadowTrailPoint(22);
 const orchardBranch: [number, number][] = [
@@ -165,6 +177,8 @@ const chains = [
     'observatory:cedar',
   ],
 ];
+for (const turnout of TRAIL_TURNOUTS)
+  chains.push([`meadow:trail-${turnout.trailIndex}`, `${turnout.id}:approach`, turnout.id]);
 for (let seat = 0; seat < 8; seat++) {
   const p = routeForSeat(seat)[1];
   NODES[`home-${seat}`] = p;

@@ -14,6 +14,7 @@ import {
   walkwayHeight,
 } from './terrain';
 import { SOUTHWIND_MERE, clearOfSouthwindMere, waterRadiusAt } from './scenery/merePlacement';
+import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
 const options = { reduced: false, playing: true, leaving: false, now: 10000, outings: true };
 const agent = (seat = 0, status: ReturnType<typeof initialAgents>[number]['status'] = 'idle') => ({
   ...initialAgents()[seat],
@@ -25,6 +26,67 @@ function advance(motion: ResidentJourney, a = agent(), seconds = 1, overrides = 
 }
 
 describe('navigation graph', () => {
+  it('connects both trail turnouts as clear terminal branches for every seat', () => {
+    for (const turnout of TRAIL_TURNOUTS) {
+      const approach = `${turnout.id}:approach`;
+      expect(DESTINATIONS.some((destination) => destination.id === turnout.id)).toBe(true);
+      expect(NODES[approach]).toEqual([...turnoutPoint(turnout.trailIndex, turnout.side, 2.5)]);
+      expect(NODES[turnout.id]).toEqual([...turnoutPoint(turnout.trailIndex, turnout.side, 4.8)]);
+      expect(EDGES.filter(([a, b]) => a === turnout.id || b === turnout.id)).toHaveLength(1);
+      for (let seat = 0; seat < 8; seat++) {
+        const outward = planRoute(`home-${seat}`, turnout.id);
+        expect(outward.ids.slice(-3)).toEqual([
+          `meadow:trail-${turnout.trailIndex}`,
+          approach,
+          turnout.id,
+        ]);
+        const home = planRoute(turnout.id, `home-${seat}`);
+        expect(home.points).toEqual([...outward.points].reverse());
+      }
+      for (const [start, end] of [
+        [`meadow:trail-${turnout.trailIndex}`, approach],
+        [approach, turnout.id],
+      ]) {
+        const a = NODES[start],
+          b = NODES[end];
+        for (let step = 0; step <= 40; step++) {
+          const t = step / 40;
+          const x = a[0] + (b[0] - a[0]) * t;
+          const y = a[1] + (b[1] - a[1]) * t;
+          const z = a[2] + (b[2] - a[2]) * t;
+          const clearance = y - renderedTerrainHeight(x, z);
+          expect(clearance, `${start} → ${end} at ${t}`).toBeGreaterThan(0.015);
+          expect(clearance, `${start} → ${end} at ${t}`).toBeLessThan(0.22);
+        }
+      }
+    }
+  });
+  it('keeps turnout resting pads clear of existing walking lanes', () => {
+    const distanceToEdge = (
+      x: number,
+      z: number,
+      from: (typeof NODES)[string],
+      to: (typeof NODES)[string],
+    ) => {
+      const dx = to[0] - from[0],
+        dz = to[2] - from[2];
+      const length = dx * dx + dz * dz;
+      const t = length
+        ? Math.max(0, Math.min(1, ((x - from[0]) * dx + (z - from[2]) * dz) / length))
+        : 0;
+      return Math.hypot(x - from[0] - t * dx, z - from[2] - t * dz);
+    };
+    for (const turnout of TRAIL_TURNOUTS) {
+      const center = NODES[turnout.id];
+      for (const [start, end] of EDGES) {
+        if (start.startsWith(turnout.id) || end.startsWith(turnout.id)) continue;
+        expect(
+          distanceToEdge(center[0], center[2], NODES[start], NODES[end]),
+          `${turnout.id} overlaps ${start} → ${end}`,
+        ).toBeGreaterThan(0.8);
+      }
+    }
+  });
   it('keeps the scenic southern water above its rendered basin and away from routes', () => {
     for (let step = 0; step < 36; step++) {
       const angle = (step / 36) * Math.PI * 2;
@@ -642,6 +704,32 @@ it('fades an offsite removal in place without waiting for a frozen corridor', ()
   expect(m.exited).toBe(true);
   expect(m.position).toEqual(p);
   expect(traffic.acquire('replacement', Object.keys(NODES))).toBe(true);
+});
+
+it('returns from the eastern trail rest when a task needs input', () => {
+  const traffic = new NavigationTraffic();
+  const motion = new ResidentJourney(0, 'demo-2', traffic);
+  for (const destination of DESTINATIONS)
+    if (destination.id !== 'meadow:rest-east') traffic.reserveDestination('scene', destination.id);
+  let arrived = false;
+  for (let frame = 0; frame < 180 * 60; frame++) {
+    motion.update(agent(), 1 / 60, options);
+    if (motion.activity === 'Resting at eastern trail rest') {
+      arrived = true;
+      break;
+    }
+  }
+  expect(arrived).toBe(true);
+  const before = motion.position;
+  const waiting = agent(0, 'waiting');
+  motion.update(waiting, 1 / 60, options);
+  expect(Math.hypot(...motion.position.map((value, axis) => value - before[axis]))).toBeLessThan(
+    0.06,
+  );
+  advance(motion, waiting, 150);
+  expect(motion.clip(waiting)).toBe('DeskWait');
+  expect(waiting.status).toBe('waiting');
+  expect(traffic.reserveDestination('next', 'meadow:rest-east')).toBe(true);
 });
 
 it('rejoins home invisibly when an interrupted meadow return stays blocked', () => {

@@ -1,6 +1,12 @@
 import type { Agent } from './state';
 import { worldCounts, type WorkFilter } from './world/hud';
-import { WORLD_VIEWS, WORLD_VIEW_LABELS, type WorldLocation, type WorldView } from './world/layout';
+import {
+  WORLD_VIEWS,
+  WORLD_VIEW_LABELS,
+  WORLD_LOCATION_LABELS,
+  type WorldLocation,
+  type WorldView,
+} from './world/layout';
 export function WorldHUD({
   agents,
   paused,
@@ -24,9 +30,7 @@ export function WorldHUD({
       <div className="world-location">
         <h1>The Grove</h1>
         <span aria-hidden="true">/</span>
-        <span className="world-location-name">
-          {location === 'open-landscape' ? 'Open landscape' : WORLD_VIEW_LABELS[location]}
-        </span>
+        <span className="world-location-name">{WORLD_LOCATION_LABELS[location]}</span>
       </div>
       <select
         className="world-jump"

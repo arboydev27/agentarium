@@ -9,6 +9,7 @@ import {
   type WorldLocation,
   type ZoneName,
 } from './layout';
+import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
 export type WorkFilter = 'working' | 'completed' | 'unknown' | 'here';
 export function matchesWorkFilter(agent: Agent, filter: WorkFilter, paused = false) {
   if (filter === 'here') return agent.seat >= 0 && agent.seat < 8;
@@ -41,6 +42,10 @@ export function districtAt(x: number, z: number): WorldLocation {
   if (Math.hypot(x - ORCHARD.x, z - ORCHARD.z) <= ORCHARD.focusRadius) return 'orchard';
   if (Math.hypot(x - OBSERVATORY.x, z - OBSERVATORY.z) <= OBSERVATORY.focusRadius)
     return 'observatory';
+  for (const turnout of TRAIL_TURNOUTS) {
+    const [tx, , tz] = turnoutPoint(turnout.trailIndex, turnout.side, 4.8);
+    if (Math.hypot(x - tx, z - tz) <= 3.6) return turnout.id;
+  }
   return Math.abs(x) <= WORLD.width / 2 + 5 && Math.abs(z) <= WORLD.depth / 2 + 5
     ? 'overview'
     : 'open-landscape';
