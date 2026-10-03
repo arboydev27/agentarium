@@ -2,76 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useWorld } from '../../state';
-import { detailChunkAt, selectDetailChunks } from '../chunks';
-import { LOOKOUT } from '../layout';
-import { meadowTrailPoint, terrainHeight } from '../terrain';
-import { clearOfOrchard } from './orchardPlacement';
-import { clearOfObservatory } from './observatoryPlacement';
-
-const PATCH_CENTERS: [number, number][] = [
-  [-15, -22],
-  [-17, -38],
-  [-19, -57],
-  [-12, -72],
-  [19, -23],
-  [25, -31],
-  [25, -56],
-  [14, -69],
-];
-const OAK = { x: 18.5, z: -44 } as const;
-
-type Piece = { x: number; y: number; z: number; size: number; shade: number };
-type ChunkPieces = { patches: Piece[]; flowers: Piece[]; rocks: Piece[] };
-
-function clearOfRoutes(x: number, z: number) {
-  const index = Math.max(0, Math.min(34, Math.round((-10.2 - z) / 2.35)));
-  const trail = meadowTrailPoint(index);
-  if (Math.abs(x - trail[0]) < 3.1 && Math.abs(z - trail[2]) < 2.6) return false;
-  return (
-    Math.hypot(x - LOOKOUT.x, z - LOOKOUT.z) >= LOOKOUT.focusRadius + 1.6 &&
-    clearOfOrchard(x, z) &&
-    clearOfObservatory(x, z)
-  );
-}
-
-function buildPieces(quality: 'high' | 'low') {
-  const count = quality === 'high' ? 240 : 104;
-  const patches = Array.from({ length: count }, (_, i) => {
-    const [cx, cz] = PATCH_CENTERS[i % PATCH_CENTERS.length];
-    const ring = Math.floor(i / PATCH_CENTERS.length);
-    const spread = Math.sqrt((ring + 0.5) / (count / PATCH_CENTERS.length)) * 8.5;
-    const angle = i * 2.399963;
-    const x = cx + Math.cos(angle) * spread;
-    const z = cz + Math.sin(angle) * spread;
-    const size = 0.66 + ((i * 11) % 17) * 0.045;
-    return { x, z, y: terrainHeight(x, z), size, shade: i % 4 };
-  }).filter(({ x, z }) => clearOfRoutes(x, z));
-  const rocks = Array.from({ length: quality === 'high' ? 42 : 20 }, (_, i) => {
-    const [cx, cz] = PATCH_CENTERS[(i * 3) % PATCH_CENTERS.length];
-    const angle = i * 2.399963;
-    const radius = 4.5 + ((i * 7) % 15) * 0.31;
-    const x = cx + Math.cos(angle) * radius;
-    const z = cz + Math.sin(angle) * radius;
-    return { x, z, y: terrainHeight(x, z), size: 0.37 + (i % 5) * 0.095, shade: i % 3 };
-  }).filter(({ x, z }) => clearOfRoutes(x, z) && Math.hypot(x - OAK.x, z - OAK.z) > 3.5);
-  const groups = new Map<string, ChunkPieces>();
-  const add = (piece: Piece, kind: keyof ChunkPieces) => {
-    const chunk = detailChunkAt(piece.x, piece.z);
-    if (!chunk) return;
-    let group = groups.get(chunk.id);
-    if (!group) {
-      group = { patches: [], flowers: [], rocks: [] };
-      groups.set(chunk.id, group);
-    }
-    group[kind].push(piece);
-  };
-  patches.forEach((piece, i) => {
-    add(piece, 'patches');
-    if (quality === 'high' && i % 3 === 0) add(piece, 'flowers');
-  });
-  rocks.forEach((piece) => add(piece, 'rocks'));
-  return groups;
-}
+import { selectDetailChunks, type DetailChunk } from '../chunks';
+import { buildMeadowPieces, meadowChunkHasDetail } from './meadowPlacement';
 
 function useSharedMeshes() {
   const shared = useMemo(
@@ -92,14 +24,15 @@ function useSharedMeshes() {
 type SharedMeshes = ReturnType<typeof useSharedMeshes>;
 
 function MeadowChunk({
-  id,
-  pieces,
+  chunk,
+  quality,
   shared,
 }: {
-  id: string;
-  pieces: ChunkPieces;
+  chunk: DetailChunk;
+  quality: 'high' | 'low';
   shared: SharedMeshes;
 }) {
+  const pieces = useMemo(() => buildMeadowPieces(chunk, quality), [chunk, quality]);
   const hummocks = useRef<THREE.InstancedMesh>(null);
   const blooms = useRef<THREE.InstancedMesh>(null);
   const stones = useRef<THREE.InstancedMesh>(null);
@@ -150,7 +83,7 @@ function MeadowChunk({
     return () => instances.forEach((mesh) => mesh.dispose());
   }, [pieces]);
   return (
-    <group name={id}>
+    <group name={chunk.id}>
       {pieces.patches.length > 0 && (
         <instancedMesh
           ref={hummocks}
@@ -178,9 +111,8 @@ function MeadowChunk({
 
 export function MeadowChunks() {
   const quality = useWorld((state) => state.quality);
-  const groups = useMemo(() => buildPieces(quality), [quality]);
   const shared = useSharedMeshes();
-  const [visible, setVisible] = useState<string[]>([]);
+  const [visible, setVisible] = useState<DetailChunk[]>([]);
   const selected = useRef<ReadonlySet<string>>(new Set());
   // Select on the first rendered frame, then sample at 0.2-second intervals.
   const elapsed = useRef(0.2);
@@ -199,21 +131,23 @@ export function MeadowChunks() {
     };
     const chunks = selectDetailChunks({ focus, camera: camera.position }, selected.current);
     selected.current = new Set(chunks.map((chunk) => chunk.id));
-    const next = chunks.filter((chunk) => groups.has(chunk.id)).map((chunk) => chunk.id);
+    const next = chunks.filter(meadowChunkHasDetail);
     setVisible((previous) =>
-      previous.length === next.length && previous.every((id, i) => id === next[i])
+      previous.length === next.length && previous.every((chunk, i) => chunk.id === next[i].id)
         ? previous
         : next,
     );
   });
   return (
     <group name="meadow-detail-chunks">
-      {visible.map((id) => {
-        const pieces = groups.get(id);
-        return pieces ? (
-          <MeadowChunk key={`${quality}:${id}`} id={id} pieces={pieces} shared={shared} />
-        ) : null;
-      })}
+      {visible.map((chunk) => (
+        <MeadowChunk
+          key={`${quality}:${chunk.id}`}
+          chunk={chunk}
+          quality={quality}
+          shared={shared}
+        />
+      ))}
     </group>
   );
 }
