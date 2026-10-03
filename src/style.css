@@ -1989,6 +1989,105 @@ h1 span {
   width: 100%;
   height: 100%;
 }
+.landmark-map-count {
+  position: absolute;
+  top: 7px;
+  left: 8px;
+  z-index: 2;
+  padding: 3px 6px;
+  border-radius: 5px;
+  background: #f7f9eddf;
+  color: #476249;
+  font-size: 9px;
+  pointer-events: none;
+}
+.landmark-camera-marker,
+.landmark-resident-marker {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  transform: translate(-50%, -50%);
+}
+.landmark-camera-marker {
+  z-index: 3;
+  width: 26px;
+  height: 26px;
+  border: 2px solid #3e6574;
+  border-radius: 50%;
+  background: #eff9f8a6;
+  color: #355d6b;
+  box-shadow: 0 0 0 2px #f8f9e9bf;
+  pointer-events: none;
+}
+.landmark-resident-marker {
+  z-index: 4;
+  width: 24px;
+  height: 24px;
+  border: 2px solid #f9faec;
+  border-radius: 50%;
+  background: #325f47;
+  color: #fffdf0;
+  box-shadow: 0 2px 6px #243c2c80;
+  font-size: 10px;
+  font-weight: 800;
+}
+.landmark-resident-marker:hover,
+.landmark-resident-marker:focus-visible {
+  background: #254b38;
+  transform: translate(-50%, -50%) scale(1.15);
+}
+.landmark-resident-marker.selected {
+  box-shadow:
+    0 0 0 3px #edba60,
+    0 2px 8px #243c2c80;
+}
+.landmark-resident-picker {
+  position: absolute;
+  z-index: 6;
+  right: 7px;
+  bottom: 7px;
+  left: 7px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 3px;
+  max-height: min(113px, calc(100% - 26px));
+  padding: 5px;
+  overflow-y: auto;
+  border: 1px solid #c2d5bd;
+  border-radius: 8px;
+  background: #f8faeffa;
+  box-shadow: 0 3px 12px #243c2c45;
+}
+.landmark-resident-picker button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 4px;
+  overflow: hidden;
+  border-radius: 5px;
+  color: #34543f;
+  font-size: 10px;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.landmark-resident-picker button:hover,
+.landmark-resident-picker button:focus-visible,
+.landmark-resident-picker button.selected {
+  background: #dcebd8;
+}
+.landmark-resident-picker button span {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #4f7657;
+  color: white;
+  font-size: 9px;
+}
 .landmark-ridge {
   fill: #adc3ad;
 }
@@ -2021,8 +2120,39 @@ h1 span {
   font-weight: 700;
   letter-spacing: 0.08em;
 }
+.landmark-map-legend {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  margin: 8px 2px 9px;
+  color: #59705b;
+  font-size: 9px;
+}
+.landmark-map-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.landmark-map-legend i {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+.landmark-legend-camera {
+  border: 2px solid #3e6574;
+  background: #eff9f8;
+}
+.landmark-legend-resident {
+  background: #325f47;
+  box-shadow: 0 0 0 1px #f9faec;
+}
+.landmark-viewpoints {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+}
 .landmark-pin {
-  position: absolute;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -2049,22 +2179,6 @@ h1 span {
   border-radius: 50%;
   background: #466c4e;
   color: #f7f9ec;
-}
-.landmark-pin.overview {
-  left: 17px;
-  bottom: 11px;
-}
-.landmark-pin.lookout {
-  right: 16px;
-  top: 73px;
-}
-.landmark-pin.orchard {
-  right: 10px;
-  top: 16px;
-}
-.landmark-pin.horizon {
-  left: 62px;
-  top: 16px;
 }
 .landmark-map p {
   margin: 9px 3px 1px;
@@ -2096,27 +2210,14 @@ h1 span {
   .landmark-map {
     bottom: calc(100% + 72px);
     width: min(248px, calc(100vw - 32px));
+    max-height: calc(100dvh - 210px);
+    overflow-y: auto;
   }
   .landmark-map-art {
     height: 112px;
+    flex: none;
   }
   .landmark-map p {
     display: none;
-  }
-  .landmark-pin.horizon {
-    top: 7px;
-  }
-  .landmark-pin.lookout {
-    top: 42px;
-  }
-  .landmark-pin.orchard {
-    right: 5px;
-    top: 7px;
-  }
-  .landmark-pin.horizon {
-    left: 8px;
-  }
-  .landmark-pin.overview {
-    bottom: 5px;
   }
 }

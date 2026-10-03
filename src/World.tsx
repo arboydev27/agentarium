@@ -19,6 +19,12 @@ import { Box, Cylinder, Pot } from './world/primitives';
 import { Environment } from './world/Environment';
 import { CAMERA_VIEWS } from './world/layout';
 import { CAMERA_PAN_BOUNDS, clampPanDelta, isPanKey, keyboardPanDelta } from './world/cameraPan';
+import {
+  mapIsActive,
+  publishMapSnapshot,
+  visibleMapResidents,
+  type ResidentPosition,
+} from './world/mapSnapshot';
 export { SEATS } from './world/motion';
 const statusColors = {
   idle: '#98aaa0',
@@ -112,7 +118,7 @@ function Desk({ seat, status }: { seat: number; status?: Status }) {
     </group>
   );
 }
-type Positions = Map<string, THREE.Vector3>;
+type Positions = Map<string, ResidentPosition>;
 function Resident({
   agent,
   leaving,
@@ -172,6 +178,10 @@ function Resident({
   const outings = useWorld((s) => s.residentOutings);
   const root = useRef<THREE.Group>(null);
   const worldPosition = useMemo(() => new THREE.Vector3(), []);
+  const positionEntry = useMemo(
+    () => ({ point: worldPosition, seat: agent.seat }),
+    [worldPosition, agent.seat],
+  );
   const exited = useRef(false);
   const selected = useWorld((s) => s.selected === agent.id);
   const select = useWorld((s) => s.select);
@@ -182,11 +192,16 @@ function Resident({
     s.mode === 'live' ? s.bridgeStatus === 'connected' : s.playing,
   );
   const playing = playback && !agent.telemetryStale;
+  useEffect(
+    () => () => {
+      if (positions.get(agent.id)?.point === worldPosition) positions.delete(agent.id);
+    },
+    [agent.id, positions, worldPosition],
+  );
   useEffect(() => {
     active.current = null;
     currentClip.current = '';
     return () => {
-      positions.delete(agent.id);
       mixer.stopAllAction();
       mixer.uncacheRoot(model);
       materials.forEach((m) => {
@@ -199,13 +214,18 @@ function Resident({
       });
       skeletons.forEach((skeleton) => skeleton.dispose());
     };
-  }, [agent.id, materials, mixer, model, positions, dressed]);
+  }, [materials, mixer, model, dressed]);
   useFrame((_, delta) => {
     if (!root.current) return;
     motion.update(agent, delta, { reduced, playing, leaving, now: Date.now(), outings });
     root.current.position.fromArray(motion.position);
     root.current.rotation.y = motion.facing;
-    positions.set(agent.id, worldPosition.copy(root.current.position));
+    if (!leaving && motion.opacity > 0.2) {
+      worldPosition.copy(root.current.position);
+      positions.set(agent.id, positionEntry);
+    } else if (positions.get(agent.id) === positionEntry) {
+      positions.delete(agent.id);
+    }
     for (const material of materials) material.opacity = motion.opacity;
     const name = motion.clip(agent);
     if (name !== currentClip.current) {
@@ -449,6 +469,7 @@ function Camera({ positions }: { positions: Positions }) {
   const targetPos = useRef(new THREE.Vector3());
   const targetLook = useRef(new THREE.Vector3());
   const zoom = useRef(30);
+  const lastMapPublish = useRef(Number.NEGATIVE_INFINITY);
   useLayoutEffect(() => {
     // Fiber resizes only its active camera. Keep the parked orthographic
     // projection current too, so returning from Horizon after a resize works.
@@ -531,10 +552,10 @@ function Camera({ positions }: { positions: Positions }) {
     world.addEventListener('keydown', pan);
     return () => world.removeEventListener('keydown', pan);
   }, [camera, gl]);
-  useFrame((_, d) => {
+  useFrame(({ clock }, d) => {
     const point =
       follow && followVisible && useWorld.getState().followAgent === follow
-        ? positions.get(follow)
+        ? positions.get(follow)?.point
         : null;
     if (point) {
       targetLook.current.set(point.x, point.y + 1, point.z);
@@ -581,6 +602,18 @@ function Camera({ positions }: { positions: Positions }) {
       const location = districtAt(controls.current.target.x, controls.current.target.z);
       if (useWorld.getState().worldLocation !== location)
         useWorld.setState({ worldLocation: location });
+      if (!mapIsActive()) {
+        lastMapPublish.current = Number.NEGATIVE_INFINITY;
+      } else if (clock.elapsedTime * 1000 - lastMapPublish.current >= 250) {
+        // Copy plain coordinates out of Three's mutable vectors. Only the
+        // optional map subscribes, at most four times per second.
+        const agents = useWorld.getState().agents;
+        publishMapSnapshot({
+          camera: { x: target.x, z: target.z },
+          residents: visibleMapResidents(agents, positions),
+        });
+        lastMapPublish.current = clock.elapsedTime * 1000;
+      }
     }
   });
   return (
