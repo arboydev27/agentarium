@@ -17,7 +17,9 @@ import {
 import { MeadowScenery } from './scenery/Meadow';
 import { OrchardCommons } from './scenery/Orchard';
 import { clearOfOrchard, clearOfOrchardView } from './scenery/orchardPlacement';
+import { clearOfObservatory, clearOfObservatoryView } from './scenery/observatoryPlacement';
 import { FarRidge } from './scenery/FarRidge';
+import { CedarObservatory } from './scenery/Observatory';
 
 const wood = '#b98b60';
 const green = '#365d4a';
@@ -217,6 +219,7 @@ function Landscape() {
       <LandscapeGroves />
       <MeadowScenery />
       <OrchardCommons />
+      <CedarObservatory />
       <FarRidge />
     </group>
   );
@@ -253,7 +256,13 @@ function LandscapeGroves() {
       const z = cz + Math.sin(angle) * spread;
       const size = 1.15 + ((i * 13) % 17) * 0.1;
       return { x, y: terrainHeight(x, z), z, size, shade: i % 3 };
-    }).filter(({ x, z }) => clearOfOrchard(x, z, 1.8) && clearOfOrchardView(x, z));
+    }).filter(
+      ({ x, z }) =>
+        clearOfOrchard(x, z, 1.8) &&
+        clearOfOrchardView(x, z) &&
+        clearOfObservatory(x, z, 1.8) &&
+        clearOfObservatoryView(x, z),
+    );
   }, [quality]);
   useEffect(() => {
     if (!trunks.current || !crowns.current || !tips.current || !understory.current) return;

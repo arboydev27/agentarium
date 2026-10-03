@@ -6,6 +6,7 @@ import { detailChunkAt, selectDetailChunks } from '../chunks';
 import { LOOKOUT } from '../layout';
 import { meadowTrailPoint, terrainHeight } from '../terrain';
 import { clearOfOrchard } from './orchardPlacement';
+import { clearOfObservatory } from './observatoryPlacement';
 
 const PATCH_CENTERS: [number, number][] = [
   [-15, -22],
@@ -27,7 +28,9 @@ function clearOfRoutes(x: number, z: number) {
   const trail = meadowTrailPoint(index);
   if (Math.abs(x - trail[0]) < 3.1 && Math.abs(z - trail[2]) < 2.6) return false;
   return (
-    Math.hypot(x - LOOKOUT.x, z - LOOKOUT.z) >= LOOKOUT.focusRadius + 1.6 && clearOfOrchard(x, z)
+    Math.hypot(x - LOOKOUT.x, z - LOOKOUT.z) >= LOOKOUT.focusRadius + 1.6 &&
+    clearOfOrchard(x, z) &&
+    clearOfObservatory(x, z)
   );
 }
 
