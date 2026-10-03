@@ -26,6 +26,8 @@ October 2, 2026; development server, Codex in-app browser, 1280 × 720 viewport,
 
 In a later 1280 × 720 development-browser spot check with the simulator paused, Horizon read about **847 draws, 268,250 triangles, 705 geometries, and 42 textures** before Orchard Commons and **870 draws, 278,284 triangles, 728 geometries, and 43 textures** after it. Both views stayed near the browser's 60 fps display limit, with p95 intervals around 17 ms. Orchard's own close view read **36 draws / 64,602 triangles** at high quality and **31 draws / 50,186 triangles** at low quality after settling. These are individual scene-counter observations, not controlled frame-time benchmarks; HMR, browser scheduling, and renderer visibility can change them. Recheck a production build and representative devices before setting a performance budget.
 
+With the distant ridge and stone arch added, the same paused Horizon setup showed about **875 draws, 279,464 triangles, 733 geometries, and 43 textures** at 60 fps with p95 around 17.4 ms. Its settled Orchard view showed **38 draws and 65,746 triangles**. These snapshots suggest a modest scene-counter increase over the prior local reading; they do not establish a frame-time improvement or device-wide budget.
+
 ## Repeatable review procedure
 
 1. Use the same browser, viewport, display, camera preset, quality, and resident state. Prefer a production build with `npm run build` and `npm run preview` for formal profiling.

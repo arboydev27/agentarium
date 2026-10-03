@@ -12,7 +12,7 @@ The spatial model should have three layers:
 | --------------- | -------------------------------------------------------------- | ------------------------------------------------------------ |
 | Active district | Desks, routes, destinations, interactive selection             | Four-zone island implemented                                 |
 | Near landscape  | Connected paths and landmarks that can become future districts | Meadow Lookout, Orchard Commons, and authored trail branches |
-| Far horizon     | Silhouette and atmosphere without unnecessary detail           | Perspective view, terrain, and fog                           |
+| Far horizon     | Silhouette and atmosphere without unnecessary detail           | Perspective view, terrain, ridge, arch, and fog              |
 
 ## Milestones
 
@@ -20,7 +20,7 @@ The spatial model should have three layers:
 
 Extend the visible ground well beyond the current island, keep the existing desk/navigation geometry clear, and give users an explicit horizon view. Use inexpensive geometry and instance repeated trees. Match fog to the terrain edge so zooming or panning does not expose an abrupt empty border. Test day/night, low/high quality, reduced motion, watch/follow, and different window sizes.
 
-The current implementation uses a finite 600 × 600 landscape. A raised plateau blends the original district into meadow, with a winding trail, clustered groves, meadow groundcover, a distinctive amber oak, and a northern rise. Horizon now uses perspective to show a lower skyline and far land. Terrain and placement are deterministic; no background generation or streaming runs yet. One route along the trail carries residents to the lookout.
+The current implementation uses a finite 600 × 600 landscape. A raised plateau blends the original district into meadow, with a winding trail, clustered groves, meadow groundcover, a distinctive amber oak, and a northern rise. A low-poly ridge and ruined arch add depth behind the orchard. Horizon uses perspective to show a lower skyline and far land. Terrain and placement are deterministic; no background generation or streaming runs yet. Authored routes along the trail carry residents to the lookout and Orchard Commons. Route nodes and visible ribbons share a height rule checked against the actual rendered terrain triangles.
 
 ### 2. Make the first outside area truly traversable
 
@@ -38,7 +38,7 @@ The first implementation partitions optional meadow hummocks, flowers, and stone
 
 ### 4. Broaden navigation and camera controls
 
-When more than eight residents or multiple active districts are visible, revisit seat allocation and traffic priorities. The optional schematic jumps among Overview, Lookout, Orchard, and Horizon, while focused arrow-key panning provides bounded travel across the current landscape. Add region search and a position-aware minimap once spatial scale warrants it. Keep a list-based route to every task needing attention. Add local avoidance or passing lanes where authored paths become busy; do not assume visual terrain alone is traversable.
+When more than eight residents or multiple active districts are visible, revisit seat allocation and traffic priorities. The optional map jumps among Overview, Lookout, Orchard, and Horizon and locates the camera focus and currently visible residents; focused arrow-key panning provides bounded travel across the current landscape. Add region search, map zoom, and a fuller spatial model as new districts arrive. Keep a list-based route to every task needing attention. Add local avoidance or passing lanes where authored paths become busy; do not assume visual terrain alone is traversable.
 
 ### 5. Set a performance budget and ship gates
 

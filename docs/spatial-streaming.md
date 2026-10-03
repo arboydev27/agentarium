@@ -6,6 +6,8 @@ The world is a finite 600 × 600 scene. Splitting optional scenery into chunks i
 
 A chunk owns only decorative scene objects such as meadow hummocks, flowers, and rocks. Agent sessions, resident rigs and journeys, route reservations, task attention, and recap history remain outside chunk components. Unmounting a detail chunk cannot change an agent's status or interrupt a trip.
 
+The optional live map follows the same boundary: it reads camera focus and the positions of mounted resident rigs, independently of decorative chunk membership. It cannot infer a resident's task status from whether its surrounding scenery is mounted.
+
 Chunk identity comes from fixed world coordinates, not React mount order or random generation. Placement must be deterministic so a returned chunk looks the same. Shared base terrain and authored routes continue across chunk boundaries without seams.
 
 ## Selection contract
