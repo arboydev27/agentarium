@@ -141,6 +141,7 @@ type State = {
   camera: WorldView;
   cameraCustomized: boolean;
   cameraVersion: number;
+  cameraJump: { x: number; z: number; sequence: number } | null;
   cinematic: boolean;
   watchMode: boolean;
   followAgent: string | null;
@@ -240,6 +241,7 @@ export const useWorld = create<State>((set, get) => ({
   camera: 'overview',
   cameraCustomized: false,
   cameraVersion: 0,
+  cameraJump: null,
   cinematic: false,
   watchMode: false,
   followAgent: null,

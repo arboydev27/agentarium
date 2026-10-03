@@ -4,6 +4,7 @@ import {
   activateMap,
   getMapSnapshot,
   groupNearbyMapResidents,
+  mapToWorld,
   publishMapSnapshot,
   subscribeMapSnapshot,
   visibleMapResidents,
@@ -22,6 +23,14 @@ describe('live landmark map', () => {
     });
     expect(worldToMap({ x: 0, z: -5 })).toEqual({ left: 50, top: 50 });
     expect(worldToMap({ x: 900, z: -900 })).toEqual({ left: 100, top: 0 });
+  });
+
+  it('round-trips camera targets and clamps map choices to camera bounds', () => {
+    expect(mapToWorld(worldToMap({ x: 24, z: -71 }))).toEqual({ x: 24, z: -71 });
+    expect(mapToWorld({ left: -10, top: 150 })).toEqual({
+      x: CAMERA_PAN_BOUNDS.minX,
+      z: CAMERA_PAN_BOUNDS.maxZ,
+    });
   });
 
   it('includes only current visible seat assignments and copies coordinates', () => {

@@ -23,6 +23,13 @@ export function worldToMap(point: MapPoint) {
   };
 }
 
+export function mapToWorld(point: { left: number; top: number }): MapPoint {
+  const { minX, maxX, minZ, maxZ } = CAMERA_PAN_BOUNDS;
+  const left = Math.max(0, Math.min(100, point.left)) / 100;
+  const top = Math.max(0, Math.min(100, point.top)) / 100;
+  return { x: minX + left * (maxX - minX), z: minZ + top * (maxZ - minZ) };
+}
+
 export function visibleMapResidents(
   agents: readonly SeatedResident[],
   positions: ReadonlyMap<string, ResidentPosition>,

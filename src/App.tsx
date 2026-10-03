@@ -885,6 +885,17 @@ export default function App() {
           view={camera}
           following={!!followAgent}
           customized={cameraCustomized}
+          onScout={(point) => {
+            set({
+              cameraJump: {
+                ...point,
+                sequence: (useWorld.getState().cameraJump?.sequence ?? 0) + 1,
+              },
+              cameraCustomized: true,
+              followAgent: null,
+              cinematic: false,
+            });
+          }}
           navigate={(view) => {
             changeCamera(view);
             set({ cinematic: false });

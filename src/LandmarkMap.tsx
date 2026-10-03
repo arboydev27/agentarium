@@ -1,14 +1,17 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { Eye, Focus, Map, MapPin, Telescope, Trees, X } from 'lucide-react';
+import { Crosshair, Eye, Focus, Map, MapPin, Telescope, Trees, X } from 'lucide-react';
 import { useWorld } from './state';
 import type { WorldView } from './world/layout';
 import {
   activateMap,
   getMapSnapshot,
   groupNearbyMapResidents,
+  mapToWorld,
   subscribeMapSnapshot,
   worldToMap,
+  type MapPoint,
 } from './world/mapSnapshot';
+import { CAMERA_PAN_BOUNDS } from './world/cameraPan';
 
 const LANDMARKS = [
   { view: 'overview', label: 'Overview', icon: Focus, detail: 'The resident grove' },
@@ -18,8 +21,13 @@ const LANDMARKS = [
   { view: 'horizon', label: 'Horizon', icon: Eye, detail: 'Ridge and sky' },
 ] as const;
 
-function LiveMapLayer({ onFind }: { onFind: (id: string) => void }) {
-  const snapshot = useSyncExternalStore(subscribeMapSnapshot, getMapSnapshot, getMapSnapshot);
+function LiveMapLayer({
+  onFind,
+  snapshot,
+}: {
+  onFind: (id: string) => void;
+  snapshot: ReturnType<typeof getMapSnapshot>;
+}) {
   const selected = useWorld((state) => state.selected);
   const [expanded, setExpanded] = useState<string | null>(null);
   const camera = snapshot.camera ? worldToMap(snapshot.camera) : null;
@@ -99,6 +107,7 @@ export function LandmarkMap({
   following,
   customized,
   navigate,
+  onScout,
   onOpen,
   onClose,
 }: {
@@ -106,12 +115,23 @@ export function LandmarkMap({
   following: boolean;
   customized: boolean;
   navigate: (view: WorldView) => void;
+  onScout: (point: MapPoint) => void;
   onOpen?: () => void;
   onClose?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const container = useRef<HTMLElement>(null);
   const toggle = useRef<HTMLButtonElement>(null);
+  const snapshot = useSyncExternalStore(subscribeMapSnapshot, getMapSnapshot, getMapSnapshot);
+  const [scout, setScout] = useState<MapPoint | null>(null);
+  const [scoutSelected, setScoutSelected] = useState(false);
+  const scoutInitialized = useRef(false);
+
+  useEffect(() => {
+    if (!open || !snapshot.camera || scoutInitialized.current) return;
+    scoutInitialized.current = true;
+    setScout(snapshot.camera);
+  }, [open, snapshot]);
 
   useEffect(() => {
     if (!open) return;
@@ -130,8 +150,16 @@ export function LandmarkMap({
   const close = () => {
     activateMap(false);
     setOpen(false);
+    setScout(null);
+    setScoutSelected(false);
+    scoutInitialized.current = false;
     onClose?.();
     toggle.current?.focus();
+  };
+  const commitScout = () => {
+    if (!scout) return;
+    onScout(scout);
+    close();
   };
 
   return (
@@ -178,7 +206,7 @@ export function LandmarkMap({
           <div
             className="landmark-map-art"
             role="group"
-            aria-label="Live position locator. North is up. Markers show only residents occupying the eight visible world seats; illustrated terrain is decorative."
+            aria-label="Live position locator and camera scout. North is up. Markers show only residents occupying the eight visible world seats."
           >
             <svg
               viewBox="0 0 280 170"
@@ -198,7 +226,73 @@ export function LandmarkMap({
             <span className="landmark-north" aria-hidden="true">
               N ↑
             </span>
+            <button
+              className="landmark-scout-surface"
+              aria-label="Choose camera location on map. Click a location, or use arrow keys then Enter to move the camera."
+              onClick={(event) => {
+                if (event.detail === 0) return;
+                const bounds = event.currentTarget.getBoundingClientRect();
+                setScout(
+                  mapToWorld({
+                    left: ((event.clientX - bounds.left) / bounds.width) * 100,
+                    top: ((event.clientY - bounds.top) / bounds.height) * 100,
+                  }),
+                );
+                setScoutSelected(true);
+              }}
+              onKeyDown={(event) => {
+                if (event.key.startsWith('Arrow')) {
+                  event.preventDefault();
+                  const point = scout ?? snapshot.camera ?? { x: 0, z: -5 };
+                  const distance = event.shiftKey ? 8 : 3;
+                  setScout({
+                    x: Math.max(
+                      CAMERA_PAN_BOUNDS.minX,
+                      Math.min(
+                        CAMERA_PAN_BOUNDS.maxX,
+                        point.x +
+                          (event.key === 'ArrowRight'
+                            ? distance
+                            : event.key === 'ArrowLeft'
+                              ? -distance
+                              : 0),
+                      ),
+                    ),
+                    z: Math.max(
+                      CAMERA_PAN_BOUNDS.minZ,
+                      Math.min(
+                        CAMERA_PAN_BOUNDS.maxZ,
+                        point.z +
+                          (event.key === 'ArrowDown'
+                            ? distance
+                            : event.key === 'ArrowUp'
+                              ? -distance
+                              : 0),
+                      ),
+                    ),
+                  });
+                  setScoutSelected(true);
+                } else if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  if (scoutSelected) commitScout();
+                  else {
+                    setScout(scout ?? snapshot.camera ?? { x: 0, z: -5 });
+                    setScoutSelected(true);
+                  }
+                }
+              }}
+            />
+            {scoutSelected && scout && (
+              <span
+                className="landmark-scout-marker"
+                style={{ left: `${worldToMap(scout).left}%`, top: `${worldToMap(scout).top}%` }}
+                aria-hidden="true"
+              >
+                <Crosshair size={18} />
+              </span>
+            )}
             <LiveMapLayer
+              snapshot={snapshot}
               onFind={(id) => {
                 const world = useWorld.getState();
                 world.select(id);
@@ -206,6 +300,12 @@ export function LandmarkMap({
                 close();
               }}
             />
+          </div>
+          <div className="landmark-scout-actions">
+            <span>Choose a camera point. Scenic terrain may not be walkable.</span>
+            <button disabled={!scoutSelected} onClick={commitScout}>
+              Move camera here
+            </button>
           </div>
           <div className="landmark-map-legend">
             <span>
@@ -236,7 +336,7 @@ export function LandmarkMap({
               </button>
             ))}
           </div>
-          <p>Viewpoints move the camera. Other chats remain in Residents.</p>
+          <p>Camera only. Scenic terrain may not be walkable. Other chats remain in Residents.</p>
         </div>
       )}
     </section>

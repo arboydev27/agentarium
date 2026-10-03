@@ -19,6 +19,7 @@ import { Box, Cylinder, Pot } from './world/primitives';
 import { Environment } from './world/Environment';
 import { CAMERA_VIEWS } from './world/layout';
 import { CAMERA_PAN_BOUNDS, clampPanDelta, isPanKey, keyboardPanDelta } from './world/cameraPan';
+import { renderedTerrainHeight } from './world/terrain';
 import {
   mapIsActive,
   publishMapSnapshot,
@@ -447,6 +448,7 @@ function Camera({ positions }: { positions: Positions }) {
   const controls = useRef<OrbitControlsImpl>(null);
   const view = useWorld((s) => s.camera);
   const version = useWorld((s) => s.cameraVersion);
+  const cameraJump = useWorld((s) => s.cameraJump);
   const cinematic = useWorld((s) => s.cinematic);
   const follow = useWorld((s) => s.followAgent);
   const followVisible = useWorld(
@@ -470,6 +472,7 @@ function Camera({ positions }: { positions: Positions }) {
   const targetLook = useRef(new THREE.Vector3());
   const zoom = useRef(30);
   const lastMapPublish = useRef(Number.NEGATIVE_INFINITY);
+  const lastJump = useRef(0);
   useLayoutEffect(() => {
     // Fiber resizes only its active camera. Keep the parked orthographic
     // projection current too, so returning from Horizon after a resize works.
@@ -509,6 +512,19 @@ function Camera({ positions }: { positions: Positions }) {
     moving.current = true;
     keyboardPanning.current = false;
   }, [view, version]);
+  useEffect(() => {
+    if (!cameraJump || cameraJump.sequence === lastJump.current || !controls.current) return;
+    lastJump.current = cameraJump.sequence;
+    const { x, z } = cameraJump;
+    const y = renderedTerrainHeight(x, z) + 1;
+    const destination = new THREE.Vector3(x, y, z);
+    // Translate the whole orbit so its pitch, distance, and zoom are preserved.
+    const offset = destination.clone().sub(controls.current.target);
+    targetPos.current.copy(camera.position).add(offset);
+    targetLook.current.copy(destination);
+    moving.current = true;
+    keyboardPanning.current = false;
+  }, [cameraJump, camera]);
   useEffect(() => {
     if (view === 'horizon' || useWorld.getState().followAgent) return;
     const preset = CAMERA_VIEWS[view];

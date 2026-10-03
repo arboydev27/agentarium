@@ -1997,6 +1997,50 @@ h1 span {
   width: 100%;
   height: 100%;
 }
+.landmark-scout-surface {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+}
+.landmark-scout-surface:focus-visible {
+  outline: 3px solid #bc8542;
+  outline-offset: -4px;
+}
+.landmark-scout-marker {
+  position: absolute;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: #fff6d8e8;
+  color: #9a5729;
+  box-shadow: 0 0 0 2px #8f572a;
+  pointer-events: none;
+}
+.landmark-scout-actions {
+  display: grid;
+  gap: 5px;
+  margin: 8px 2px;
+  color: #59705b;
+  font-size: 10px;
+}
+.landmark-scout-actions button {
+  min-height: 29px;
+  border-radius: 8px;
+  background: #426b52;
+  color: #fffdf2;
+  font-weight: 650;
+}
+.landmark-scout-actions button:disabled {
+  background: #e3e8da;
+  color: #75836e;
+}
 .landmark-map-count {
   position: absolute;
   top: 7px;
