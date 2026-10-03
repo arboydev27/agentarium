@@ -1,6 +1,6 @@
 import type { Agent } from './state';
 import { worldCounts, type WorkFilter } from './world/hud';
-import type { WorldView } from './world/layout';
+import { WORLD_VIEWS, WORLD_VIEW_LABELS, type WorldView } from './world/layout';
 export function WorldHUD({
   agents,
   paused,
@@ -29,15 +29,11 @@ export function WorldHUD({
           value={location}
           onChange={(e) => navigate(e.target.value as WorldView)}
         >
-          <option value="overview">Overview</option>
-          <option value="café">Café</option>
-          <option value="garden">Garden</option>
-          <option value="studio">Studio</option>
-          <option value="courtyard">Courtyard</option>
-          <option value="lookout">Lookout</option>
-          <option value="orchard">Orchard Commons</option>
-          <option value="observatory">Cedar Observatory</option>
-          <option value="horizon">Horizon</option>
+          {WORLD_VIEWS.map((view) => (
+            <option key={view} value={view}>
+              {WORLD_VIEW_LABELS[view]}
+            </option>
+          ))}
         </select>
       </div>
       {!compact && (

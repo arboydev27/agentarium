@@ -43,7 +43,7 @@ import {
   ScanEye,
 } from 'lucide-react';
 import { useWorld, STATUS_LABEL } from './state';
-import { WORLD_VIEWS, type WorldView } from './world/layout';
+import { WORLD_VIEWS, WORLD_VIEW_LABELS } from './world/layout';
 import { registerWorldTools } from './webmcp';
 import { agentSessionId, summarizeSessions, sessionKey } from './sessions';
 import { SessionActions, SessionManager } from './SessionControls';
@@ -51,11 +51,6 @@ import { filterResidents } from './sessions';
 import type { SessionView } from './sessions';
 import type { Agent, Status } from './state';
 const World = lazy(() => import('./World'));
-function cameraViewLabel(view: WorldView) {
-  if (view === 'orchard') return 'Orchard Commons';
-  if (view === 'observatory') return 'Cedar Observatory';
-  return view[0].toUpperCase() + view.slice(1);
-}
 function ProviderIcon({ provider }: { provider: string }) {
   return (
     <span className={'provider-icon ' + provider.toLowerCase()}>
@@ -907,8 +902,8 @@ export default function App() {
             className={camera === view && !followAgent ? 'active' : ''}
             key={view}
             onClick={() => changeCamera(view)}
-            aria-label={`${cameraViewLabel(view)} view`}
-            title={`${cameraViewLabel(view)} view`}
+            aria-label={`${WORLD_VIEW_LABELS[view]} view`}
+            title={`${WORLD_VIEW_LABELS[view]} view`}
           >
             {view === 'overview' ? (
               <Focus size={15} />

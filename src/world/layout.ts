@@ -24,6 +24,17 @@ export const WORLD_VIEWS = [
   'horizon',
 ] as const;
 export type WorldView = (typeof WORLD_VIEWS)[number];
+export const WORLD_VIEW_LABELS: Record<WorldView, string> = {
+  overview: 'Overview',
+  café: 'Café',
+  garden: 'Garden',
+  studio: 'Studio',
+  courtyard: 'Courtyard',
+  lookout: 'Lookout',
+  orchard: 'Orchard Commons',
+  observatory: 'Cedar Observatory',
+  horizon: 'Horizon',
+};
 export const SEATS: Point[] = [
   [-8.8, 0.68, -2.5],
   [-4.8, 0.68, -2.5],
