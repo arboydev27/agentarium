@@ -639,6 +639,51 @@ it('fades an offsite removal in place without waiting for a frozen corridor', ()
   expect(traffic.acquire('replacement', Object.keys(NODES))).toBe(true);
 });
 
+it('rejoins home invisibly when an interrupted meadow return stays blocked', () => {
+  const traffic = new NavigationTraffic();
+  const motion = new ResidentJourney(3, 'demo-3', traffic);
+  for (const destination of DESTINATIONS)
+    if (destination.id !== 'orchard:commons') traffic.reserveDestination('scene', destination.id);
+  let followerHeld = false;
+  const follower = planRoute('home-1', 'meadow:lookout');
+  for (let frame = 0; frame < 180 * 60; frame++) {
+    motion.update(agent(3), 1 / 60, options);
+    if (motion.position[2] < -49 && traffic.acquire('follower', follower.ids)) {
+      followerHeld = true;
+      break;
+    }
+  }
+  expect(followerHeld).toBe(true);
+  const waiting = agent(3, 'working');
+  advance(motion, waiting, 3);
+  const pausedPosition = motion.position;
+  advance(motion, waiting, 30, { playing: false });
+  expect(motion.position).toEqual(pausedPosition);
+  expect(motion.opacity).toBe(1);
+  let lastVisible: typeof motion.position | null = motion.position;
+  let becameInvisible = false;
+  for (let frame = 0; frame < 12 * 60; frame++) {
+    motion.update(waiting, 1 / 60, options);
+    const next = motion.position;
+    if (motion.opacity > 0.15) {
+      if (lastVisible)
+        expect(Math.hypot(...next.map((value, axis) => value - lastVisible![axis]))).toBeLessThan(
+          0.08,
+        );
+      lastVisible = next;
+    } else {
+      becameInvisible = true;
+      lastVisible = null;
+    }
+  }
+  expect(becameInvisible).toBe(true);
+  expect(motion.position[2]).toBeGreaterThan(-10);
+  expect(waiting.status).toBe('working');
+  expect(traffic.reserveDestination('next', 'orchard:commons')).toBe(true);
+  traffic.release('follower');
+  expect(traffic.acquire('another', planRoute('home-2', 'orchard:commons').ids)).toBe(true);
+});
+
 it('shows the lookout promptly in ordinary demo pacing without forced destinations', () => {
   // Match the default 6.5s demo tick and its 60s idle window with deterministic choices.
   const results = [];

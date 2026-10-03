@@ -22,6 +22,8 @@ export class ResidentJourney extends ResidentMotion {
     held: boolean;
     dwell: number;
     seated: number;
+    blockedReturn: number;
+    fadingHome: boolean;
   } | null = null;
   activity = 'Near desk';
   constructor(
@@ -67,11 +69,26 @@ export class ResidentJourney extends ResidentMotion {
         return;
       }
       this.exited = false;
-      this.opacity = Math.min(1, this.opacity + dt * 3);
       if (!options.playing && !options.leaving) {
         this.moving = false;
         return;
       }
+      if (trip.fadingHome) {
+        this.opacity = Math.max(0, this.opacity - dt * 3);
+        this.moving = false;
+        this.activity = 'Returning to desk';
+        if (this.opacity === 0) {
+          // No resident or label is visible when the cosmetic trip relocates.
+          // Release both the corridor and any pending priority claim together.
+          this.traffic.release(this.identity);
+          this.trip = null;
+          this.idleTime = 0;
+          this.distance = this.lengths[1];
+          this.sitting = 0;
+        }
+        return;
+      }
+      this.opacity = Math.min(1, this.opacity + dt * 3);
       if (
         (!leisure || options.leaving || trip.dwell >= this.style.visitSeconds) &&
         !trip.returning
@@ -83,6 +100,16 @@ export class ResidentJourney extends ResidentMotion {
       }
       if (trip.returning && !trip.held)
         trip.held = this.traffic.acquire(this.identity, trip.path.ids, true);
+      if (trip.returning && !trip.held) {
+        trip.blockedReturn += dt;
+        const timeout = leisure ? 25 : 8;
+        if (trip.blockedReturn >= timeout) {
+          trip.fadingHome = true;
+          this.activity = 'Returning to desk';
+          this.moving = false;
+          return;
+        }
+      } else trip.blockedReturn = 0;
       const end = trip.path.lengths.at(-1)!;
       const atDestination = trip.distance === end && !trip.returning;
       if (atDestination) {
@@ -159,6 +186,8 @@ export class ResidentJourney extends ResidentMotion {
         held: true,
         dwell: 0,
         seated: 0,
+        blockedReturn: 0,
+        fadingHome: false,
       };
       this.visit++;
       return;

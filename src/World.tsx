@@ -378,7 +378,9 @@ function WorldLabel({
     anchor.current.updateWorldMatrix(true, false);
     point.setFromMatrixPosition(anchor.current.matrixWorld).project(camera);
     element.current.style.visibility =
-      Math.abs(point.x) < 1 && Math.abs(point.y) < 1 && point.z < 1 ? 'visible' : 'hidden';
+      motion.opacity > 0.15 && Math.abs(point.x) < 1 && Math.abs(point.y) < 1 && point.z < 1
+        ? 'visible'
+        : 'hidden';
     element.current.style.transform = `translate(${((point.x + 1) * size.width) / 2}px,${((1 - point.y) * size.height) / 2}px) translate(-50%,-50%)`;
   });
   return <group ref={anchor} position={[0, height, 0]} />;
