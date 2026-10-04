@@ -5,6 +5,7 @@ import { DAWNLIGHT_GLASSHOUSE } from './scenery/dawnlightPlacement';
 import { SOUTHWIND_SHORE } from './scenery/southwindTrailPlacement';
 import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
 import { WINDWARD_MILL } from './scenery/windwardPlacement';
+import { WOODLAND_HOLLOW } from './scenery/woodlandPlacement';
 import {
   activateMap,
   detailMapBounds,
@@ -42,11 +43,12 @@ describe('live landmark map', () => {
   });
 
   it('plots named outside places at their shared world destinations', () => {
-    expect(MAP_LANDMARKS).toHaveLength(9);
+    expect(MAP_LANDMARKS).toHaveLength(10);
     expect(MAP_LANDMARKS.map((landmark) => landmark.id)).toEqual([
       'lookout',
       'orchard',
       'observatory',
+      'woodland:hollow',
       'dawnlight',
       'windward',
       'amber',
@@ -54,6 +56,13 @@ describe('live landmark map', () => {
       'meadow:rest-west',
       'meadow:rest-east',
     ]);
+    const hollow = MAP_LANDMARKS.find((landmark) => landmark.id === WOODLAND_HOLLOW.id)!;
+    expect(hollow).toMatchObject({
+      label: WOODLAND_HOLLOW.label,
+      point: { x: WOODLAND_HOLLOW.x, z: WOODLAND_HOLLOW.z },
+      view: 'hollow',
+    });
+    expect(hollow.scenicOnly).toBeUndefined();
     const mere = MAP_LANDMARKS.find((landmark) => landmark.id === 'mere')!;
     expect(mere.point).toEqual({ x: SOUTHWIND_SHORE.x, z: SOUTHWIND_SHORE.z });
     expect(mere.view).toBe('mere');

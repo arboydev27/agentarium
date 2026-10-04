@@ -40,6 +40,7 @@ import {
   MapPin,
   Trees,
   Telescope,
+  Lamp,
   Waves,
   Flower2,
   Wind,
@@ -975,6 +976,8 @@ export default function App() {
               <Trees size={15} />
             ) : view === 'observatory' ? (
               <Telescope size={15} />
+            ) : view === 'hollow' ? (
+              <Lamp size={15} />
             ) : view === 'mere' ? (
               <Waves size={15} />
             ) : view === 'dawnlight' ? (

@@ -5,6 +5,7 @@ import { DAWNLIGHT_GLASSHOUSE } from './scenery/dawnlightPlacement';
 import { SOUTHWIND_SHORE } from './scenery/southwindTrailPlacement';
 import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
 import { WINDWARD_MILL } from './scenery/windwardPlacement';
+import { WOODLAND_HOLLOW } from './scenery/woodlandPlacement';
 
 export type MapPoint = { x: number; z: number };
 export type MapBounds = Readonly<{ minX: number; maxX: number; minZ: number; maxZ: number }>;
@@ -46,6 +47,13 @@ export const MAP_LANDMARKS: readonly MapLandmark[] = [
     shortLabel: 'C',
     point: { x: OBSERVATORY.x, z: OBSERVATORY.z },
     view: 'observatory',
+  },
+  {
+    id: WOODLAND_HOLLOW.id,
+    label: WOODLAND_HOLLOW.label,
+    shortLabel: 'H',
+    point: { x: WOODLAND_HOLLOW.x, z: WOODLAND_HOLLOW.z },
+    view: 'hollow',
   },
   {
     id: 'dawnlight',

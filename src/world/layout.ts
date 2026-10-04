@@ -2,6 +2,7 @@ import type { Point } from './motion';
 import { AMBER_BLUFF } from './scenery/amberPlacement';
 import { DAWNLIGHT_GLASSHOUSE } from './scenery/dawnlightPlacement';
 import { WINDWARD_MILL } from './scenery/windwardPlacement';
+import { WOODLAND_HOLLOW } from './scenery/woodlandPlacement';
 
 export const WORLD = { width: 29.25, depth: 22.2 };
 // Bounds include the entire walkable floor; y is its top surface.
@@ -24,6 +25,7 @@ export const WORLD_VIEWS = [
   'lookout',
   'orchard',
   'observatory',
+  'hollow',
   'mere',
   'dawnlight',
   'windward',
@@ -48,6 +50,7 @@ export const WORLD_VIEW_LABELS: Record<WorldView, string> = {
   lookout: 'Lookout',
   orchard: 'Orchard Commons',
   observatory: 'Cedar Observatory',
+  hollow: 'Lantern Hollow',
   mere: 'Southwind Mere',
   dawnlight: 'Dawnlight Glasshouse',
   windward: 'Windward Mill',
@@ -83,6 +86,11 @@ export const CAMERA_VIEWS: Record<WorldView, { pos: Point; look: Point; span: [n
     lookout: { pos: [27, 16, -16], look: [LOOKOUT.x, 4, LOOKOUT.z], span: [24, 17] },
     orchard: { pos: [53, 24, -51], look: [ORCHARD.x, 9.7, ORCHARD.z], span: [28, 20] },
     observatory: { pos: [-45, 20, -30], look: [OBSERVATORY.x, 5.5, OBSERVATORY.z], span: [27, 19] },
+    hollow: {
+      pos: [WOODLAND_HOLLOW.x + 15, 14, WOODLAND_HOLLOW.z + 19],
+      look: [WOODLAND_HOLLOW.x - 3, 2, WOODLAND_HOLLOW.z + 1],
+      span: [28, 20],
+    },
     mere: { pos: [-27, 15, 65], look: [-48, 1.5, 45], span: [28, 20] },
     dawnlight: {
       pos: [63, 18, 48],
