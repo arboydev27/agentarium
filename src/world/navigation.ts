@@ -2,6 +2,7 @@ import { routeForSeat, routeLengths, type Point } from './motion';
 import { LOOKOUT, OBSERVATORY, ORCHARD } from './layout';
 import { meadowTrailPoint, terrainHeight, walkwayHeight } from './terrain';
 import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
+import { SOUTHWIND_SHORE, SOUTHWIND_TRAIL_XZ } from './scenery/southwindTrailPlacement';
 
 export type Destination = {
   id: string;
@@ -31,7 +32,13 @@ export const DESTINATIONS: Destination[] = [
     clip: 'BenchRest',
   },
   { id: 'basin', label: 'courtyard basin', node: 'basin', facing: Math.PI / 2, clip: 'GardenLook' },
-  { id: 'studio-break', label: 'studio terrace', node: 'studio-break', facing: 0, clip: 'Rest' },
+  {
+    id: SOUTHWIND_SHORE.id,
+    label: SOUTHWIND_SHORE.label,
+    node: SOUTHWIND_SHORE.id,
+    facing: -Math.PI / 2,
+    clip: 'GardenLook',
+  },
   // Profile seven starts with this landmark, making the new district visible in the demo.
   {
     id: 'meadow:lookout',
@@ -40,6 +47,7 @@ export const DESTINATIONS: Destination[] = [
     facing: 0.7,
     clip: 'GardenLook',
   },
+  { id: 'studio-break', label: 'studio terrace', node: 'studio-break', facing: 0, clip: 'Rest' },
   { id: 'promenade', label: 'tree-lined path', node: 'promenade', facing: 0, clip: 'GardenLook' },
   {
     id: 'orchard:commons',
@@ -115,6 +123,12 @@ for (const turnout of TRAIL_TURNOUTS) {
   NODES[`${turnout.id}:approach`] = [...turnoutPoint(turnout.trailIndex, turnout.side, 2.5)];
   NODES[turnout.id] = [...turnoutPoint(turnout.trailIndex, turnout.side, 4.8)];
 }
+for (let index = 1; index < SOUTHWIND_TRAIL_XZ.length; index++) {
+  const [x, z] = SOUTHWIND_TRAIL_XZ[index];
+  const id =
+    index === SOUTHWIND_TRAIL_XZ.length - 1 ? SOUTHWIND_SHORE.id : `southwind:trail-${index}`;
+  NODES[id] = [x, walkwayHeight(x, z, index === SOUTHWIND_TRAIL_XZ.length - 1 ? 0.1 : 0.105), z];
+}
 const orchardOrigin = meadowTrailPoint(22);
 const orchardBranch: [number, number][] = [
   [(orchardOrigin[0] + 10) / 2, (orchardOrigin[2] - 64) / 2],
@@ -162,6 +176,12 @@ const chains = [
   ['garden-front', 'garden-west'],
   ['garden-front', 'garden-east'],
   ['west', 'court-door', 'court-aisle', 'court-front', 'basin'],
+  [
+    'court-front',
+    ...SOUTHWIND_TRAIL_XZ.slice(1).map((_, index) =>
+      index === SOUTHWIND_TRAIL_XZ.length - 2 ? SOUTHWIND_SHORE.id : `southwind:trail-${index + 1}`,
+    ),
+  ],
   ['court-aisle', 'bench-approach', 'bench'],
   ['center', 'promenade'],
   ['center', ...Array.from({ length: 23 }, (_, index) => `meadow:trail-${index}`)],

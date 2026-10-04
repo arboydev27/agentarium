@@ -6,6 +6,7 @@ import { clearOfObservatory } from './observatoryPlacement';
 import { clearOfOrchard } from './orchardPlacement';
 import { clearOfSlateReach } from './slatePlacement';
 import { clearOfSouthwindMere } from './merePlacement';
+import { clearOfSouthwindTrail } from './southwindTrailPlacement';
 import { clearOfTurnouts } from './turnoutPlacement';
 
 export type MeadowPiece = { x: number; y: number; z: number; size: number; shade: number };
@@ -45,6 +46,7 @@ export function clearOfMeadowRoutes(x: number, z: number, radius = 0) {
   if (Math.hypot(x - OAK.x, z - OAK.z) < 3.5 + radius) return false;
   if (!clearOfSlateReach(x, z, radius)) return false;
   if (!clearOfSouthwindMere(x, z, radius)) return false;
+  if (!clearOfSouthwindTrail(x, z, radius)) return false;
   if (!clearOfTurnouts(x, z, radius)) return false;
   if (!clearOfOrchard(x, z, radius) || !clearOfObservatory(x, z, radius)) return false;
   if (z < -83 && Math.abs(x) < 107) return false;

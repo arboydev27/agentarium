@@ -13,8 +13,14 @@ import {
   terrainHeight,
   walkwayHeight,
 } from './terrain';
-import { SOUTHWIND_MERE, clearOfSouthwindMere, waterRadiusAt } from './scenery/merePlacement';
+import {
+  SOUTHWIND_MERE,
+  clearOfSouthwindMere,
+  distanceToSouthwindMere,
+  waterRadiusAt,
+} from './scenery/merePlacement';
 import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
+import { SOUTHWIND_SHORE, SOUTHWIND_TRAIL_XZ } from './scenery/southwindTrailPlacement';
 const options = { reduced: false, playing: true, leaving: false, now: 10000, outings: true };
 const agent = (seat = 0, status: ReturnType<typeof initialAgents>[number]['status'] = 'idle') => ({
   ...initialAgents()[seat],
@@ -87,7 +93,7 @@ describe('navigation graph', () => {
       }
     }
   });
-  it('keeps the scenic southern water above its rendered basin and away from routes', () => {
+  it('keeps the southern water above its basin and the shore trail dry', () => {
     for (let step = 0; step < 36; step++) {
       const angle = (step / 36) * Math.PI * 2;
       for (let radius = 0; radius <= waterRadiusAt(angle); radius += 0.5) {
@@ -103,7 +109,33 @@ describe('navigation graph', () => {
     }
     for (const [start, end] of EDGES) {
       for (const id of [start, end])
-        expect(clearOfSouthwindMere(NODES[id][0], NODES[id][2])).toBe(true);
+        if (!id.startsWith('southwind:'))
+          expect(clearOfSouthwindMere(NODES[id][0], NODES[id][2])).toBe(true);
+      if (![start, end].some((id) => id.startsWith('southwind:'))) continue;
+      const a = NODES[start],
+        b = NODES[end];
+      for (let step = 0; step <= 20; step++) {
+        const t = step / 20;
+        const x = a[0] + (b[0] - a[0]) * t;
+        const z = a[2] + (b[2] - a[2]) * t;
+        const angle = Math.atan2(z - SOUTHWIND_MERE.z, x - SOUTHWIND_MERE.x);
+        expect(distanceToSouthwindMere(x, z)).toBeGreaterThan(waterRadiusAt(angle) + 1.5);
+      }
+    }
+  });
+  it('connects every seat to the dry Southwind shore on the authored centerline', () => {
+    expect(SOUTHWIND_TRAIL_XZ[0]).toEqual([-6.2, 7.7]);
+    expect(SOUTHWIND_TRAIL_XZ.at(-1)).toEqual([SOUTHWIND_SHORE.x, SOUTHWIND_SHORE.z]);
+    expect(
+      EDGES.filter(([a, b]) => a === SOUTHWIND_SHORE.id || b === SOUTHWIND_SHORE.id),
+    ).toHaveLength(1);
+    for (let seat = 0; seat < 8; seat++) {
+      const route = planRoute(`home-${seat}`, SOUTHWIND_SHORE.id);
+      expect(route.ids.at(-1)).toBe(SOUTHWIND_SHORE.id);
+      expect(route.ids).toContain('court-front');
+      expect(planRoute(SOUTHWIND_SHORE.id, `home-${seat}`).points).toEqual(
+        [...route.points].reverse(),
+      );
     }
   });
   it('samples the actual coarse landscape triangles at vertices and within both faces', () => {
@@ -132,7 +164,10 @@ describe('navigation graph', () => {
       if (
         ![start, end].some(
           (id) =>
-            id.startsWith('meadow:') || id.startsWith('orchard:') || id.startsWith('observatory:'),
+            id.startsWith('meadow:') ||
+            id.startsWith('orchard:') ||
+            id.startsWith('observatory:') ||
+            id.startsWith('southwind:'),
         )
       )
         continue;
@@ -170,9 +205,10 @@ describe('navigation graph', () => {
           if (
             route.ids[index].startsWith('meadow:') ||
             route.ids[index].startsWith('orchard:') ||
-            route.ids[index].startsWith('observatory:')
+            route.ids[index].startsWith('observatory:') ||
+            route.ids[index].startsWith('southwind:')
           ) {
-            expect(z).toBeLessThan(-10);
+            if (!route.ids[index].startsWith('southwind:')) expect(z).toBeLessThan(-10);
             expect(y - renderedTerrainHeight(x, z)).toBeGreaterThanOrEqual(0.04);
             expect(y - renderedTerrainHeight(x, z)).toBeLessThanOrEqual(0.22);
             continue;
@@ -730,6 +766,27 @@ it('returns from the eastern trail rest when a task needs input', () => {
   expect(motion.clip(waiting)).toBe('DeskWait');
   expect(waiting.status).toBe('waiting');
   expect(traffic.reserveDestination('next', 'meadow:rest-east')).toBe(true);
+});
+
+it('shows the southern outing in the demo and yields immediately to reported work', () => {
+  const traffic = new NavigationTraffic();
+  const motion = new ResidentJourney(6, 'demo-6', traffic);
+  let arrived = false;
+  for (let frame = 0; frame < 120 * 60; frame++) {
+    motion.update(agent(6), 1 / 60, options);
+    if (motion.activity === 'Resting at Southwind Mere shore') {
+      arrived = true;
+      break;
+    }
+  }
+  expect(arrived).toBe(true);
+  const waiting = agent(6, 'waiting');
+  motion.update(waiting, 1 / 60, options);
+  expect(motion.activity).toBe('Returning to desk');
+  advance(motion, waiting, 100);
+  expect(motion.clip(waiting)).toBe('DeskWait');
+  expect(waiting.status).toBe('waiting');
+  expect(traffic.reserveDestination('next', SOUTHWIND_SHORE.id)).toBe(true);
 });
 
 it('rejoins home invisibly when an interrupted meadow return stays blocked', () => {

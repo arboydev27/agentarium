@@ -24,6 +24,8 @@ import { SlateReach } from './scenery/SlateReach';
 import { clearOfSlateReach } from './scenery/slatePlacement';
 import { SouthwindMere } from './scenery/SouthwindMere';
 import { clearOfSouthwindMere } from './scenery/merePlacement';
+import { SouthwindTrail } from './scenery/SouthwindTrail';
+import { clearOfSouthwindTrail } from './scenery/southwindTrailPlacement';
 import { TrailTurnouts } from './scenery/TrailTurnouts';
 import { clearOfTurnouts } from './scenery/turnoutPlacement';
 
@@ -228,6 +230,7 @@ function Landscape() {
       <OrchardCommons />
       <CedarObservatory />
       <SlateReach />
+      <SouthwindTrail />
       <SouthwindMere />
       <FarRidge />
     </group>
@@ -273,6 +276,7 @@ function LandscapeGroves() {
         clearOfObservatoryView(x, z) &&
         clearOfSlateReach(x, z, 2) &&
         clearOfSouthwindMere(x, z, 1.5) &&
+        clearOfSouthwindTrail(x, z, 1.5) &&
         clearOfTurnouts(x, z, 1.5),
     );
   }, [quality]);

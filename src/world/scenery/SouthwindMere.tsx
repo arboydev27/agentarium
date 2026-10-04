@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useWorld } from '../../state';
-import { renderedTerrainHeight, SOUTHWIND_WATER_Y } from '../terrain';
+import { renderedTerrainHeight, SOUTHWIND_WATER_Y, walkwayHeight } from '../terrain';
+import { Box, Cylinder, Sign } from '../primitives';
+import { SOUTHWIND_SHORE } from './southwindTrailPlacement';
 import { SOUTHWIND_MERE, waterRadiusAt } from './merePlacement';
 
 const REEDS_HIGH = 44;
@@ -143,6 +145,105 @@ function Shore({ quality }: { quality: 'high' | 'low' }) {
   );
 }
 
+function OverlookSurface() {
+  const geometry = useMemo(() => {
+    const positions: number[] = [];
+    const indices: number[] = [];
+    const { x: centerX, z: centerZ } = SOUTHWIND_SHORE;
+    const segments = 28;
+    positions.push(centerX, walkwayHeight(centerX, centerZ, 0.1), centerZ);
+    for (let index = 0; index <= segments; index++) {
+      const angle = (index / segments) * Math.PI * 2;
+      const radius = 2.35 + 0.12 * Math.sin(angle * 5);
+      const x = centerX + Math.cos(angle) * radius;
+      const z = centerZ + Math.sin(angle) * radius;
+      positions.push(x, walkwayHeight(x, z, 0.1), z);
+      if (index > 0) indices.push(0, index, index + 1);
+    }
+    const surface = new THREE.BufferGeometry();
+    surface.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    surface.setIndex(indices);
+    surface.computeVertexNormals();
+    return surface;
+  }, []);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  return (
+    <mesh name="southwind-dry-overlook" geometry={geometry} receiveShadow>
+      <meshStandardMaterial color="#b08e68" roughness={1} side={THREE.DoubleSide} />
+    </mesh>
+  );
+}
+
+function OverlookFurniture({ quality }: { quality: 'high' | 'low' }) {
+  const { x, z } = SOUTHWIND_SHORE;
+  const benchX = x - 0.55;
+  const benchZ = z + 2.55;
+  const signX = x + 1.65;
+  const signZ = z + 2.45;
+  const westX = x - 2.18;
+  return (
+    <group name="southwind-overlook-furniture">
+      {/* A low open rail preserves the view west across the water. */}
+      {[-1.1, 1.1].map((offset) => (
+        <group key={offset} position={[westX, walkwayHeight(westX, z + offset, 0.1), z + offset]}>
+          <Box pos={[0, 0.47, 0]} size={[0.13, 0.94, 0.13]} color="#76624d" radius={0} />
+        </group>
+      ))}
+      <Box
+        pos={[westX, walkwayHeight(westX, z, 0.1) + 0.86, z]}
+        size={[0.12, 0.12, 2.34]}
+        color="#987656"
+        radius={0}
+      />
+      <group
+        position={[benchX, walkwayHeight(benchX, benchZ, 0.1), benchZ]}
+        rotation={[0, Math.PI / 2, 0]}
+      >
+        <Box pos={[0, 0.48, 0]} size={[1.6, 0.13, 0.52]} color="#aa815b" radius={0} />
+        <Box pos={[0, 0.85, 0.24]} size={[1.6, 0.62, 0.11]} color="#75907c" radius={0} />
+        {[-0.62, 0.62].map((side) => (
+          <Box
+            key={side}
+            pos={[side, 0.25, 0]}
+            size={[0.12, 0.5, 0.43]}
+            color="#765b46"
+            radius={0}
+          />
+        ))}
+      </group>
+      <group
+        position={[signX, walkwayHeight(signX, signZ, 0.1), signZ]}
+        rotation={[0, Math.PI / 2, 0]}
+      >
+        <Cylinder pos={[0, 0.91, 0]} r={0.075} h={1.82} color="#715d49" />
+        <Sign
+          text="SOUTHWIND MERE"
+          pos={[0, 1.75, 0.07]}
+          size={[2.05, 0.48]}
+          background="#496b69"
+          color="#f0e8d0"
+        />
+      </group>
+      {quality === 'high' && (
+        <>
+          <Box
+            pos={[westX, walkwayHeight(westX, z, 0.1) + 0.48, z]}
+            size={[0.085, 0.085, 2.34]}
+            color="#a88662"
+            radius={0}
+          />
+          <Box
+            pos={[x + 0.75, walkwayHeight(x + 0.75, z - 2.42, 0.1) + 0.16, z - 2.42]}
+            size={[1.7, 0.2, 0.2]}
+            color="#c2a27a"
+            radius={0}
+          />
+        </>
+      )}
+    </group>
+  );
+}
+
 export function SouthwindMere() {
   const quality = useWorld((state) => state.quality);
   return (
@@ -150,6 +251,8 @@ export function SouthwindMere() {
       <Shoreline />
       <Water />
       <Shore quality={quality} />
+      <OverlookSurface />
+      <OverlookFurniture quality={quality} />
     </group>
   );
 }
