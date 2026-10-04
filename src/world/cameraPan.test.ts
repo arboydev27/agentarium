@@ -5,7 +5,7 @@ import { LANDSCAPE_SIZE } from './terrain';
 
 describe('camera pan', () => {
   it('leaves a fog margin beyond the farthest permitted camera orbit', () => {
-    expect(CAMERA_PAN_BOUNDS).toEqual({ minX: -150, maxX: 150, minZ: -150, maxZ: 150 });
+    expect(CAMERA_PAN_BOUNDS).toEqual({ minX: -210, maxX: 210, minZ: -210, maxZ: 210 });
     const halfTerrain = LANDSCAPE_SIZE / 2;
     const maximumOrbit = 190; // World OrbitControls maxDistance
     const fogFar = 165; // World scene fog far distance
@@ -14,8 +14,10 @@ describe('camera pan', () => {
       Math.abs(CAMERA_PAN_BOUNDS.maxX),
       Math.abs(CAMERA_PAN_BOUNDS.minZ),
       Math.abs(CAMERA_PAN_BOUNDS.maxZ),
-    ])
-      expect(halfTerrain - limit - maximumOrbit).toBeGreaterThan(fogFar);
+    ]) {
+      expect(halfTerrain - limit - maximumOrbit).toBe(200);
+      expect(halfTerrain - limit - maximumOrbit - fogFar).toBe(35);
+    }
   });
   it('moves in the ground-plane view direction without changing camera height', () => {
     const camera = new Vector3(0, 12, 35);
@@ -41,7 +43,7 @@ describe('camera pan', () => {
     expect(destination.x).toBeLessThanOrEqual(CAMERA_PAN_BOUNDS.maxX);
     expect(destination.z).toBeGreaterThanOrEqual(CAMERA_PAN_BOUNDS.minZ);
     expect(destination.y).toBe(look.y);
-    const pointerTarget = new Vector3(180, 4, -210);
+    const pointerTarget = new Vector3(280, 4, -310);
     pointerTarget.add(clampPanDelta(pointerTarget));
     expect(pointerTarget.x).toBe(CAMERA_PAN_BOUNDS.maxX);
     expect(pointerTarget.z).toBe(CAMERA_PAN_BOUNDS.minZ);

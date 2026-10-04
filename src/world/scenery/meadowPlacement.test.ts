@@ -24,7 +24,7 @@ describe('spatial meadow placement', () => {
       expect(low.patches).toEqual(first.patches.slice(0, low.patches.length));
       expect(low.flowers).toHaveLength(0);
     }
-    const far = detailChunkAt(270, 270)!;
+    const far = detailChunkAt(360, 360)!;
     expect(meadowChunkHasDetail(far)).toBe(false);
     expect(buildMeadowPieces(far, 'high')).toEqual({ patches: [], flowers: [], rocks: [] });
   });
@@ -32,7 +32,7 @@ describe('spatial meadow placement', () => {
   it('changes groundcover character without changing deterministic quality prefixes', () => {
     const meadow = buildMeadowPieces(detailChunkAt(85, 60)!, 'high');
     const woodland = buildMeadowPieces(detailChunkAt(-83, -20)!, 'high');
-    const highland = buildMeadowPieces(detailChunkAt(-120, -120)!, 'high');
+    const highland = buildMeadowPieces(detailChunkAt(-150, -150)!, 'high');
     const amber = buildMeadowPieces(detailChunkAt(-104, 88)!, 'high');
     expect(woodland.patches.length).toBeGreaterThan(meadow.patches.length);
     expect(highland.patches.length).toBeLessThan(meadow.patches.length);
@@ -41,7 +41,7 @@ describe('spatial meadow placement', () => {
     expect(amber.flowers.length).toBeGreaterThan(meadow.flowers.length);
     for (const [x, z] of [
       [-83, -20],
-      [-120, -120],
+      [-150, -150],
       [-104, 88],
     ] as const) {
       const chunk = detailChunkAt(x, z)!;

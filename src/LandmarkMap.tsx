@@ -34,6 +34,7 @@ import {
 } from './world/mapSnapshot';
 import { CAMERA_PAN_BOUNDS } from './world/cameraPan';
 import { landscapeBiomeAt } from './world/biomes';
+import { SOUTHWIND_MERE } from './world/scenery/merePlacement';
 
 type TintBiome = Exclude<ReturnType<typeof landscapeBiomeAt>, 'meadow'>;
 const BIOME_LABELS = [
@@ -65,6 +66,9 @@ const BIOME_TINT_PATHS = (() => {
   }
   return paths;
 })();
+
+const MERE_MAP = worldToMap({ x: SOUTHWIND_MERE.x, z: SOUTHWIND_MERE.z });
+const MERE_RADIUS = SOUTHWIND_MERE.waterRadius * 1.5;
 
 const LANDMARKS = [
   { view: 'overview', label: 'Overview', icon: Focus, detail: 'The resident grove' },
@@ -340,7 +344,15 @@ export function LandmarkMap({
                 className="landmark-contour"
                 d="M-6 73C35 57 66 67 100 54s61-12 87 2 63 9 102-8M-8 94c35-13 70-17 104-7s60-2 92-14 65-7 100 4M-9 118c42-11 79-3 118-9s66-3 91-13 53-4 90 4M-5 143c45-10 74-3 107-5s61-10 94-4 58 8 92-4"
               />
-              {!zoomed && <ellipse className="landmark-mere" cx="44" cy="132" rx="11" ry="6" />}
+              {!zoomed && (
+                <ellipse
+                  className="landmark-mere"
+                  cx={(MERE_MAP.left / 100) * 280}
+                  cy={(MERE_MAP.top / 100) * 170}
+                  rx={(MERE_RADIUS / (CAMERA_PAN_BOUNDS.maxX - CAMERA_PAN_BOUNDS.minX)) * 280}
+                  ry={(MERE_RADIUS / (CAMERA_PAN_BOUNDS.maxZ - CAMERA_PAN_BOUNDS.minZ)) * 170}
+                />
+              )}
             </svg>
             {!zoomed &&
               BIOME_LABELS.filter(

@@ -12,23 +12,23 @@ describe('finite detail chunks', () => {
   it('maps world edges to deterministic 60-unit IDs and rejects points outside the world', () => {
     expect(DETAIL_CHUNK_SIZE).toBe(60);
     expect(DETAIL_WORLD_SIZE).toBe(LANDSCAPE_SIZE);
-    expect(DETAIL_WORLD_SIZE / DETAIL_CHUNK_SIZE).toBe(17);
-    expect(detailChunkAt(-510, -510)).toMatchObject({
+    expect(DETAIL_WORLD_SIZE / DETAIL_CHUNK_SIZE).toBe(20);
+    expect(detailChunkAt(-600, -600)).toMatchObject({
       id: 'detail-chunk:0:0',
-      centerX: -480,
-      centerZ: -480,
+      centerX: -570,
+      centerZ: -570,
     });
-    expect(detailChunkAt(0, 0)).toMatchObject({ id: 'detail-chunk:8:8' });
-    expect(detailChunkAt(510, 510)).toMatchObject({
-      id: 'detail-chunk:16:16',
-      centerX: 480,
-      centerZ: 480,
+    expect(detailChunkAt(0, 0)).toMatchObject({ id: 'detail-chunk:10:10' });
+    expect(detailChunkAt(600, 600)).toMatchObject({
+      id: 'detail-chunk:19:19',
+      centerX: 570,
+      centerZ: 570,
     });
     for (const [x, z] of [
-      [-510.001, 0],
-      [510.001, 0],
-      [0, -510.001],
-      [0, 510.001],
+      [-600.001, 0],
+      [600.001, 0],
+      [0, -600.001],
+      [0, 600.001],
       [NaN, 0],
       [Infinity, 0],
     ])
@@ -45,30 +45,30 @@ describe('finite detail chunks', () => {
       camera: outside,
       residents: [{ x: -200, z: -200 }],
     });
-    expect(focus.map((chunk) => chunk.id)).toContain('detail-chunk:8:8');
-    expect(camera.map((chunk) => chunk.id)).toContain('detail-chunk:11:11');
-    expect(resident.map((chunk) => chunk.id)).toContain('detail-chunk:5:5');
+    expect(focus.map((chunk) => chunk.id)).toContain('detail-chunk:10:10');
+    expect(camera.map((chunk) => chunk.id)).toContain('detail-chunk:13:13');
+    expect(resident.map((chunk) => chunk.id)).toContain('detail-chunk:6:6');
     for (const chunk of [...focus, ...camera, ...resident]) {
       expect(chunk.col).toBeGreaterThanOrEqual(0);
-      expect(chunk.col).toBeLessThan(17);
+      expect(chunk.col).toBeLessThan(20);
       expect(chunk.row).toBeGreaterThanOrEqual(0);
-      expect(chunk.row).toBeLessThan(17);
+      expect(chunk.row).toBeLessThan(20);
     }
   });
 
   it('retains a selected chunk through the exit radius and drops it afterward', () => {
-    const camera = { x: -510, z: -510 },
-      edge = detailChunkAt(90, 30)!;
+    const camera = { x: -600, z: -600 },
+      edge = detailChunkAt(150, 30)!;
     expect(
-      selectDetailChunks({ focus: { x: -5, z: 30 }, camera }).map((chunk) => chunk.id),
+      selectDetailChunks({ focus: { x: 25, z: 30 }, camera }).map((chunk) => chunk.id),
     ).not.toContain(edge.id);
     expect(
-      selectDetailChunks({ focus: { x: -5, z: 30 }, camera }, new Set([edge.id])).map(
+      selectDetailChunks({ focus: { x: 25, z: 30 }, camera }, new Set([edge.id])).map(
         (chunk) => chunk.id,
       ),
     ).toContain(edge.id);
     expect(
-      selectDetailChunks({ focus: { x: -26, z: 30 }, camera }, new Set([edge.id])).map(
+      selectDetailChunks({ focus: { x: 0, z: 30 }, camera }, new Set([edge.id])).map(
         (chunk) => chunk.id,
       ),
     ).not.toContain(edge.id);
@@ -90,7 +90,7 @@ describe('finite detail chunks', () => {
       ),
     ).toContain(edge.id);
     expect(
-      selectDetailChunks({ focus, camera: { x: 199, z: 199 } }, new Set([edge.id])).map(
+      selectDetailChunks({ focus, camera: { x: 135, z: 135 } }, new Set([edge.id])).map(
         (chunk) => chunk.id,
       ),
     ).not.toContain(edge.id);

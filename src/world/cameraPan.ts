@@ -3,9 +3,9 @@ import { MathUtils, Vector3 } from 'three';
 export type PanKey = 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight';
 
 // Keep the orbit target inside the populated part of the finite landscape.
-// At the 190-unit orbit limit, an axis-aligned camera remains 170 units from
-// the +/-510-unit ground-mesh edge, just beyond the 165-unit fog far distance.
-export const CAMERA_PAN_BOUNDS = { minX: -150, maxX: 150, minZ: -150, maxZ: 150 } as const;
+// At the 190-unit orbit limit, the camera remains at least 200 units from
+// the +/-600-unit ground edge. The scene fog ends at 165, leaving 35 hidden units.
+export const CAMERA_PAN_BOUNDS = { minX: -210, maxX: 210, minZ: -210, maxZ: 210 } as const;
 
 export function isPanKey(key: string): key is PanKey {
   return key === 'ArrowUp' || key === 'ArrowDown' || key === 'ArrowLeft' || key === 'ArrowRight';

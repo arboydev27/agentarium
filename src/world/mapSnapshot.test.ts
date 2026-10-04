@@ -90,8 +90,8 @@ describe('live landmark map', () => {
       view: 'amber',
       scenicOnly: true,
     });
-    expect(worldToMap(amber.point).left).toBeGreaterThan(0);
-    expect(worldToMap(amber.point).left).toBeLessThan(20);
+    expect(worldToMap(amber.point).left).toBeGreaterThan(20);
+    expect(worldToMap(amber.point).left).toBeLessThan(30);
     expect(worldToMap(windward.point).left).toBeLessThan(96); // keep its entire pin inside the eastern edge
     expect(worldToMap({ x: WINDWARD_MILL.x, z: WINDWARD_MILL.z }).left).toBeGreaterThan(
       worldToMap(windward.point).left,
@@ -115,25 +115,25 @@ describe('live landmark map', () => {
 
   it('projects 2× detail consistently and keeps the focused frame inside finite bounds', () => {
     const detail = detailMapBounds({ x: 0, z: -5 });
-    expect(detail).toEqual({ minX: -75, maxX: 75, minZ: -80, maxZ: 70 });
+    expect(detail).toEqual({ minX: -105, maxX: 105, minZ: -110, maxZ: 100 });
     expect(worldToMap({ x: 0, z: -5 }, detail)).toEqual({ left: 50, top: 50 });
     expect(mapToWorld({ left: 50, top: 50 }, detail)).toEqual({ x: 0, z: -5 });
-    expect(pointInMapBounds({ x: 100, z: 80 }, detail)).toBe(false);
+    expect(pointInMapBounds({ x: 115, z: 105 }, detail)).toBe(false);
     expect(pointInMapBounds({ x: 36, z: -20 }, detail)).toBe(true);
     expect(detailMapBounds({ x: CAMERA_PAN_BOUNDS.maxX, z: CAMERA_PAN_BOUNDS.maxZ })).toEqual({
       minX: 0,
-      maxX: 150,
+      maxX: 210,
       minZ: 0,
-      maxZ: 150,
+      maxZ: 210,
     });
     expect(detailMapBounds({ x: CAMERA_PAN_BOUNDS.minX, z: CAMERA_PAN_BOUNDS.minZ })).toEqual({
-      minX: -150,
+      minX: -210,
       maxX: 0,
-      minZ: -150,
+      minZ: -210,
       maxZ: 0,
     });
-    expect(mapToWorld({ left: 100, top: 0 }, detailMapBounds({ x: 150, z: 150 }))).toEqual({
-      x: 150,
+    expect(mapToWorld({ left: 100, top: 0 }, detailMapBounds({ x: 210, z: 210 }))).toEqual({
+      x: 210,
       z: 0,
     });
   });
@@ -141,7 +141,7 @@ describe('live landmark map', () => {
   it('re-groups nearby residents at the detail scale', () => {
     const residents = [
       { id: 'one', name: 'One', seat: 0, x: 0, z: 0 },
-      { id: 'two', name: 'Two', seat: 1, x: 15, z: 0 },
+      { id: 'two', name: 'Two', seat: 1, x: 20, z: 0 },
     ];
     expect(groupNearbyMapResidents(residents)).toHaveLength(1);
     expect(groupNearbyMapResidents(residents, detailMapBounds({ x: 0, z: 0 }))).toHaveLength(2);

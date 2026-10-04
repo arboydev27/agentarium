@@ -8,8 +8,8 @@ import {
 
 describe('expanded finite landscape', () => {
   it('keeps the rendered grid near its prior vertex spacing', () => {
-    expect(LANDSCAPE_SIZE).toBe(1020);
-    expect(LANDSCAPE_SEGMENTS).toBe(216);
+    expect(LANDSCAPE_SIZE).toBe(1200);
+    expect(LANDSCAPE_SEGMENTS).toBe(254);
     expect(LANDSCAPE_SIZE / LANDSCAPE_SEGMENTS).toBeGreaterThan(4.68);
     expect(LANDSCAPE_SIZE / LANDSCAPE_SEGMENTS).toBeLessThan(4.75);
   });
