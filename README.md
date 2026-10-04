@@ -8,7 +8,7 @@ See the [detailed documentation](docs/README.md) for setup, architecture, agent 
 
 ## What works
 
-- A 29.25 × 22.2 inhabited district with an expanded café, studio, garden, and courtyard inside a 1,020 × 1,020 scenic landscape of meadow, groves, an amber oak, a trail, distant groves, Amber Bluff, and a distant rise.
+- A 29.25 × 22.2 inhabited district with an expanded café, studio, garden, and courtyard inside a 1,200 × 1,200 scenic landscape of meadow, groves, an amber oak, a trail, distant groves, Amber Bluff, and rolling outer landforms.
 - Gentle tree sway, drifting leaves, courtyard water ripples, and evening lamp glows, with reduced-motion and low-quality alternatives.
 - Eight expressive CC0 robot residents with distinct procedural accessories, trim palettes, walking pace, and skeletal work/rest animations. Working residents open their laptops; idle residents close them.
 - Idle residents visit destinations in the inhabited district and along northern, southern, and eastern trails, including Southwind Mere and Windward Mill; live work sends them back to their desks.

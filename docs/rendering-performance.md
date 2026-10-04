@@ -53,6 +53,10 @@ October 3; 1280 × 720 development browser, eight paused simulated residents, da
 
 October 3; 1280 × 720 development browser, eight paused simulated residents, daylight/high quality. After the ground grew from 600 × 600 at 128 segments to 1,020 × 1,020 at 216 segments, a settled Horizon view showed about **925 draws, 353,608 triangles, 797 geometries, and 45 textures** (p95 9.1 ms on this 120 Hz display). The settled Amber Bluff view showed **30 draws, 123,634 triangles, 728 geometries, and 42 textures** after shared resources warmed. Evening/low-quality/reduced-motion Amber rendered at **29 draws and 123,394 triangles** with no browser warning. Ground geometry alone grows from 32,768 to 93,312 triangles, so these snapshots do not establish a cross-device frame-rate budget or a controlled before/after improvement.
 
+## Wider travel-area spot check
+
+October 3; 1280 × 720 development browser, simulated residents. After camera travel expanded to X/Z ±210 and the outer scenery gained nearby spatial groups, an eastern scout view around X ≈ 175, Z ≈ 0 read **37 draws, 179,702 triangles, 760 geometries, and 42 textures** in daylight/high quality, with p95 frame intervals around 9.2 ms on a 120 Hz display. A separate evening/low-quality reading there was **25 draws, 152,326 triangles, 710 geometries, and 41 textures**. The camera framing, resident state, lighting, and quality differed; these are scene-resource spot checks, not a controlled comparison or device budget. Browser console warnings were absent in those views. The finite ground now uses 254 segments and 129,032 triangles, up from 93,312 for the previous 216-segment mesh.
+
 ## Repeatable review procedure
 
 1. Use the same browser, viewport, display, camera preset, quality, and resident state. Prefer a production build with `npm run build` and `npm run preview` for formal profiling.
