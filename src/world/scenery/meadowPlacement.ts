@@ -11,6 +11,7 @@ import { clearOfSouthwindTrail } from './southwindTrailPlacement';
 import { clearOfDawnlightTrail } from './dawnlightPlacement';
 import { clearOfWindwardTrail } from './windwardPlacement';
 import { clearOfAmberBluff } from './amberPlacement';
+import { clearOfWoodlandHollow, clearOfWoodlandShelter } from './woodlandPlacement';
 import { clearOfTurnouts } from './turnoutPlacement';
 
 export type MeadowPiece = { x: number; y: number; z: number; size: number; shade: number };
@@ -54,6 +55,8 @@ export function clearOfMeadowRoutes(x: number, z: number, radius = 0) {
   if (!clearOfDawnlightTrail(x, z, radius)) return false;
   if (!clearOfWindwardTrail(x, z, radius)) return false;
   if (!clearOfAmberBluff(x, z, radius)) return false;
+  if (!clearOfWoodlandHollow(x, z, radius + 0.8)) return false;
+  if (!clearOfWoodlandShelter(x, z, radius + 0.8)) return false;
   if (!clearOfTurnouts(x, z, radius)) return false;
   if (!clearOfOrchard(x, z, radius) || !clearOfObservatory(x, z, radius)) return false;
   if (z < -83 && Math.abs(x) < 107) return false;

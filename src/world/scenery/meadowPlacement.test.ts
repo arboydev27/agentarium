@@ -4,6 +4,7 @@ import { LOOKOUT, OBSERVATORY, ORCHARD } from '../layout';
 import { meadowTrailPoint } from '../terrain';
 import { WINDWARD_MILL, WINDWARD_BRANCH_XZ } from './windwardPlacement';
 import { AMBER_BLUFF } from './amberPlacement';
+import { WOODLAND_HOLLOW, WOODLAND_TRAIL_XZ, WOODLAND_SHELTER_XZ } from './woodlandPlacement';
 import { buildMeadowPieces, clearOfMeadowRoutes, meadowChunkHasDetail } from './meadowPlacement';
 
 describe('spatial meadow placement', () => {
@@ -62,6 +63,9 @@ describe('spatial meadow placement', () => {
       [WINDWARD_MILL.centerX, WINDWARD_MILL.centerZ],
       ...WINDWARD_BRANCH_XZ,
       [AMBER_BLUFF.x, AMBER_BLUFF.z],
+      [WOODLAND_HOLLOW.x, WOODLAND_HOLLOW.z],
+      WOODLAND_SHELTER_XZ,
+      ...WOODLAND_TRAIL_XZ,
     ]) {
       expect(clearOfMeadowRoutes(x, z)).toBe(false);
     }

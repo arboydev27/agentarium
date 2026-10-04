@@ -3,9 +3,10 @@ import { AMBER_BLUFF } from './scenery/amberPlacement';
 import { DAWNLIGHT_GLASSHOUSE } from './scenery/dawnlightPlacement';
 import { SLATE_REACH } from './scenery/slatePlacement';
 import { WINDWARD_MILL } from './scenery/windwardPlacement';
+import { WOODLAND_HOLLOW } from './scenery/woodlandPlacement';
 
 export type ScenicRegionId =
-  'lookout' | 'orchard' | 'observatory' | 'dawnlight' | 'slate' | 'windward' | 'amber';
+  'lookout' | 'orchard' | 'observatory' | 'dawnlight' | 'slate' | 'windward' | 'amber' | 'woodland';
 export type ScenicPoint = Readonly<{ x: number; z: number }>;
 export type ScenicBounds = Readonly<{
   minX: number;
@@ -53,6 +54,7 @@ export const SCENIC_REGIONS: readonly ScenicRegion[] = Object.freeze([
     box(WINDWARD_MILL.centerX, WINDWARD_MILL.centerZ, WINDWARD_MILL.clearingRadius + 8),
   ),
   region('amber', box(AMBER_BLUFF.x, AMBER_BLUFF.z, AMBER_BLUFF.clearingRadius + 8)),
+  region('woodland', box(WOODLAND_HOLLOW.x, WOODLAND_HOLLOW.z, WOODLAND_HOLLOW.focusRadius + 7)),
 ]);
 
 export const SCENIC_ENTER_PADDING = 18;

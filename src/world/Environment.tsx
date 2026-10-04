@@ -35,9 +35,15 @@ import { SouthwindMere } from './scenery/SouthwindMere';
 import { DawnlightGlasshouse, DawnlightGround } from './scenery/DawnlightGlasshouse';
 import { WindwardMill, WindwardGround } from './scenery/WindwardMill';
 import { AmberBluff } from './scenery/AmberBluff';
+import { LanternHollow, WoodlandGround } from './scenery/WoodlandHollow';
 import { clearOfDawnlightTrail } from './scenery/dawnlightPlacement';
 import { clearOfWindwardTrail } from './scenery/windwardPlacement';
 import { clearOfAmberBluff } from './scenery/amberPlacement';
+import {
+  WOODLAND_HOLLOW,
+  clearOfWoodlandHollow,
+  clearOfWoodlandShelter,
+} from './scenery/woodlandPlacement';
 import { clearOfSouthwindMere } from './scenery/merePlacement';
 import { SouthwindTrail } from './scenery/SouthwindTrail';
 import { clearOfSouthwindTrail } from './scenery/southwindTrailPlacement';
@@ -325,6 +331,7 @@ function ScenicMounts() {
       {active.has('dawnlight') && <DawnlightGlasshouse key={`dawnlight-${quality}`} />}
       {active.has('windward') && <WindwardMill key={`windward-${quality}`} />}
       {active.has('amber') && <AmberBluff key={`amber-${quality}`} />}
+      {active.has('woodland') && <LanternHollow key={`woodland-${quality}`} />}
       {active.has('slate') && <SlateReach key={`slate-${quality}`} />}
     </group>
   );
@@ -394,6 +401,7 @@ function Landscape() {
       <MeadowLookoutGround />
       <OrchardGround />
       <ObservatoryGround />
+      <WoodlandGround />
       <SouthwindTrail />
       <SouthwindMere />
       <DawnlightGround />
@@ -404,6 +412,17 @@ function Landscape() {
       <ScenicMounts />
     </group>
   );
+}
+
+function clearOfHollowSightline(x: number, z: number) {
+  const [cameraX, , cameraZ] = CAMERA_VIEWS.hollow.pos;
+  const dx = WOODLAND_HOLLOW.x - cameraX;
+  const dz = WOODLAND_HOLLOW.z - cameraZ;
+  const lengthSquared = dx * dx + dz * dz;
+  const t = lengthSquared
+    ? THREE.MathUtils.clamp(((x - cameraX) * dx + (z - cameraZ) * dz) / lengthSquared, 0, 1)
+    : 0;
+  return Math.hypot(x - cameraX - t * dx, z - cameraZ - t * dz) >= 10;
 }
 
 function LandscapeGroves() {
@@ -482,6 +501,9 @@ function LandscapeGroves() {
         clearOfDawnlightTrail(x, z, 1.5) &&
         clearOfWindwardTrail(x, z, 1.5) &&
         clearOfAmberBluff(x, z, 1.5) &&
+        clearOfWoodlandHollow(x, z, 3.5) &&
+        clearOfWoodlandShelter(x, z, 5.5) &&
+        clearOfHollowSightline(x, z) &&
         clearOfTurnouts(x, z, 1.5),
     );
   }, [quality]);

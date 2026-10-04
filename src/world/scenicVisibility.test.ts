@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { CAMERA_VIEWS } from './layout';
 import { WINDWARD_MILL } from './scenery/windwardPlacement';
 import { AMBER_BLUFF } from './scenery/amberPlacement';
+import { WOODLAND_HOLLOW } from './scenery/woodlandPlacement';
 import {
   SCENIC_ENTER_PADDING,
   SCENIC_EXIT_PADDING,
@@ -39,6 +40,7 @@ describe('fixed scenic-region visibility', () => {
       'slate',
       'windward',
       'amber',
+      'woodland',
     ];
     expect(SCENIC_REGIONS.map((region) => region.id)).toEqual(expected);
     const horizon: ScenicVisibilityInput = { ...frame(away), mode: 'horizon' };
@@ -61,6 +63,7 @@ describe('fixed scenic-region visibility', () => {
       ['dawnlight', 'dawnlight'],
       ['windward', 'windward'],
       ['amber', 'amber'],
+      ['hollow', 'woodland'],
     ] as const)
       expect(ids({ mode: 'orthographic', ...preset(view) }), view).toContain(region);
     expect(ids({ mode: 'orthographic', ...preset('observatory') })).toContain('slate');
@@ -71,6 +74,9 @@ describe('fixed scenic-region visibility', () => {
     const bluff = SCENIC_REGIONS.find((region) => region.id === 'amber')!;
     expect(bluff.bounds.minX).toBeLessThan(AMBER_BLUFF.x - AMBER_BLUFF.footprintRadius);
     expect(bluff.bounds.maxZ).toBeGreaterThan(AMBER_BLUFF.z + AMBER_BLUFF.footprintRadius);
+    const hollow = SCENIC_REGIONS.find((region) => region.id === 'woodland')!;
+    expect(hollow.bounds.minX).toBeLessThan(WOODLAND_HOLLOW.x - WOODLAND_HOLLOW.clearingRadius);
+    expect(hollow.bounds.maxZ).toBeGreaterThan(WOODLAND_HOLLOW.z + WOODLAND_HOLLOW.clearingRadius);
   });
 
   it('prefetches ahead of the frustum and keeps a selected region through the exit band', () => {
