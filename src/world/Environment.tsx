@@ -28,6 +28,7 @@ import { OrchardCommons, OrchardGround } from './scenery/Orchard';
 import { clearOfOrchard, clearOfOrchardView } from './scenery/orchardPlacement';
 import { clearOfObservatory, clearOfObservatoryView } from './scenery/observatoryPlacement';
 import { FarRidge } from './scenery/FarRidge';
+import { DistantLandforms } from './scenery/DistantLandforms';
 import { OuterLandscape } from './scenery/OuterLandscape';
 import { CedarObservatory, ObservatoryGround } from './scenery/Observatory';
 import { SlateReach } from './scenery/SlateReach';
@@ -416,6 +417,7 @@ function Landscape() {
       <DawnlightGround />
       <WindwardGround />
       <FarRidge />
+      <DistantLandforms />
       <OuterLandscape />
       <LandscapeGroves />
       <MeadowScenery />
