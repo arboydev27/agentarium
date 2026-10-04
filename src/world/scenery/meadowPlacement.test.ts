@@ -3,6 +3,7 @@ import { detailChunkAt } from '../chunks';
 import { LOOKOUT, OBSERVATORY, ORCHARD } from '../layout';
 import { meadowTrailPoint } from '../terrain';
 import { WINDWARD_MILL, WINDWARD_BRANCH_XZ } from './windwardPlacement';
+import { AMBER_BLUFF } from './amberPlacement';
 import { buildMeadowPieces, clearOfMeadowRoutes, meadowChunkHasDetail } from './meadowPlacement';
 
 describe('spatial meadow placement', () => {
@@ -36,6 +37,7 @@ describe('spatial meadow placement', () => {
       [-20, -79],
       [WINDWARD_MILL.centerX, WINDWARD_MILL.centerZ],
       ...WINDWARD_BRANCH_XZ,
+      [AMBER_BLUFF.x, AMBER_BLUFF.z],
     ]) {
       expect(clearOfMeadowRoutes(x, z)).toBe(false);
     }

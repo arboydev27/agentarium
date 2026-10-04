@@ -18,6 +18,7 @@ import {
   LANDSCAPE_SEGMENTS,
   LANDSCAPE_SIZE,
   meadowTrailPoint,
+  renderedTerrainHeight,
   terrainHeight,
   walkwayHeight,
 } from './terrain';
@@ -32,8 +33,10 @@ import { clearOfSlateReach } from './scenery/slatePlacement';
 import { SouthwindMere } from './scenery/SouthwindMere';
 import { DawnlightGlasshouse, DawnlightGround } from './scenery/DawnlightGlasshouse';
 import { WindwardMill, WindwardGround } from './scenery/WindwardMill';
+import { AmberBluff } from './scenery/AmberBluff';
 import { clearOfDawnlightTrail } from './scenery/dawnlightPlacement';
 import { clearOfWindwardTrail } from './scenery/windwardPlacement';
+import { clearOfAmberBluff } from './scenery/amberPlacement';
 import { clearOfSouthwindMere } from './scenery/merePlacement';
 import { SouthwindTrail } from './scenery/SouthwindTrail';
 import { clearOfSouthwindTrail } from './scenery/southwindTrailPlacement';
@@ -320,6 +323,7 @@ function ScenicMounts() {
       {active.has('observatory') && <CedarObservatory key={`observatory-${quality}`} />}
       {active.has('dawnlight') && <DawnlightGlasshouse key={`dawnlight-${quality}`} />}
       {active.has('windward') && <WindwardMill key={`windward-${quality}`} />}
+      {active.has('amber') && <AmberBluff key={`amber-${quality}`} />}
       {active.has('slate') && <SlateReach key={`slate-${quality}`} />}
     </group>
   );
@@ -391,7 +395,7 @@ function LandscapeGroves() {
   const tips = useRef<THREE.InstancedMesh>(null);
   const understory = useRef<THREE.InstancedMesh>(null);
   const placements = useMemo(() => {
-    const count = quality === 'high' ? 168 : 84;
+    const count = quality === 'high' ? 252 : 126;
     const clusters: [number, number][] = [
       [-43, -30],
       [-29, -49],
@@ -405,6 +409,15 @@ function LandscapeGroves() {
       [51, 47],
       [-18, -78],
       [35, -84],
+      [-105, -55],
+      [-112, 35],
+      [-100, 110],
+      [82, -93],
+      [109, -41],
+      [105, 56],
+      [95, 112],
+      [-55, 112],
+      [18, 109],
     ];
     return Array.from({ length: count }, (_, i) => {
       const [cx, cz] = clusters[i % clusters.length];
@@ -414,7 +427,7 @@ function LandscapeGroves() {
       const x = cx + Math.cos(angle) * spread;
       const z = cz + Math.sin(angle) * spread;
       const size = 1.15 + ((i * 13) % 17) * 0.1;
-      return { x, y: terrainHeight(x, z), z, size, shade: i % 3 };
+      return { x, y: renderedTerrainHeight(x, z), z, size, shade: i % 3 };
     }).filter(
       ({ x, z }) =>
         clearOfOrchard(x, z, 1.8) &&
@@ -426,6 +439,7 @@ function LandscapeGroves() {
         clearOfSouthwindTrail(x, z, 1.5) &&
         clearOfDawnlightTrail(x, z, 1.5) &&
         clearOfWindwardTrail(x, z, 1.5) &&
+        clearOfAmberBluff(x, z, 1.5) &&
         clearOfTurnouts(x, z, 1.5),
     );
   }, [quality]);
