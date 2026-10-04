@@ -12,9 +12,17 @@ describe('outer landscape composition', () => {
     expect(high.trees.length).toBeGreaterThan(90);
     expect(low.trees.length).toBeLessThan(high.trees.length * 0.65);
     expect(high.rocks.length).toBeGreaterThan(15);
+    expect(high.trees.length).toBeLessThan(310);
+    expect(high.rocks.length).toBeLessThan(110);
+    const outer = high.trees.filter((tree) => Math.max(Math.abs(tree.x), Math.abs(tree.z)) > 205);
+    expect(outer.length).toBeGreaterThan(55);
+    expect(outer.some((tree) => tree.x > 220)).toBe(true);
+    expect(outer.some((tree) => tree.x < -220)).toBe(true);
+    expect(outer.some((tree) => tree.z > 220)).toBe(true);
+    expect(outer.some((tree) => tree.z < -220)).toBe(true);
     expect(low.rocks.length).toBeLessThan(high.rocks.length);
     for (const piece of [...high.trees, ...high.rocks]) {
-      expect(Math.max(Math.abs(piece.x), Math.abs(piece.z))).toBeLessThanOrEqual(190);
+      expect(Math.max(Math.abs(piece.x), Math.abs(piece.z))).toBeLessThanOrEqual(315);
       expect(Math.hypot(piece.x, piece.z)).toBeGreaterThanOrEqual(53);
     }
     for (const piece of [...low.trees, ...low.rocks]) {

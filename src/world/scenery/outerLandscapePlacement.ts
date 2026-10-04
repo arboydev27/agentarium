@@ -38,10 +38,21 @@ const CLUSTERS: readonly Cluster[] = [
   { x: 4, z: -145, radiusX: 25, radiusZ: 21, count: 22, biome: 'highland', phase: 2.8 },
   { x: 84, z: -143, radiusX: 27, radiusZ: 24, count: 24, biome: 'highland', phase: 0.6 },
   { x: -136, z: -132, radiusX: 27, radiusZ: 20, count: 20, biome: 'highland', phase: 1.9 },
+  // Sparse continuation across the newer ±210 camera travel area. The
+  // four existing instanced meshes absorb these without extra draw calls.
+  { x: 232, z: -62, radiusX: 23, radiusZ: 23, count: 11, biome: 'meadow', phase: 0.4 },
+  { x: 271, z: 37, radiusX: 27, radiusZ: 31, count: 9, biome: 'meadow', phase: 1.9 },
+  { x: 236, z: 139, radiusX: 25, radiusZ: 21, count: 9, biome: 'meadow', phase: 2.6 },
+  { x: 90, z: 251, radiusX: 27, radiusZ: 25, count: 9, biome: 'meadow', phase: 0.8 },
+  { x: -84, z: 257, radiusX: 24, radiusZ: 26, count: 9, biome: 'amber', phase: 2.3 },
+  { x: -244, z: -38, radiusX: 28, radiusZ: 25, count: 9, biome: 'woodland', phase: 1.1 },
+  { x: -265, z: 107, radiusX: 26, radiusZ: 28, count: 9, biome: 'amber', phase: 0.2 },
+  { x: -63, z: -253, radiusX: 25, radiusZ: 25, count: 9, biome: 'highland', phase: 1.5 },
+  { x: 85, z: -257, radiusX: 27, radiusZ: 24, count: 9, biome: 'highland', phase: 2.9 },
 ];
 
 function clearOfWork(x: number, z: number, radius: number, biome: FringeBiome) {
-  if (Math.max(Math.abs(x), Math.abs(z)) > 190 || Math.hypot(x, z) < 53) return false;
+  if (Math.max(Math.abs(x), Math.abs(z)) > 315 || Math.hypot(x, z) < 53) return false;
   // The meadow groundcover policy intentionally excludes the entire far-north
   // strip. Here a narrower check allows scenery *behind* Northstar, while
   // preserving the exact walkable spur, tower, and arrival clearing.
