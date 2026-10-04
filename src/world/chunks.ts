@@ -1,5 +1,7 @@
+import { LANDSCAPE_SIZE } from './terrain';
+
 // Selection for optional scenery only. Agents, routes, and task state live elsewhere.
-export const DETAIL_WORLD_SIZE = 600;
+export const DETAIL_WORLD_SIZE = LANDSCAPE_SIZE;
 export const DETAIL_CHUNK_SIZE = 60;
 export const DETAIL_CHUNK_LIMIT = 24;
 

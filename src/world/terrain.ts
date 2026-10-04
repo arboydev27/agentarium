@@ -6,8 +6,8 @@ import { distanceToSouthwindMere } from './scenery/merePlacement';
 // Match Landscape's PlaneGeometry dimensions and subdivisions. The mesh is
 // sampled only at vertices, so its rendered surface differs from terrainHeight
 // between vertices.
-export const LANDSCAPE_SIZE = 600;
-export const LANDSCAPE_SEGMENTS = 128;
+export const LANDSCAPE_SIZE = 1020;
+export const LANDSCAPE_SEGMENTS = 216;
 export const SOUTHWIND_WATER_Y = -0.06;
 
 function meadowHeight(x: number, z: number) {

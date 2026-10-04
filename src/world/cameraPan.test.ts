@@ -1,8 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import { Vector3 } from 'three';
 import { CAMERA_PAN_BOUNDS, clampPanDelta, keyboardPanDelta } from './cameraPan';
+import { LANDSCAPE_SIZE } from './terrain';
 
 describe('camera pan', () => {
+  it('leaves a fog margin beyond the farthest permitted camera orbit', () => {
+    expect(CAMERA_PAN_BOUNDS).toEqual({ minX: -125, maxX: 125, minZ: -125, maxZ: 125 });
+    const halfTerrain = LANDSCAPE_SIZE / 2;
+    const maximumOrbit = 190; // World OrbitControls maxDistance
+    const fogFar = 165; // World scene fog far distance
+    for (const limit of [
+      Math.abs(CAMERA_PAN_BOUNDS.minX),
+      Math.abs(CAMERA_PAN_BOUNDS.maxX),
+      Math.abs(CAMERA_PAN_BOUNDS.minZ),
+      Math.abs(CAMERA_PAN_BOUNDS.maxZ),
+    ])
+      expect(halfTerrain - limit - maximumOrbit).toBeGreaterThan(fogFar);
+  });
   it('moves in the ground-plane view direction without changing camera height', () => {
     const camera = new Vector3(0, 12, 35);
     const look = new Vector3(0, 2, -22);

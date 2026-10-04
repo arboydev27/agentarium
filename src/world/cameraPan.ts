@@ -3,9 +3,9 @@ import { MathUtils, Vector3 } from 'three';
 export type PanKey = 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight';
 
 // Keep the orbit target inside the populated part of the finite landscape.
-// The ground mesh extends to +/-300; these limits also leave room for the
-// maximum 190-unit perspective orbit radius without exposing its edge.
-export const CAMERA_PAN_BOUNDS = { minX: -80, maxX: 80, minZ: -95, maxZ: 85 } as const;
+// At the 190-unit orbit limit, an axis-aligned camera remains 195 units from
+// the +/-510-unit ground-mesh edge, 30 beyond the 165-unit fog far distance.
+export const CAMERA_PAN_BOUNDS = { minX: -125, maxX: 125, minZ: -125, maxZ: 125 } as const;
 
 export function isPanKey(key: string): key is PanKey {
   return key === 'ArrowUp' || key === 'ArrowDown' || key === 'ArrowLeft' || key === 'ArrowRight';

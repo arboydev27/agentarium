@@ -498,7 +498,7 @@ describe('navigation graph', () => {
           lowestPadClearance = Math.min(lowestPadClearance, y - renderedTerrainHeight(x, z));
       }
     }
-    // Sample the renderer's actual 128×128 triangle grid so the branch and
+    // Sample the renderer's actual landscape triangle grid so the branch and
     // arrival pad do not sink into the visible landscape.
     expect(lowestBranchClearance).toBeGreaterThan(0.03);
     expect(lowestPadClearance).toBeGreaterThan(0.08);
