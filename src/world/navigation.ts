@@ -1,5 +1,6 @@
 import { routeForSeat, routeLengths, type Point } from './motion';
 import { WOODLAND_HOLLOW, WOODLAND_TRAIL_XZ } from './scenery/woodlandPlacement';
+import { NORTHSTAR_OUTPOST, NORTHSTAR_TRAIL_XZ } from './scenery/northstarPlacement';
 import { LOOKOUT, OBSERVATORY, ORCHARD } from './layout';
 import { meadowTrailPoint, renderedTerrainHeight, terrainHeight, walkwayHeight } from './terrain';
 import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
@@ -67,6 +68,13 @@ export const DESTINATIONS: Destination[] = [
     label: 'orchard commons',
     node: 'orchard:commons',
     facing: 0.7,
+    clip: 'GardenLook',
+  },
+  {
+    id: NORTHSTAR_OUTPOST.id,
+    label: NORTHSTAR_OUTPOST.label,
+    node: NORTHSTAR_OUTPOST.id,
+    facing: 0.5,
     clip: 'GardenLook',
   },
   {
@@ -190,6 +198,12 @@ for (let index = 0; index < orchardBranch.length; index++) {
   const [x, z] = orchardBranch[index];
   NODES[`orchard:branch-${index + 1}`] = [x, walkwayHeight(x, z, 0.105), z];
 }
+for (let index = 1; index < NORTHSTAR_TRAIL_XZ.length; index++) {
+  const [x, z] = NORTHSTAR_TRAIL_XZ[index];
+  const id =
+    index === NORTHSTAR_TRAIL_XZ.length - 1 ? NORTHSTAR_OUTPOST.id : `northstar:trail-${index}`;
+  NODES[id] = [x, renderedTerrainHeight(x, z) + 0.105, z];
+}
 const observatoryBranch: [number, number][] = [
   [0, -47.8],
   [-4, -47.8],
@@ -256,6 +270,14 @@ const chains = [
     'meadow:trail-22',
     ...orchardBranch.map((_, index) => `orchard:branch-${index + 1}`),
     'orchard:commons',
+  ],
+  [
+    'orchard:branch-3',
+    ...NORTHSTAR_TRAIL_XZ.slice(1).map((_, index) =>
+      index === NORTHSTAR_TRAIL_XZ.length - 2
+        ? NORTHSTAR_OUTPOST.id
+        : `northstar:trail-${index + 1}`,
+    ),
   ],
   [
     'meadow:trail-16',

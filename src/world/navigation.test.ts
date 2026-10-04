@@ -21,6 +21,14 @@ import {
 } from './scenery/merePlacement';
 import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
 import {
+  NORTHSTAR_BRANCH,
+  NORTHSTAR_OUTPOST,
+  NORTHSTAR_TOWER_XZ,
+  NORTHSTAR_TRAIL_XZ,
+  clearOfNorthstarStructure,
+  clearOfNorthstarTrail,
+} from './scenery/northstarPlacement';
+import {
   WOODLAND_BRANCH,
   WOODLAND_HOLLOW,
   WOODLAND_SHELTER_XZ,
@@ -131,6 +139,55 @@ describe('navigation graph', () => {
       }
     }
     expect(highestWoodlandGrade).toBeLessThan(0.38);
+  });
+  it('connects Northstar Outpost from the orchard approach on safe, reversible terrain chords', () => {
+    expect(NORTHSTAR_BRANCH[0]).toEqual([
+      NODES['orchard:branch-3'][0],
+      NODES['orchard:branch-3'][2],
+    ]);
+    expect(NORTHSTAR_TRAIL_XZ.at(-1)).toEqual([NORTHSTAR_OUTPOST.x, NORTHSTAR_OUTPOST.z]);
+    expect(clearOfNorthstarTrail(30, -94)).toBe(false);
+    expect(clearOfNorthstarTrail(NORTHSTAR_OUTPOST.x, NORTHSTAR_OUTPOST.z)).toBe(false);
+    expect(clearOfNorthstarTrail(65, -94)).toBe(true);
+    expect(clearOfNorthstarStructure(...NORTHSTAR_TOWER_XZ)).toBe(false);
+    expect(clearOfNorthstarStructure(NORTHSTAR_OUTPOST.x, NORTHSTAR_OUTPOST.z)).toBe(true);
+    expect(
+      EDGES.filter(([a, b]) => a === NORTHSTAR_OUTPOST.id || b === NORTHSTAR_OUTPOST.id),
+    ).toHaveLength(1);
+    for (let seat = 0; seat < 8; seat++) {
+      const outward = planRoute(`home-${seat}`, NORTHSTAR_OUTPOST.id);
+      expect(outward.ids).toContain('orchard:branch-3');
+      expect(outward.ids).not.toContain('orchard:commons');
+      expect(outward.ids.at(-1)).toBe(NORTHSTAR_OUTPOST.id);
+      expect(planRoute(NORTHSTAR_OUTPOST.id, `home-${seat}`).points).toEqual(
+        [...outward.points].reverse(),
+      );
+    }
+    let highestGrade = 0;
+    for (const [start, end] of EDGES) {
+      if (!start.startsWith('northstar:') && !end.startsWith('northstar:')) continue;
+      const from = NODES[start],
+        to = NODES[end];
+      const horizontal = Math.hypot(to[0] - from[0], to[2] - from[2]);
+      expect(horizontal, `${start} → ${end} length`).toBeLessThan(1.85);
+      highestGrade = Math.max(highestGrade, Math.abs(to[1] - from[1]) / horizontal);
+      for (let step = 0; step <= 20; step++) {
+        const t = step / 20;
+        const x = from[0] + (to[0] - from[0]) * t;
+        const y = from[1] + (to[1] - from[1]) * t;
+        const z = from[2] + (to[2] - from[2]) * t;
+        const clearance = y - renderedTerrainHeight(x, z);
+        expect(clearance, `${start} → ${end} at ${t}`).toBeGreaterThan(0.015);
+        expect(clearance, `${start} → ${end} at ${t}`).toBeLessThan(0.24);
+        expect(Math.hypot(x - ORCHARD.x, z - ORCHARD.z)).toBeGreaterThan(
+          ORCHARD.clearingRadius + 1,
+        );
+        expect(Math.hypot(x - NORTHSTAR_TOWER_XZ[0], z - NORTHSTAR_TOWER_XZ[1])).toBeGreaterThan(
+          4.5 + 0.8,
+        );
+      }
+    }
+    expect(highestGrade).toBeLessThan(0.35);
   });
   it('connects Windward Mill on a clear branch of the Dawnlight trail for all seats', () => {
     const anchor = `dawnlight:trail-${WINDWARD_DAWNLIGHT_BRANCH_INDEX}`;
@@ -416,6 +473,7 @@ describe('navigation graph', () => {
             id.startsWith('orchard:') ||
             id.startsWith('observatory:') ||
             id.startsWith('woodland:') ||
+            id.startsWith('northstar:') ||
             id.startsWith('southwind:'),
         )
       )
@@ -456,6 +514,7 @@ describe('navigation graph', () => {
             route.ids[index].startsWith('orchard:') ||
             route.ids[index].startsWith('observatory:') ||
             route.ids[index].startsWith('woodland:') ||
+            route.ids[index].startsWith('northstar:') ||
             route.ids[index].startsWith('southwind:') ||
             route.ids[index].startsWith('dawnlight:') ||
             route.ids[index].startsWith('windward:')
@@ -989,6 +1048,90 @@ describe('resident journeys', () => {
     advance(motion, agent(3, 'working'), 240);
     expect(motion.activity).toBe('At desk');
     expect(traffic.reserveDestination('next', WOODLAND_HOLLOW.id)).toBe(true);
+  });
+  it('reaches Northstar Outpost and retraces its long route when work interrupts', () => {
+    const traffic = new NavigationTraffic();
+    const motion = new ResidentJourney(3, 'demo-3', traffic);
+    for (const destination of DESTINATIONS)
+      if (destination.id !== NORTHSTAR_OUTPOST.id)
+        expect(traffic.reserveDestination('scene', destination.id)).toBe(true);
+    let arrived = false;
+    let previous = motion.position;
+    for (let frame = 0; frame < 290 * 60; frame++) {
+      motion.update(agent(3), 1 / 60, options);
+      const next = motion.position;
+      expect(Math.hypot(...next.map((value, axis) => value - previous[axis]))).toBeLessThan(0.06);
+      previous = next;
+      if (motion.activity === `Resting at ${NORTHSTAR_OUTPOST.label}`) {
+        arrived = true;
+        break;
+      }
+    }
+    expect(arrived).toBe(true);
+    expect(motion.position[0]).toBeCloseTo(NORTHSTAR_OUTPOST.x);
+    expect(motion.position[2]).toBeCloseTo(NORTHSTAR_OUTPOST.z);
+    const working = agent(3, 'working');
+    let faded = false;
+    for (let frame = 0; frame < 290 * 60 && motion.activity !== 'At desk'; frame++) {
+      motion.update(working, 1 / 60, options);
+      const next = motion.position;
+      expect(Math.hypot(...next.map((value, axis) => value - previous[axis]))).toBeLessThan(0.06);
+      if (motion.opacity < 0.99) faded = true;
+      previous = next;
+    }
+    expect(faded).toBe(false);
+    expect(motion.activity).toBe('At desk');
+    expect(traffic.reserveDestination('next', NORTHSTAR_OUTPOST.id)).toBe(true);
+  });
+  it('reverses an interrupted Northstar branch outing without a jump or hidden relocation', () => {
+    const traffic = new NavigationTraffic();
+    const motion = new ResidentJourney(2, 'demo-2', traffic);
+    for (const destination of DESTINATIONS)
+      if (destination.id !== NORTHSTAR_OUTPOST.id)
+        expect(traffic.reserveDestination('scene', destination.id)).toBe(true);
+    let reachedSpur = false;
+    let previous = motion.position;
+    for (let frame = 0; frame < 230 * 60; frame++) {
+      motion.update(agent(2), 1 / 60, options);
+      const next = motion.position;
+      expect(Math.hypot(...next.map((value, axis) => value - previous[axis]))).toBeLessThan(0.06);
+      previous = next;
+      if (
+        next[0] > 26 &&
+        next[2] < -89 &&
+        motion.activity === `Walking to ${NORTHSTAR_OUTPOST.label}`
+      ) {
+        reachedSpur = true;
+        break;
+      }
+    }
+    expect(reachedSpur).toBe(true);
+    const working = agent(2, 'working');
+    let faded = false;
+    for (let frame = 0; frame < 230 * 60 && motion.activity !== 'At desk'; frame++) {
+      motion.update(working, 1 / 60, options);
+      const next = motion.position;
+      expect(Math.hypot(...next.map((value, axis) => value - previous[axis]))).toBeLessThan(0.06);
+      if (motion.opacity < 0.99) faded = true;
+      previous = next;
+    }
+    expect(faded).toBe(false);
+    expect(motion.activity).toBe('At desk');
+    expect(traffic.reserveDestination('next', NORTHSTAR_OUTPOST.id)).toBe(true);
+  });
+  it('keeps Northstar and Orchard trips exclusive on their shared approach', () => {
+    const traffic = new NavigationTraffic();
+    const northstar = planRoute('home-0', NORTHSTAR_OUTPOST.id);
+    const orchard = planRoute('home-1', 'orchard:commons');
+    expect(traffic.acquire('northstar', northstar.ids)).toBe(true);
+    expect(traffic.acquire('orchard', orchard.ids)).toBe(false);
+    traffic.releasePassed(
+      'northstar',
+      northstar.lengths[northstar.ids.indexOf('orchard:branch-3')] + 1,
+    );
+    expect(traffic.acquire('orchard', orchard.ids)).toBe(false);
+    traffic.releaseCorridor('northstar');
+    expect(traffic.acquire('orchard', orchard.ids)).toBe(true);
   });
   it('does not roam from unknown, disconnected, stale, paused, or reduced states', () => {
     for (const state of [
