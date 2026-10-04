@@ -5,6 +5,7 @@ import { DAWNLIGHT_GLASSHOUSE } from './scenery/dawnlightPlacement';
 import { SOUTHWIND_SHORE } from './scenery/southwindTrailPlacement';
 import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
 import { WINDWARD_MILL } from './scenery/windwardPlacement';
+import { NORTHSTAR_OUTPOST } from './scenery/northstarPlacement';
 import { WOODLAND_HOLLOW } from './scenery/woodlandPlacement';
 import {
   activateMap,
@@ -35,7 +36,9 @@ describe('live landmark map', () => {
   });
 
   it('round-trips camera targets and clamps map choices to camera bounds', () => {
-    expect(mapToWorld(worldToMap({ x: 24, z: -71 }))).toEqual({ x: 24, z: -71 });
+    const roundTrip = mapToWorld(worldToMap({ x: 24, z: -71 }));
+    expect(roundTrip.x).toBeCloseTo(24);
+    expect(roundTrip.z).toBeCloseTo(-71);
     expect(mapToWorld({ left: -10, top: 150 })).toEqual({
       x: CAMERA_PAN_BOUNDS.minX,
       z: CAMERA_PAN_BOUNDS.maxZ,
@@ -43,10 +46,11 @@ describe('live landmark map', () => {
   });
 
   it('plots named outside places at their shared world destinations', () => {
-    expect(MAP_LANDMARKS).toHaveLength(10);
+    expect(MAP_LANDMARKS).toHaveLength(11);
     expect(MAP_LANDMARKS.map((landmark) => landmark.id)).toEqual([
       'lookout',
       'orchard',
+      'northstar:outpost',
       'observatory',
       'woodland:hollow',
       'dawnlight',
@@ -56,6 +60,14 @@ describe('live landmark map', () => {
       'meadow:rest-west',
       'meadow:rest-east',
     ]);
+    const northstar = MAP_LANDMARKS.find((landmark) => landmark.id === NORTHSTAR_OUTPOST.id)!;
+    expect(northstar).toMatchObject({
+      label: NORTHSTAR_OUTPOST.label,
+      point: { x: NORTHSTAR_OUTPOST.x, z: NORTHSTAR_OUTPOST.z },
+      view: 'northstar',
+    });
+    expect(northstar.scenicOnly).toBeUndefined();
+    expect(worldToMap(northstar.point).top).toBeGreaterThan(0);
     const hollow = MAP_LANDMARKS.find((landmark) => landmark.id === WOODLAND_HOLLOW.id)!;
     expect(hollow).toMatchObject({
       label: WOODLAND_HOLLOW.label,
@@ -79,7 +91,7 @@ describe('live landmark map', () => {
       scenicOnly: true,
     });
     expect(worldToMap(amber.point).left).toBeGreaterThan(0);
-    expect(worldToMap(amber.point).left).toBeLessThan(12);
+    expect(worldToMap(amber.point).left).toBeLessThan(20);
     expect(worldToMap(windward.point).left).toBeLessThan(96); // keep its entire pin inside the eastern edge
     expect(worldToMap({ x: WINDWARD_MILL.x, z: WINDWARD_MILL.z }).left).toBeGreaterThan(
       worldToMap(windward.point).left,
@@ -103,25 +115,25 @@ describe('live landmark map', () => {
 
   it('projects 2× detail consistently and keeps the focused frame inside finite bounds', () => {
     const detail = detailMapBounds({ x: 0, z: -5 });
-    expect(detail).toEqual({ minX: -62.5, maxX: 62.5, minZ: -67.5, maxZ: 57.5 });
+    expect(detail).toEqual({ minX: -75, maxX: 75, minZ: -80, maxZ: 70 });
     expect(worldToMap({ x: 0, z: -5 }, detail)).toEqual({ left: 50, top: 50 });
     expect(mapToWorld({ left: 50, top: 50 }, detail)).toEqual({ x: 0, z: -5 });
     expect(pointInMapBounds({ x: 100, z: 80 }, detail)).toBe(false);
     expect(pointInMapBounds({ x: 36, z: -20 }, detail)).toBe(true);
     expect(detailMapBounds({ x: CAMERA_PAN_BOUNDS.maxX, z: CAMERA_PAN_BOUNDS.maxZ })).toEqual({
       minX: 0,
-      maxX: 125,
+      maxX: 150,
       minZ: 0,
-      maxZ: 125,
+      maxZ: 150,
     });
     expect(detailMapBounds({ x: CAMERA_PAN_BOUNDS.minX, z: CAMERA_PAN_BOUNDS.minZ })).toEqual({
-      minX: -125,
+      minX: -150,
       maxX: 0,
-      minZ: -125,
+      minZ: -150,
       maxZ: 0,
     });
-    expect(mapToWorld({ left: 100, top: 0 }, detailMapBounds({ x: 125, z: 125 }))).toEqual({
-      x: 125,
+    expect(mapToWorld({ left: 100, top: 0 }, detailMapBounds({ x: 150, z: 150 }))).toEqual({
+      x: 150,
       z: 0,
     });
   });

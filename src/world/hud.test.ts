@@ -9,6 +9,7 @@ import { AMBER_BLUFF } from './scenery/amberPlacement';
 import { DESTINATIONS } from './navigation';
 import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
 import { WINDWARD_MILL } from './scenery/windwardPlacement';
+import { NORTHSTAR_OUTPOST } from './scenery/northstarPlacement';
 import { WOODLAND_HOLLOW } from './scenery/woodlandPlacement';
 it('keeps counts and task filters aligned, including hidden and unseated work', () => {
   const agents = initialAgents().map((a, i) => ({
@@ -49,6 +50,8 @@ it('identifies named places and ordinary open terrain independently of the camer
   expect(districtAt(WOODLAND_HOLLOW.x + WOODLAND_HOLLOW.focusRadius - 1, WOODLAND_HOLLOW.z)).toBe(
     'hollow',
   );
+  expect(districtAt(NORTHSTAR_OUTPOST.x, NORTHSTAR_OUTPOST.z)).toBe('northstar');
+  expect(districtAt(NORTHSTAR_OUTPOST.x + 6, NORTHSTAR_OUTPOST.z - 6)).toBe('northstar');
   expect(districtAt(-30, -50)).toBe('observatory');
   expect(districtAt(-38, -50)).toBe('observatory');
   expect(districtAt(-39, -50)).toBe('open-landscape');
@@ -90,6 +93,11 @@ it('names unnamed broad terrain from the shared biome classifier without overrid
   expect(districtAt(-80, -20)).toBe('hollow');
   expect(landscapeBiomeAt(-65, 15)).toBe('woodland');
   expect(districtAt(-65, 15)).toBe('western-woods');
+  expect(
+    districtAt(NORTHSTAR_OUTPOST.x + NORTHSTAR_OUTPOST.focusRadius + 1, NORTHSTAR_OUTPOST.z),
+  ).toBe('northern-highlands');
+  expect(landscapeBiomeAt(-40, -105)).toBe('highland');
+  expect(districtAt(-40, -105)).toBe('northern-highlands');
   expect(districtAt(0, -90)).toBe('northern-highlands');
   expect(districtAt(-87, 88)).toBe('amber-foothills');
   expect(districtAt(AMBER_BLUFF.x, AMBER_BLUFF.z)).toBe('amber');

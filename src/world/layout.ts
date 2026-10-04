@@ -2,6 +2,7 @@ import type { Point } from './motion';
 import { AMBER_BLUFF } from './scenery/amberPlacement';
 import { DAWNLIGHT_GLASSHOUSE } from './scenery/dawnlightPlacement';
 import { WINDWARD_MILL } from './scenery/windwardPlacement';
+import { NORTHSTAR_OUTPOST } from './scenery/northstarPlacement';
 import { WOODLAND_HOLLOW } from './scenery/woodlandPlacement';
 
 export const WORLD = { width: 29.25, depth: 22.2 };
@@ -24,6 +25,7 @@ export const WORLD_VIEWS = [
   'courtyard',
   'lookout',
   'orchard',
+  'northstar',
   'observatory',
   'hollow',
   'mere',
@@ -49,6 +51,7 @@ export const WORLD_VIEW_LABELS: Record<WorldView, string> = {
   courtyard: 'Courtyard',
   lookout: 'Lookout',
   orchard: 'Orchard Commons',
+  northstar: 'Northstar Outpost',
   observatory: 'Cedar Observatory',
   hollow: 'Lantern Hollow',
   mere: 'Southwind Mere',
@@ -85,6 +88,11 @@ export const CAMERA_VIEWS: Record<WorldView, { pos: Point; look: Point; span: [n
     courtyard: { pos: [1, 11, 18], look: [-6, 1.5, 5.5], span: [16, 12] },
     lookout: { pos: [27, 16, -16], look: [LOOKOUT.x, 4, LOOKOUT.z], span: [24, 17] },
     orchard: { pos: [53, 24, -51], look: [ORCHARD.x, 9.7, ORCHARD.z], span: [28, 20] },
+    northstar: {
+      pos: [NORTHSTAR_OUTPOST.x - 12, 24, NORTHSTAR_OUTPOST.z - 18],
+      look: [NORTHSTAR_OUTPOST.centerX + 1, 12, NORTHSTAR_OUTPOST.centerZ - 2],
+      span: [32, 24],
+    },
     observatory: { pos: [-45, 20, -30], look: [OBSERVATORY.x, 5.5, OBSERVATORY.z], span: [27, 19] },
     hollow: {
       pos: [WOODLAND_HOLLOW.x + 15, 14, WOODLAND_HOLLOW.z + 19],

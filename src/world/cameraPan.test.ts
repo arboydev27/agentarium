@@ -5,7 +5,7 @@ import { LANDSCAPE_SIZE } from './terrain';
 
 describe('camera pan', () => {
   it('leaves a fog margin beyond the farthest permitted camera orbit', () => {
-    expect(CAMERA_PAN_BOUNDS).toEqual({ minX: -125, maxX: 125, minZ: -125, maxZ: 125 });
+    expect(CAMERA_PAN_BOUNDS).toEqual({ minX: -150, maxX: 150, minZ: -150, maxZ: 150 });
     const halfTerrain = LANDSCAPE_SIZE / 2;
     const maximumOrbit = 190; // World OrbitControls maxDistance
     const fogFar = 165; // World scene fog far distance

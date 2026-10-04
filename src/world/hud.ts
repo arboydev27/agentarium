@@ -15,6 +15,7 @@ import { DAWNLIGHT_GLASSHOUSE } from './scenery/dawnlightPlacement';
 import { SOUTHWIND_SHORE } from './scenery/southwindTrailPlacement';
 import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
 import { WINDWARD_MILL } from './scenery/windwardPlacement';
+import { NORTHSTAR_OUTPOST } from './scenery/northstarPlacement';
 import { WOODLAND_HOLLOW } from './scenery/woodlandPlacement';
 export type WorkFilter = 'working' | 'completed' | 'unknown' | 'here';
 export function matchesWorkFilter(agent: Agent, filter: WorkFilter, paused = false) {
@@ -46,6 +47,11 @@ export function districtAt(x: number, z: number): WorldLocation {
   }
   if (Math.hypot(x - LOOKOUT.x, z - LOOKOUT.z) <= LOOKOUT.focusRadius) return 'lookout';
   if (Math.hypot(x - ORCHARD.x, z - ORCHARD.z) <= ORCHARD.focusRadius) return 'orchard';
+  if (
+    Math.hypot(x - NORTHSTAR_OUTPOST.centerX, z - NORTHSTAR_OUTPOST.centerZ) <=
+    NORTHSTAR_OUTPOST.focusRadius
+  )
+    return 'northstar';
   if (Math.hypot(x - OBSERVATORY.x, z - OBSERVATORY.z) <= OBSERVATORY.focusRadius)
     return 'observatory';
   if (Math.hypot(x - SOUTHWIND_SHORE.x, z - SOUTHWIND_SHORE.z) <= SOUTHWIND_SHORE.focusRadius)

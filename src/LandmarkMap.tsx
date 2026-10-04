@@ -9,6 +9,7 @@ import {
   MapPin,
   Mountain,
   Telescope,
+  Tent,
   Trees,
   Waves,
   Wind,
@@ -37,7 +38,6 @@ import { landscapeBiomeAt } from './world/biomes';
 type TintBiome = Exclude<ReturnType<typeof landscapeBiomeAt>, 'meadow'>;
 const BIOME_LABELS = [
   { kind: 'woodland', label: 'Western Woods', point: { x: -65, z: 15 } },
-  { kind: 'highland', label: 'Northern Highlands', point: { x: 35, z: -110 } },
   { kind: 'amber', label: 'Amber Foothills', point: { x: -80, z: 68 } },
 ] as const;
 
@@ -70,6 +70,12 @@ const LANDMARKS = [
   { view: 'overview', label: 'Overview', icon: Focus, detail: 'The resident grove' },
   { view: 'lookout', label: 'Lookout', icon: MapPin, detail: 'Northern clearing' },
   { view: 'orchard', label: 'Orchard', icon: Trees, detail: 'Orchard Commons' },
+  {
+    view: 'northstar',
+    label: 'Northstar Outpost',
+    icon: Tent,
+    detail: 'Northern Highlands outpost',
+  },
   { view: 'observatory', label: 'Observatory', icon: Telescope, detail: 'Cedar Observatory' },
   { view: 'hollow', label: 'Lantern Hollow', icon: Lamp, detail: 'Western Woods clearing' },
   { view: 'mere', label: 'Southwind Mere', icon: Waves, detail: 'Dry eastern shore' },

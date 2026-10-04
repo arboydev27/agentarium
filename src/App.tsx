@@ -40,6 +40,7 @@ import {
   MapPin,
   Trees,
   Telescope,
+  Tent,
   Lamp,
   Waves,
   Flower2,
@@ -974,6 +975,8 @@ export default function App() {
               <MapPin size={15} />
             ) : view === 'orchard' ? (
               <Trees size={15} />
+            ) : view === 'northstar' ? (
+              <Tent size={15} />
             ) : view === 'observatory' ? (
               <Telescope size={15} />
             ) : view === 'hollow' ? (

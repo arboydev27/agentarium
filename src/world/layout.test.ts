@@ -15,6 +15,8 @@ import {
 import { DAWNLIGHT_GLASSHOUSE } from './scenery/dawnlightPlacement';
 import { SOUTHWIND_SHORE } from './scenery/southwindTrailPlacement';
 import { WINDWARD_MILL } from './scenery/windwardPlacement';
+import { NORTHSTAR_OUTPOST } from './scenery/northstarPlacement';
+import { renderedTerrainHeight } from './terrain';
 import { WOODLAND_HOLLOW } from './scenery/woodlandPlacement';
 import { routeForSeat } from './motion';
 import { showFineDetail } from './detail';
@@ -196,9 +198,52 @@ describe('expanded world layout', () => {
     expect(Math.abs(arrival.x)).toBeLessThan(1);
     expect(Math.abs(arrival.y)).toBeLessThan(1);
   });
+  it('frames Northstar arrival and outpost tower inside the northern highlands', () => {
+    const preset = CAMERA_VIEWS.northstar;
+    expect(WORLD_VIEWS).toContain('northstar');
+    expect(WORLD_VIEW_LABELS.northstar).toBe(NORTHSTAR_OUTPOST.label);
+    expect(NORTHSTAR_OUTPOST).toMatchObject({ x: 43, z: -112 });
+    expect(preset.span.every((value) => value > 0)).toBe(true);
+    for (const [x, z] of [
+      [preset.pos[0], preset.pos[2]],
+      [preset.look[0], preset.look[2]],
+    ]) {
+      expect(x).toBeGreaterThanOrEqual(CAMERA_PAN_BOUNDS.minX);
+      expect(x).toBeLessThanOrEqual(CAMERA_PAN_BOUNDS.maxX);
+      expect(z).toBeGreaterThanOrEqual(CAMERA_PAN_BOUNDS.minZ);
+      expect(z).toBeLessThanOrEqual(CAMERA_PAN_BOUNDS.maxZ);
+    }
+    const camera = new OrthographicCamera(
+      -preset.span[0] / 2,
+      preset.span[0] / 2,
+      preset.span[1] / 2,
+      -preset.span[1] / 2,
+      0.1,
+      400,
+    );
+    camera.position.fromArray(preset.pos);
+    camera.lookAt(new Vector3(...preset.look));
+    camera.updateMatrixWorld();
+    for (const [x, y, z] of [
+      [
+        NORTHSTAR_OUTPOST.x,
+        renderedTerrainHeight(NORTHSTAR_OUTPOST.x, NORTHSTAR_OUTPOST.z),
+        NORTHSTAR_OUTPOST.z,
+      ],
+      [
+        NORTHSTAR_OUTPOST.x + 6,
+        renderedTerrainHeight(NORTHSTAR_OUTPOST.x + 6, NORTHSTAR_OUTPOST.z - 6) + 9,
+        NORTHSTAR_OUTPOST.z - 6,
+      ],
+    ]) {
+      const projected = new Vector3(x, y, z).project(camera);
+      expect(Math.abs(projected.x)).toBeLessThan(1);
+      expect(Math.abs(projected.y)).toBeLessThan(1);
+    }
+  });
   it('bookmarks Cedar Observatory west of the meadow trail', () => {
     expect(WORLD_VIEWS).toContain('observatory');
-    expect(WORLD_VIEWS).toHaveLength(14);
+    expect(WORLD_VIEWS).toHaveLength(15);
     expect(OBSERVATORY).toMatchObject({ x: -30, z: -50 });
     expect(OBSERVATORY.focusRadius).toBeGreaterThan(OBSERVATORY.clearingRadius);
     expect(CAMERA_VIEWS.observatory.look[0]).toBe(OBSERVATORY.x);

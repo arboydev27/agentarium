@@ -5,6 +5,7 @@ import { DAWNLIGHT_GLASSHOUSE } from './scenery/dawnlightPlacement';
 import { SOUTHWIND_SHORE } from './scenery/southwindTrailPlacement';
 import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
 import { WINDWARD_MILL } from './scenery/windwardPlacement';
+import { NORTHSTAR_OUTPOST } from './scenery/northstarPlacement';
 import { WOODLAND_HOLLOW } from './scenery/woodlandPlacement';
 
 export type MapPoint = { x: number; z: number };
@@ -40,6 +41,13 @@ export const MAP_LANDMARKS: readonly MapLandmark[] = [
     shortLabel: 'O',
     point: { x: ORCHARD.x, z: ORCHARD.z },
     view: 'orchard',
+  },
+  {
+    id: NORTHSTAR_OUTPOST.id,
+    label: NORTHSTAR_OUTPOST.label,
+    shortLabel: 'N',
+    point: { x: NORTHSTAR_OUTPOST.x, z: NORTHSTAR_OUTPOST.z },
+    view: 'northstar',
   },
   {
     id: 'observatory',
