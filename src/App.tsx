@@ -236,6 +236,14 @@ export default function App() {
   const waiting = agents.filter((a) => attentionFor(a)).length;
   const idle = agents.filter((a) => a.status === 'idle' || a.status === 'completed').length;
   useEffect(() => {
+    const mobile = window.matchMedia('(max-width: 600px)');
+    const onMobileChange = (event: MediaQueryListEvent) => {
+      if (event.matches) setCollapsed(true);
+    };
+    mobile.addEventListener('change', onMobileChange);
+    return () => mobile.removeEventListener('change', onMobileChange);
+  }, []);
+  useEffect(() => {
     if (followAgent || cameraCustomized) return;
     cameraPresetRef.current
       ?.querySelector<HTMLButtonElement>('button.active')
@@ -524,7 +532,7 @@ export default function App() {
             }}
           >
             <AlertCircle size={15} />
-            {waiting} need attention · View all
+            {waiting} need attention{collapsed ? '' : ' · View all'}
           </button>
         )}
         {!collapsed && (
