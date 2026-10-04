@@ -1,0 +1,118 @@
+import { describe, expect, it } from 'vitest';
+import { CAMERA_VIEWS } from './layout';
+import {
+  SCENIC_ENTER_PADDING,
+  SCENIC_EXIT_PADDING,
+  SCENIC_REGIONS,
+  selectScenicRegions,
+  type ScenicRegionId,
+  type ScenicVisibilityInput,
+} from './scenicVisibility';
+
+const away = { x: 250, z: 250 };
+const frame = (
+  focus: { x: number; z: number },
+  visibleGroundRadius = 10,
+): ScenicVisibilityInput => ({
+  mode: 'orthographic',
+  focus,
+  camera: away,
+  visibleGroundRadius,
+});
+const ids = (input: ScenicVisibilityInput, previousIds?: ReadonlySet<ScenicRegionId>) =>
+  selectScenicRegions(input, previousIds).map((region) => region.id);
+const preset = (name: keyof typeof CAMERA_VIEWS) => ({
+  focus: { x: CAMERA_VIEWS[name].look[0], z: CAMERA_VIEWS[name].look[2] },
+  camera: { x: CAMERA_VIEWS[name].pos[0], z: CAMERA_VIEWS[name].pos[2] },
+  visibleGroundRadius: 25,
+});
+
+describe('fixed scenic-region visibility', () => {
+  it('has stable authored identities and keeps every region in Horizon', () => {
+    const expected = [
+      'lookout',
+      'orchard',
+      'observatory',
+      'southwind',
+      'dawnlight',
+      'slate',
+      'ridge',
+    ];
+    expect(SCENIC_REGIONS.map((region) => region.id)).toEqual(expected);
+    const horizon: ScenicVisibilityInput = { ...frame(away), mode: 'horizon' };
+    expect(ids(horizon)).toEqual(expected);
+    expect(ids({ ...frame(away), visibleGroundRadius: Number.NaN })).toEqual(expected);
+    expect(ids({ ...frame(away), visibleGroundRadius: Infinity })).toEqual(expected);
+    const first = selectScenicRegions(frame({ x: 36, z: -70 }));
+    selectScenicRegions(frame(away)); // unmount between views
+    const remounted = selectScenicRegions(frame({ x: 36, z: -70 }));
+    expect(remounted.find((region) => region.id === 'orchard')).toBe(
+      first.find((region) => region.id === 'orchard'),
+    );
+  });
+
+  it('includes each landmark before its bounded orthographic view sees it', () => {
+    for (const [view, region] of [
+      ['lookout', 'lookout'],
+      ['orchard', 'orchard'],
+      ['observatory', 'observatory'],
+      ['mere', 'southwind'],
+      ['dawnlight', 'dawnlight'],
+    ] as const)
+      expect(ids({ mode: 'orthographic', ...preset(view) }), view).toContain(region);
+    expect(ids({ mode: 'orthographic', ...preset('orchard') })).toContain('ridge');
+    expect(ids({ mode: 'orthographic', ...preset('observatory') })).toContain('slate');
+  });
+
+  it('prefetches ahead of the frustum and keeps a selected region through the exit band', () => {
+    const lookout = SCENIC_REGIONS.find((region) => region.id === 'lookout')!;
+    const x = lookout.bounds.maxX;
+    const z = (lookout.bounds.minZ + lookout.bounds.maxZ) / 2;
+    const radius = 10;
+    const selected = frame({ x: x + radius + SCENIC_ENTER_PADDING - 0.1, z }, radius);
+    const justOutside = frame({ x: x + radius + SCENIC_ENTER_PADDING + 0.1, z }, radius);
+    expect(ids(selected)).toContain('lookout');
+    expect(ids(justOutside)).not.toContain('lookout');
+    expect(ids(justOutside, new Set(['lookout']))).toContain('lookout');
+    expect(
+      ids(frame({ x: x + radius + SCENIC_EXIT_PADDING + 0.1, z }, radius), new Set(['lookout'])),
+    ).not.toContain('lookout');
+    // Any landmark already inside the measured viewport must remain selected.
+    expect(ids(frame({ x: x + radius - 0.1, z }, radius))).toContain('lookout');
+    expect(
+      ids({
+        ...frame(away, 0),
+        camera: {
+          x: (lookout.bounds.minX + lookout.bounds.maxX) / 2,
+          z,
+        },
+      }),
+    ).toContain('lookout');
+  });
+
+  it('loads a distant preset immediately and survives rapid target changes during travel', () => {
+    const orchard = preset('orchard');
+    const dawnlight = preset('dawnlight');
+    const observatory = preset('observatory');
+    const movingToOrchard: ScenicVisibilityInput = {
+      mode: 'orthographic',
+      ...preset('overview'),
+      target: orchard,
+    };
+    expect(ids(movingToOrchard)).toContain('orchard');
+    const nearOrchard: ScenicVisibilityInput = {
+      mode: 'orthographic',
+      ...orchard,
+      target: dawnlight,
+    };
+    const mounted = new Set(ids(nearOrchard));
+    expect(mounted).toContain('orchard');
+    expect(mounted).toContain('dawnlight');
+    const switched: ScenicVisibilityInput = {
+      ...nearOrchard,
+      target: observatory,
+    };
+    expect(ids(switched, mounted)).toEqual(expect.arrayContaining(['orchard', 'observatory']));
+    expect(ids({ mode: 'orthographic', ...observatory })).toContain('observatory');
+  });
+});
