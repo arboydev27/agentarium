@@ -1,10 +1,8 @@
 import { LOOKOUT, OBSERVATORY, ORCHARD } from './layout';
 import { DAWNLIGHT_GLASSHOUSE } from './scenery/dawnlightPlacement';
-import { SOUTHWIND_MERE } from './scenery/merePlacement';
 import { SLATE_REACH } from './scenery/slatePlacement';
 
-export type ScenicRegionId =
-  'lookout' | 'orchard' | 'observatory' | 'southwind' | 'dawnlight' | 'slate' | 'ridge';
+export type ScenicRegionId = 'lookout' | 'orchard' | 'observatory' | 'dawnlight' | 'slate';
 export type ScenicPoint = Readonly<{ x: number; z: number }>;
 export type ScenicBounds = Readonly<{
   minX: number;
@@ -38,7 +36,6 @@ export const SCENIC_REGIONS: readonly ScenicRegion[] = Object.freeze([
   region('lookout', box(LOOKOUT.x, LOOKOUT.z, LOOKOUT.focusRadius + 4)),
   region('orchard', box(ORCHARD.x + 3, ORCHARD.z - 3, ORCHARD.focusRadius + 7)),
   region('observatory', box(OBSERVATORY.x, OBSERVATORY.z, OBSERVATORY.focusRadius + 7)),
-  region('southwind', box(SOUTHWIND_MERE.x, SOUTHWIND_MERE.z, SOUTHWIND_MERE.shoreRadius + 5)),
   region(
     'dawnlight',
     box(
@@ -48,8 +45,6 @@ export const SCENIC_REGIONS: readonly ScenicRegion[] = Object.freeze([
     ),
   ),
   region('slate', box(SLATE_REACH.x, SLATE_REACH.z, SLATE_REACH.radius + 7)),
-  // FarRidge spans x=-102..102 and z=-109..-84; retain vertical-art margin.
-  region('ridge', Object.freeze({ minX: -106, maxX: 106, minZ: -113, maxZ: -79 })),
 ]);
 
 export const SCENIC_ENTER_PADDING = 18;

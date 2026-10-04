@@ -571,11 +571,18 @@ function ForecourtGarden() {
   );
 }
 
+export function DawnlightGround() {
+  return (
+    <group name="dawnlight-walkable-ground">
+      <EastTrail />
+      <Forecourt />
+    </group>
+  );
+}
+
 export function DawnlightGlasshouse() {
   return (
     <group name="dawnlight-glasshouse-district">
-      <EastTrail />
-      <Forecourt />
       <ConservatoryFrame />
       <PlantBeds />
       <ForecourtGarden />

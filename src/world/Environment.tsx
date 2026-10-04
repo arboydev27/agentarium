@@ -1,10 +1,17 @@
 import { BasinWater, DriftingLeaves, WarmGlow } from './Ambience';
-import { memo, useEffect, useMemo, useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useWorld } from '../state';
 import { Box, Cylinder, Sphere, Sign, Tree, Pot, Lamp } from './primitives';
-import { LOOKOUT, ZONES, type ZoneName } from './layout';
+import { CAMERA_VIEWS, LOOKOUT, ZONES, type ZoneName } from './layout';
+import {
+  SCENIC_REGIONS,
+  selectScenicRegions,
+  type ScenicFrame,
+  type ScenicPoint,
+  type ScenicRegionId,
+} from './scenicVisibility';
 import { DetailLayer } from './DetailLayer';
 import { useSurfaceTextures } from './surfaces';
 import {
@@ -15,15 +22,15 @@ import {
   walkwayHeight,
 } from './terrain';
 import { MeadowScenery } from './scenery/Meadow';
-import { OrchardCommons } from './scenery/Orchard';
+import { OrchardCommons, OrchardGround } from './scenery/Orchard';
 import { clearOfOrchard, clearOfOrchardView } from './scenery/orchardPlacement';
 import { clearOfObservatory, clearOfObservatoryView } from './scenery/observatoryPlacement';
 import { FarRidge } from './scenery/FarRidge';
-import { CedarObservatory } from './scenery/Observatory';
+import { CedarObservatory, ObservatoryGround } from './scenery/Observatory';
 import { SlateReach } from './scenery/SlateReach';
 import { clearOfSlateReach } from './scenery/slatePlacement';
 import { SouthwindMere } from './scenery/SouthwindMere';
-import { DawnlightGlasshouse } from './scenery/DawnlightGlasshouse';
+import { DawnlightGlasshouse, DawnlightGround } from './scenery/DawnlightGlasshouse';
 import { clearOfDawnlightTrail } from './scenery/dawnlightPlacement';
 import { clearOfSouthwindMere } from './scenery/merePlacement';
 import { SouthwindTrail } from './scenery/SouthwindTrail';
@@ -128,15 +135,23 @@ function LookoutCanopy() {
   );
 }
 
-function MeadowLookout() {
+function MeadowLookoutGround() {
   const ground = terrainHeight(LOOKOUT.x, LOOKOUT.z);
   return (
-    <group name="meadow-lookout" position={[LOOKOUT.x, ground, LOOKOUT.z]}>
+    <group name="meadow-lookout-pad" position={[LOOKOUT.x, ground, LOOKOUT.z]}>
       <Cylinder pos={[0, 0, 0]} r={LOOKOUT.clearingRadius} h={0.2} color="#bfb391" />
       <mesh position={[0, 0.112, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[2.9, 3.12, 32]} />
         <meshStandardMaterial color="#d8cca7" roughness={1} side={THREE.DoubleSide} />
       </mesh>
+    </group>
+  );
+}
+
+function MeadowLookout() {
+  const ground = terrainHeight(LOOKOUT.x, LOOKOUT.z);
+  return (
+    <group name="meadow-lookout" position={[LOOKOUT.x, ground, LOOKOUT.z]}>
       {[-2.35, 2.35].flatMap((x) =>
         [-2.2, 2.2].map((z) => (
           <group key={`${x},${z}`}>
@@ -178,6 +193,131 @@ function MeadowLookout() {
           />
         </group>
       ))}
+    </group>
+  );
+}
+
+type GroundScratch = { near: THREE.Vector3; far: THREE.Vector3 };
+
+function groundIntersection(
+  camera: THREE.OrthographicCamera,
+  ndcX: number,
+  ndcY: number,
+  height: number,
+  scratch: GroundScratch,
+): ScenicPoint | null {
+  scratch.near.set(ndcX, ndcY, -1).unproject(camera);
+  scratch.far.set(ndcX, ndcY, 1).unproject(camera);
+  const dy = scratch.far.y - scratch.near.y;
+  if (Math.abs(dy) < 0.025) return null;
+  const t = (height - scratch.near.y) / dy;
+  if (t < 0 || t > 1) return null;
+  return {
+    x: THREE.MathUtils.lerp(scratch.near.x, scratch.far.x, t),
+    z: THREE.MathUtils.lerp(scratch.near.z, scratch.far.z, t),
+  };
+}
+
+function scenicFrame(camera: THREE.OrthographicCamera, scratch: GroundScratch): ScenicFrame {
+  camera.updateMatrixWorld();
+  const focus = groundIntersection(camera, 0, 0, 0, scratch);
+  const cameraPoint = { x: camera.position.x, z: camera.position.z };
+  if (!focus) return { focus: cameraPoint, camera: cameraPoint, visibleGroundRadius: Infinity };
+  let radius = 0;
+  for (const ndcX of [-1, 1]) {
+    for (const ndcY of [-1, 1]) {
+      const ground = groundIntersection(camera, ndcX, ndcY, 0, scratch);
+      if (!ground) return { focus, camera: cameraPoint, visibleGroundRadius: Infinity };
+      radius = Math.max(radius, Math.hypot(ground.x - focus.x, ground.z - focus.z));
+      // Tall landmarks can enter the view before their ground footprint does.
+      const elevated = groundIntersection(camera, ndcX, ndcY, 12, scratch);
+      if (elevated)
+        radius = Math.max(radius, Math.hypot(elevated.x - focus.x, elevated.z - focus.z));
+    }
+  }
+  return { focus, camera: cameraPoint, visibleGroundRadius: radius + 12 };
+}
+
+function ScenicMounts() {
+  const view = useWorld((state) => state.camera);
+  const customized = useWorld((state) => state.cameraCustomized);
+  const cameraJump = useWorld((state) => state.cameraJump);
+  const quality = useWorld((state) => state.quality);
+  const size = useThree((state) => state.size);
+  const allIds = useMemo(() => new Set(SCENIC_REGIONS.map((region) => region.id)), []);
+  const [visible, setVisible] = useState<ReadonlySet<ScenicRegionId>>(allIds);
+  const selected = useRef<ReadonlySet<ScenicRegionId>>(allIds);
+  const [completedJump, setCompletedJump] = useState<number | null>(null);
+  const elapsed = useRef(0.2);
+  const lastRadius = useRef(60);
+  const scratch = useMemo(() => ({ near: new THREE.Vector3(), far: new THREE.Vector3() }), []);
+  const presetCamera = useMemo(() => new THREE.OrthographicCamera(), []);
+  const presetTarget = useMemo<ScenicFrame | undefined>(() => {
+    if (view === 'horizon' || customized || !size.width || !size.height) return undefined;
+    const preset = CAMERA_VIEWS[view];
+    presetCamera.left = -size.width / 2;
+    presetCamera.right = size.width / 2;
+    presetCamera.top = size.height / 2;
+    presetCamera.bottom = -size.height / 2;
+    presetCamera.near = 0.1;
+    presetCamera.far = 360;
+    presetCamera.zoom = Math.min(size.width / preset.span[0], size.height / preset.span[1]);
+    presetCamera.position.fromArray(preset.pos);
+    presetCamera.lookAt(new THREE.Vector3(...preset.look));
+    presetCamera.updateProjectionMatrix();
+    return scenicFrame(presetCamera, scratch);
+  }, [view, customized, size.width, size.height, presetCamera, scratch]);
+  const jumpActive = Boolean(customized && cameraJump && cameraJump.sequence !== completedJump);
+  const jumpTarget: ScenicFrame | undefined =
+    jumpActive && cameraJump
+      ? {
+          focus: { x: cameraJump.x, z: cameraJump.z },
+          camera: { x: cameraJump.x, z: cameraJump.z },
+          visibleGroundRadius: Math.max(45, lastRadius.current),
+        }
+      : undefined;
+  const target = jumpTarget ?? presetTarget;
+  // This union renders the destination in the same React update that requests
+  // a preset or map jump, before the camera begins its animated travel.
+  const prefetched = target
+    ? selectScenicRegions({ mode: 'orthographic', ...target }).map((region) => region.id)
+    : [];
+  useFrame(({ camera }, delta) => {
+    elapsed.current += delta;
+    if (elapsed.current < 0.2) return;
+    elapsed.current = 0;
+    const next =
+      view === 'horizon' || !(camera instanceof THREE.OrthographicCamera)
+        ? [...SCENIC_REGIONS]
+        : (() => {
+            const current = scenicFrame(camera, scratch);
+            if (Number.isFinite(current.visibleGroundRadius))
+              lastRadius.current = current.visibleGroundRadius;
+            if (
+              jumpActive &&
+              cameraJump &&
+              Math.hypot(current.focus.x - cameraJump.x, current.focus.z - cameraJump.z) < 6
+            )
+              setCompletedJump(cameraJump.sequence);
+            return selectScenicRegions(
+              { mode: 'orthographic', ...current, target },
+              selected.current,
+            );
+          })();
+    const ids = new Set(next.map((region) => region.id));
+    if (ids.size === selected.current.size && [...ids].every((id) => selected.current.has(id)))
+      return;
+    selected.current = ids;
+    setVisible(ids);
+  });
+  const active = view === 'horizon' ? allIds : new Set([...visible, ...prefetched]);
+  return (
+    <group name="spatial-scenic-landmarks">
+      {active.has('lookout') && <MeadowLookout key={`lookout-${quality}`} />}
+      {active.has('orchard') && <OrchardCommons key={`orchard-${quality}`} />}
+      {active.has('observatory') && <CedarObservatory key={`observatory-${quality}`} />}
+      {active.has('dawnlight') && <DawnlightGlasshouse key={`dawnlight-${quality}`} />}
+      {active.has('slate') && <SlateReach key={`slate-${quality}`} />}
     </group>
   );
 }
@@ -226,16 +366,16 @@ function Landscape() {
       <LandscapePath />
       <TrailTurnouts />
       <LookoutBranch />
-      <MeadowLookout />
-      <LandscapeGroves />
-      <MeadowScenery />
-      <OrchardCommons />
-      <CedarObservatory />
-      <SlateReach />
+      <MeadowLookoutGround />
+      <OrchardGround />
+      <ObservatoryGround />
       <SouthwindTrail />
       <SouthwindMere />
-      <DawnlightGlasshouse />
+      <DawnlightGround />
       <FarRidge />
+      <LandscapeGroves />
+      <MeadowScenery />
+      <ScenicMounts />
     </group>
   );
 }

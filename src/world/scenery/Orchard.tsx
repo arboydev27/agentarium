@@ -163,18 +163,19 @@ function OrchardTrees() {
         }
       }
     });
-    for (const mesh of [
+    const instances = [
       mulch.current,
       trunks.current,
       crowns.current,
       lobes.current,
       fruit.current,
-    ]) {
-      if (!mesh) continue;
+    ].filter((mesh): mesh is THREE.InstancedMesh => mesh !== null);
+    for (const mesh of instances) {
       mesh.instanceMatrix.needsUpdate = true;
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
       mesh.computeBoundingSphere();
     }
+    return () => instances.forEach((mesh) => mesh.dispose());
   }, [sites, quality]);
   return (
     <group name="orchard-tree-rows">
@@ -228,6 +229,10 @@ function CommonsPavilion() {
     );
     posts.current.instanceMatrix.needsUpdate = true;
     posts.current.computeBoundingSphere();
+    const mesh = posts.current;
+    return () => {
+      mesh.dispose();
+    };
   }, []);
   return (
     <group name="harvest-pavilion" position={[x, terrainHeight(x, z), z]}>
@@ -305,11 +310,13 @@ function HarvestDetails() {
       crates.current!.setMatrixAt(i, matrix);
       crates.current!.setColorAt(i, woods[i % woods.length]);
     });
-    for (const mesh of [plants.current, crates.current]) {
+    const instances = [plants.current, crates.current];
+    for (const mesh of instances) {
       mesh.instanceMatrix.needsUpdate = true;
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
       mesh.computeBoundingSphere();
     }
+    return () => instances.forEach((mesh) => mesh.dispose());
   }, [plantSites]);
   return (
     <group name="commons-harvest-planting">
@@ -338,11 +345,18 @@ function ArrivalCircle() {
   );
 }
 
+export function OrchardGround() {
+  return (
+    <group name="orchard-walkable-ground">
+      <OrchardPath />
+      <ArrivalCircle />
+    </group>
+  );
+}
+
 export function OrchardCommons() {
   return (
     <group name="orchard-commons">
-      <OrchardPath />
-      <ArrivalCircle />
       <OrchardTrees />
       <CommonsPavilion />
       <HarvestDetails />

@@ -33,6 +33,10 @@ function SlateFins() {
     fins.current.instanceMatrix.needsUpdate = true;
     if (fins.current.instanceColor) fins.current.instanceColor.needsUpdate = true;
     fins.current.computeBoundingSphere();
+    const mesh = fins.current;
+    return () => {
+      mesh.dispose();
+    };
   }, []);
   return (
     <instancedMesh ref={fins} args={[undefined, undefined, FINS.length]} castShadow>
@@ -94,6 +98,10 @@ function Scree() {
     stones.current.instanceMatrix.needsUpdate = true;
     if (stones.current.instanceColor) stones.current.instanceColor.needsUpdate = true;
     stones.current.computeBoundingSphere();
+    const mesh = stones.current;
+    return () => {
+      mesh.dispose();
+    };
   }, [sites]);
   return (
     <instancedMesh ref={stones} args={[undefined, undefined, sites.length]}>

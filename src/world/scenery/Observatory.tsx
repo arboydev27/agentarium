@@ -99,11 +99,13 @@ function CedarFringe() {
         boughs.current!.setColorAt(index * 2 + tier, foliage[(index + tier) % foliage.length]);
       }
     });
-    for (const mesh of [trunks.current, boughs.current]) {
+    const instances = [trunks.current, boughs.current];
+    for (const mesh of instances) {
       mesh.instanceMatrix.needsUpdate = true;
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
       mesh.computeBoundingSphere();
     }
+    return () => instances.forEach((mesh) => mesh.dispose());
   }, [sites]);
   return (
     <group name="cedar-observatory-fringe">
@@ -153,6 +155,19 @@ function BrassTelescope() {
   );
 }
 
+function ObservatoryPad() {
+  const ground = terrainHeight(OBSERVATORY.x, OBSERVATORY.z);
+  return (
+    <group name="cedar-observatory-pad" position={[OBSERVATORY.x, ground, OBSERVATORY.z]}>
+      <Cylinder pos={[0, 0.025, 0]} r={3.25} h={0.16} color="#aeb3a1" />
+      <mesh position={[0, 0.11, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <ringGeometry args={[2.85, 3.16, 32]} />
+        <meshStandardMaterial color="#ddd7bd" roughness={1} side={THREE.DoubleSide} />
+      </mesh>
+    </group>
+  );
+}
+
 function ObservatoryTerrace() {
   const ground = terrainHeight(OBSERVATORY.x, OBSERVATORY.z);
   const night = useWorld((state) => state.night);
@@ -165,11 +180,6 @@ function ObservatoryTerrace() {
   ];
   return (
     <group name="cedar-observatory-arrival" position={[OBSERVATORY.x, ground, OBSERVATORY.z]}>
-      <Cylinder pos={[0, 0.025, 0]} r={3.25} h={0.16} color="#aeb3a1" />
-      <mesh position={[0, 0.11, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <ringGeometry args={[2.85, 3.16, 32]} />
-        <meshStandardMaterial color="#ddd7bd" roughness={1} side={THREE.DoubleSide} />
-      </mesh>
       <group position={[-1.25, 0, -1.55]}>
         <mesh position={[0, 1.75, 0]} castShadow>
           <torusGeometry args={[2.05, 0.1, 6, 28, Math.PI]} />
@@ -204,10 +214,18 @@ function ObservatoryTerrace() {
   );
 }
 
+export function ObservatoryGround() {
+  return (
+    <group name="cedar-observatory-walkable-ground">
+      <ObservatoryPath />
+      <ObservatoryPad />
+    </group>
+  );
+}
+
 export function CedarObservatory() {
   return (
     <group name="cedar-observatory">
-      <ObservatoryPath />
       <ObservatoryTerrace />
       <CedarFringe />
     </group>

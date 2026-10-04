@@ -29,15 +29,7 @@ const preset = (name: keyof typeof CAMERA_VIEWS) => ({
 
 describe('fixed scenic-region visibility', () => {
   it('has stable authored identities and keeps every region in Horizon', () => {
-    const expected = [
-      'lookout',
-      'orchard',
-      'observatory',
-      'southwind',
-      'dawnlight',
-      'slate',
-      'ridge',
-    ];
+    const expected = ['lookout', 'orchard', 'observatory', 'dawnlight', 'slate'];
     expect(SCENIC_REGIONS.map((region) => region.id)).toEqual(expected);
     const horizon: ScenicVisibilityInput = { ...frame(away), mode: 'horizon' };
     expect(ids(horizon)).toEqual(expected);
@@ -56,11 +48,9 @@ describe('fixed scenic-region visibility', () => {
       ['lookout', 'lookout'],
       ['orchard', 'orchard'],
       ['observatory', 'observatory'],
-      ['mere', 'southwind'],
       ['dawnlight', 'dawnlight'],
     ] as const)
       expect(ids({ mode: 'orthographic', ...preset(view) }), view).toContain(region);
-    expect(ids({ mode: 'orthographic', ...preset('orchard') })).toContain('ridge');
     expect(ids({ mode: 'orthographic', ...preset('observatory') })).toContain('slate');
   });
 
