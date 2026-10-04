@@ -21,6 +21,11 @@ import {
 } from './scenery/merePlacement';
 import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
 import { SOUTHWIND_SHORE, SOUTHWIND_TRAIL_XZ } from './scenery/southwindTrailPlacement';
+import {
+  DAWNLIGHT_GLASSHOUSE,
+  EAST_TRAIL_XZ,
+  clearOfDawnlightTrail,
+} from './scenery/dawnlightPlacement';
 const options = { reduced: false, playing: true, leaving: false, now: 10000, outings: true };
 const agent = (seat = 0, status: ReturnType<typeof initialAgents>[number]['status'] = 'idle') => ({
   ...initialAgents()[seat],
@@ -32,6 +37,89 @@ function advance(motion: ResidentJourney, a = agent(), seconds = 1, overrides = 
 }
 
 describe('navigation graph', () => {
+  it('connects Dawnlight Glasshouse by a distinct reversible east trail with clear terrain chords', () => {
+    expect(EAST_TRAIL_XZ[0]).toEqual([NODES.promenade[0], NODES.promenade[2]]);
+    expect(EAST_TRAIL_XZ.at(-1)).toEqual([DAWNLIGHT_GLASSHOUSE.x, DAWNLIGHT_GLASSHOUSE.z]);
+    expect(clearOfDawnlightTrail(DAWNLIGHT_GLASSHOUSE.centerX, DAWNLIGHT_GLASSHOUSE.centerZ)).toBe(
+      false,
+    );
+    expect(clearOfDawnlightTrail(26, 2)).toBe(true);
+    expect(DESTINATIONS.some((destination) => destination.id === DAWNLIGHT_GLASSHOUSE.id)).toBe(
+      true,
+    );
+    expect(
+      EDGES.filter(([a, b]) => a === DAWNLIGHT_GLASSHOUSE.id || b === DAWNLIGHT_GLASSHOUSE.id),
+    ).toHaveLength(1);
+    for (let seat = 0; seat < 8; seat++) {
+      const outward = planRoute(`home-${seat}`, DAWNLIGHT_GLASSHOUSE.id);
+      expect(outward.ids).toContain('promenade');
+      expect(outward.ids.at(-1)).toBe(DAWNLIGHT_GLASSHOUSE.id);
+      expect(planRoute(DAWNLIGHT_GLASSHOUSE.id, `home-${seat}`).points).toEqual(
+        [...outward.points].reverse(),
+      );
+    }
+    for (const [start, end] of EDGES) {
+      if (!start.startsWith('dawnlight:') && !end.startsWith('dawnlight:')) continue;
+      const from = NODES[start],
+        to = NODES[end];
+      const horizontal = Math.hypot(to[0] - from[0], to[2] - from[2]);
+      expect(horizontal).toBeLessThan(2.2);
+      expect(Math.abs(to[1] - from[1]) / horizontal, `${start} → ${end} grade`).toBeLessThan(0.35);
+      for (let step = 0; step <= 20; step++) {
+        const t = step / 20;
+        const x = from[0] + (to[0] - from[0]) * t;
+        const y = from[1] + (to[1] - from[1]) * t;
+        const z = from[2] + (to[2] - from[2]) * t;
+        const clearance = y - renderedTerrainHeight(x, z);
+        expect(clearance, `${start} → ${end} at ${t}`).toBeGreaterThan(0.015);
+        expect(clearance, `${start} → ${end} at ${t}`).toBeLessThan(0.24);
+      }
+    }
+    const distanceToEdge = (
+      x: number,
+      z: number,
+      from: (typeof NODES)[string],
+      to: (typeof NODES)[string],
+    ) => {
+      const dx = to[0] - from[0],
+        dz = to[2] - from[2];
+      const length = dx * dx + dz * dz;
+      const t = length
+        ? Math.max(0, Math.min(1, ((x - from[0]) * dx + (z - from[2]) * dz) / length))
+        : 0;
+      return Math.hypot(x - from[0] - t * dx, z - from[2] - t * dz);
+    };
+    for (const [start, end] of EDGES) {
+      if (start.startsWith('dawnlight:') || end.startsWith('dawnlight:') || end === 'promenade')
+        continue;
+      for (let index = 1; index < EAST_TRAIL_XZ.length; index++) {
+        const from = EAST_TRAIL_XZ[index - 1];
+        const to = EAST_TRAIL_XZ[index];
+        for (let sample = 1; sample <= 4; sample++) {
+          const t = sample / 4;
+          const x = from[0] + (to[0] - from[0]) * t;
+          const z = from[1] + (to[1] - from[1]) * t;
+          expect(
+            distanceToEdge(x, z, NODES[start], NODES[end]),
+            `${start} → ${end} near Dawnlight`,
+          ).toBeGreaterThan(0.8);
+        }
+      }
+    }
+  });
+  it('releases the common hub before Dawnlight and meadow trips run independently', () => {
+    const traffic = new NavigationTraffic();
+    const east = planRoute('home-0', DAWNLIGHT_GLASSHOUSE.id);
+    const meadow = planRoute('home-1', 'meadow:lookout');
+    expect(traffic.acquire('east', east.ids)).toBe(true);
+    expect(traffic.acquire('meadow', meadow.ids)).toBe(false);
+    traffic.releasePassed('east', east.lengths[east.ids.indexOf('dawnlight:trail-2')] + 1);
+    expect(traffic.acquire('meadow', meadow.ids)).toBe(true);
+    expect(traffic.acquire('east', east.ids, true)).toBe(false);
+    expect(traffic.acquire('third', planRoute('home-2', DAWNLIGHT_GLASSHOUSE.id).ids)).toBe(false);
+    traffic.release('meadow');
+    expect(traffic.acquire('east', east.ids, true)).toBe(true);
+  });
   it('connects both trail turnouts as clear terminal branches for every seat', () => {
     for (const turnout of TRAIL_TURNOUTS) {
       const approach = `${turnout.id}:approach`;
@@ -206,9 +294,14 @@ describe('navigation graph', () => {
             route.ids[index].startsWith('meadow:') ||
             route.ids[index].startsWith('orchard:') ||
             route.ids[index].startsWith('observatory:') ||
-            route.ids[index].startsWith('southwind:')
+            route.ids[index].startsWith('southwind:') ||
+            route.ids[index].startsWith('dawnlight:')
           ) {
-            if (!route.ids[index].startsWith('southwind:')) expect(z).toBeLessThan(-10);
+            if (
+              !route.ids[index].startsWith('southwind:') &&
+              !route.ids[index].startsWith('dawnlight:')
+            )
+              expect(z).toBeLessThan(-10);
             expect(y - renderedTerrainHeight(x, z)).toBeGreaterThanOrEqual(0.04);
             expect(y - renderedTerrainHeight(x, z)).toBeLessThanOrEqual(0.22);
             continue;
@@ -443,6 +536,39 @@ describe('navigation graph', () => {
 });
 
 describe('resident journeys', () => {
+  it('visits Dawnlight and retraces the eastern route when work resumes', () => {
+    const traffic = new NavigationTraffic();
+    const motion = new ResidentJourney(2, 'demo-2', traffic);
+    for (const destination of DESTINATIONS)
+      if (destination.id !== DAWNLIGHT_GLASSHOUSE.id)
+        expect(traffic.reserveDestination('scene', destination.id)).toBe(true);
+    let arrived = false;
+    let previous = motion.position;
+    for (let frame = 0; frame < 180 * 60; frame++) {
+      motion.update(agent(2), 1 / 60, options);
+      const next = motion.position;
+      expect(Math.hypot(...next.map((value, axis) => value - previous[axis]))).toBeLessThan(0.06);
+      previous = next;
+      if (motion.activity === `Resting at ${DAWNLIGHT_GLASSHOUSE.label}`) {
+        arrived = true;
+        break;
+      }
+    }
+    expect(arrived).toBe(true);
+    expect(motion.position[0]).toBeCloseTo(DAWNLIGHT_GLASSHOUSE.x);
+    expect(motion.position[2]).toBeCloseTo(DAWNLIGHT_GLASSHOUSE.z);
+    const returning = agent(2, 'working');
+    for (let frame = 0; frame < 180 * 60; frame++) {
+      motion.update(returning, 1 / 60, options);
+      const next = motion.position;
+      expect(Math.hypot(...next.map((value, axis) => value - previous[axis]))).toBeLessThan(0.06);
+      expect(motion.opacity).toBe(1);
+      previous = next;
+      if (motion.activity === 'At desk') break;
+    }
+    expect(motion.activity).toBe('At desk');
+    expect(traffic.reserveDestination('next', DAWNLIGHT_GLASSHOUSE.id)).toBe(true);
+  });
   it('walks beyond the home zone, rests at a destination, and returns continuously for work', () => {
     const motion = new ResidentJourney(0, 'demo-2', new NavigationTraffic());
     let visited = false,

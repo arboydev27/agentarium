@@ -3,6 +3,7 @@ import { LOOKOUT, OBSERVATORY, ORCHARD } from './layout';
 import { meadowTrailPoint, terrainHeight, walkwayHeight } from './terrain';
 import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
 import { SOUTHWIND_SHORE, SOUTHWIND_TRAIL_XZ } from './scenery/southwindTrailPlacement';
+import { DAWNLIGHT_GLASSHOUSE, EAST_TRAIL_XZ } from './scenery/dawnlightPlacement';
 
 export type Destination = {
   id: string;
@@ -61,6 +62,13 @@ export const DESTINATIONS: Destination[] = [
     label: 'cedar observatory',
     node: 'observatory:cedar',
     facing: -0.7,
+    clip: 'GardenLook',
+  },
+  {
+    id: DAWNLIGHT_GLASSHOUSE.id,
+    label: DAWNLIGHT_GLASSHOUSE.label,
+    node: DAWNLIGHT_GLASSHOUSE.id,
+    facing: -Math.PI / 2,
     clip: 'GardenLook',
   },
   ...TRAIL_TURNOUTS.map<Destination>((turnout) => ({
@@ -129,6 +137,12 @@ for (let index = 1; index < SOUTHWIND_TRAIL_XZ.length; index++) {
     index === SOUTHWIND_TRAIL_XZ.length - 1 ? SOUTHWIND_SHORE.id : `southwind:trail-${index}`;
   NODES[id] = [x, walkwayHeight(x, z, index === SOUTHWIND_TRAIL_XZ.length - 1 ? 0.1 : 0.105), z];
 }
+for (let index = 1; index < EAST_TRAIL_XZ.length; index++) {
+  const [x, z] = EAST_TRAIL_XZ[index];
+  const id =
+    index === EAST_TRAIL_XZ.length - 1 ? DAWNLIGHT_GLASSHOUSE.id : `dawnlight:trail-${index}`;
+  NODES[id] = [x, walkwayHeight(x, z, 0.105), z];
+}
 const orchardOrigin = meadowTrailPoint(22);
 const orchardBranch: [number, number][] = [
   [(orchardOrigin[0] + 10) / 2, (orchardOrigin[2] - 64) / 2],
@@ -184,6 +198,12 @@ const chains = [
   ],
   ['court-aisle', 'bench-approach', 'bench'],
   ['center', 'promenade'],
+  [
+    'promenade',
+    ...EAST_TRAIL_XZ.slice(1).map((_, index) =>
+      index === EAST_TRAIL_XZ.length - 2 ? DAWNLIGHT_GLASSHOUSE.id : `dawnlight:trail-${index + 1}`,
+    ),
+  ],
   ['center', ...Array.from({ length: 23 }, (_, index) => `meadow:trail-${index}`)],
   ['meadow:trail-12', 'meadow:branch-1', 'meadow:branch-2', 'meadow:lookout'],
   [
