@@ -10,17 +10,22 @@ import {
   Trees,
   Waves,
   X,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react';
 import { useWorld } from './state';
 import type { WorldView } from './world/layout';
 import {
   activateMap,
+  detailMapBounds,
   getMapSnapshot,
   groupNearbyMapResidents,
   MAP_LANDMARKS,
   mapToWorld,
+  pointInMapBounds,
   subscribeMapSnapshot,
   worldToMap,
+  type MapBounds,
   type MapPoint,
 } from './world/mapSnapshot';
 import { CAMERA_PAN_BOUNDS } from './world/cameraPan';
@@ -38,14 +43,22 @@ const LANDMARKS = [
 function LiveMapLayer({
   onFind,
   snapshot,
+  viewport,
+  zoomed,
 }: {
   onFind: (id: string) => void;
   snapshot: ReturnType<typeof getMapSnapshot>;
+  viewport: MapBounds;
+  zoomed: boolean;
 }) {
   const selected = useWorld((state) => state.selected);
   const [expanded, setExpanded] = useState<string | null>(null);
-  const camera = snapshot.camera ? worldToMap(snapshot.camera) : null;
-  const groups = groupNearbyMapResidents(snapshot.residents);
+  const camera =
+    snapshot.camera && pointInMapBounds(snapshot.camera, viewport)
+      ? worldToMap(snapshot.camera, viewport)
+      : null;
+  const inFrame = snapshot.residents.filter((resident) => pointInMapBounds(resident, viewport));
+  const groups = groupNearbyMapResidents(inFrame, viewport);
   const expandedGroup = groups.find((group) => group.key === expanded);
   return (
     <>
@@ -60,7 +73,7 @@ function LiveMapLayer({
         </span>
       )}
       {groups.map((group) => {
-        const marker = worldToMap(group.point);
+        const marker = worldToMap(group.point, viewport);
         const alone = group.residents.length === 1;
         const isSelected = group.residents.some((resident) => resident.id === selected);
         return (
@@ -109,7 +122,9 @@ function LiveMapLayer({
       )}
       <span className="landmark-map-count">
         {snapshot.camera
-          ? `${snapshot.residents.length} resident${snapshot.residents.length === 1 ? '' : 's'} in the world`
+          ? zoomed
+            ? `${inFrame.length} of ${snapshot.residents.length} world residents on map`
+            : `${snapshot.residents.length} resident${snapshot.residents.length === 1 ? '' : 's'} in the world`
           : 'Locating residents…'}
       </span>
     </>
@@ -139,13 +154,17 @@ export function LandmarkMap({
   const snapshot = useSyncExternalStore(subscribeMapSnapshot, getMapSnapshot, getMapSnapshot);
   const [scout, setScout] = useState<MapPoint | null>(null);
   const [scoutSelected, setScoutSelected] = useState(false);
+  const [zoomed, setZoomed] = useState(false);
+  const [detailCenter, setDetailCenter] = useState<MapPoint>({ x: 0, z: -5 });
+  const viewport = zoomed ? detailMapBounds(detailCenter) : CAMERA_PAN_BOUNDS;
   const scoutInitialized = useRef(false);
 
   useEffect(() => {
     if (!open || !snapshot.camera || scoutInitialized.current) return;
     scoutInitialized.current = true;
     setScout(snapshot.camera);
-  }, [open, snapshot]);
+    if (zoomed) setDetailCenter(snapshot.camera);
+  }, [open, snapshot, zoomed]);
 
   useEffect(() => {
     if (!open) return;
@@ -198,6 +217,7 @@ export function LandmarkMap({
           else {
             onOpen?.();
             activateMap(true);
+            if (zoomed) setDetailCenter(snapshot.camera ?? { x: 0, z: -5 });
             setOpen(true);
           }
         }}
@@ -211,16 +231,42 @@ export function LandmarkMap({
           <header>
             <div>
               <strong>Explore the world</strong>
-              <small>Live positions · illustrated terrain</small>
+              <small>
+                {zoomed ? '2× detail · live positions' : 'Travel area · live positions'}
+              </small>
             </div>
-            <button className="landmark-close" aria-label="Close landmark map" onClick={close}>
-              <X size={16} aria-hidden="true" />
-            </button>
+            <div className="landmark-header-actions">
+              <button
+                className="landmark-zoom"
+                aria-label={
+                  zoomed ? 'Show travel area map' : 'Zoom map 2× around camera or selected point'
+                }
+                aria-pressed={zoomed}
+                title={zoomed ? 'Show travel area map' : 'Zoom to camera or selected point'}
+                onClick={() => {
+                  if (!zoomed)
+                    setDetailCenter(
+                      scoutSelected && scout ? scout : (snapshot.camera ?? { x: 0, z: -5 }),
+                    );
+                  setZoomed(!zoomed);
+                }}
+              >
+                {zoomed ? (
+                  <ZoomOut size={14} aria-hidden="true" />
+                ) : (
+                  <ZoomIn size={14} aria-hidden="true" />
+                )}
+                <span>{zoomed ? 'Full' : 'Detail'}</span>
+              </button>
+              <button className="landmark-close" aria-label="Close landmark map" onClick={close}>
+                <X size={16} aria-hidden="true" />
+              </button>
+            </div>
           </header>
           <div
-            className="landmark-map-art"
+            className={'landmark-map-art' + (zoomed ? ' detail' : '')}
             role="group"
-            aria-label="World locator and camera scout. North is up. Named place pins use world coordinates; resident markers show only the eight visible world seats."
+            aria-label={`${zoomed ? 'Two-times detail' : 'Travel area'} locator and camera scout. North is up. Named place pins use world coordinates; resident markers show only the eight visible world seats.`}
           >
             <svg
               viewBox="0 0 280 170"
@@ -236,22 +282,25 @@ export function LandmarkMap({
                 className="landmark-contour"
                 d="M-6 73C35 57 66 67 100 54s61-12 87 2 63 9 102-8M-8 94c35-13 70-17 104-7s60-2 92-14 65-7 100 4M-9 118c42-11 79-3 118-9s66-3 91-13 53-4 90 4M-5 143c45-10 74-3 107-5s61-10 94-4 58 8 92-4"
               />
-              <ellipse className="landmark-mere" cx="44" cy="132" rx="11" ry="6" />
+              {!zoomed && <ellipse className="landmark-mere" cx="44" cy="132" rx="11" ry="6" />}
             </svg>
             <span className="landmark-north" aria-hidden="true">
               N ↑
             </span>
             <button
               className="landmark-scout-surface"
-              aria-label="Choose camera location on map. Click a location, or use arrow keys then Enter to move the camera."
+              aria-label={`Choose camera location on ${zoomed ? 'detail' : 'travel area'} map. Click a location, or use arrow keys then Enter to move the camera.`}
               onClick={(event) => {
                 if (event.detail === 0) return;
-                const bounds = event.currentTarget.getBoundingClientRect();
+                const rect = event.currentTarget.getBoundingClientRect();
                 setScout(
-                  mapToWorld({
-                    left: ((event.clientX - bounds.left) / bounds.width) * 100,
-                    top: ((event.clientY - bounds.top) / bounds.height) * 100,
-                  }),
+                  mapToWorld(
+                    {
+                      left: ((event.clientX - rect.left) / rect.width) * 100,
+                      top: ((event.clientY - rect.top) / rect.height) * 100,
+                    },
+                    viewport,
+                  ),
                 );
                 setScoutSelected(true);
               }}
@@ -260,7 +309,7 @@ export function LandmarkMap({
                   event.preventDefault();
                   const point = scout ?? snapshot.camera ?? { x: 0, z: -5 };
                   const distance = event.shiftKey ? 8 : 3;
-                  setScout({
+                  const next = {
                     x: Math.max(
                       CAMERA_PAN_BOUNDS.minX,
                       Math.min(
@@ -285,48 +334,59 @@ export function LandmarkMap({
                               : 0),
                       ),
                     ),
-                  });
+                  };
+                  setScout(next);
+                  if (zoomed && !pointInMapBounds(next, viewport)) setDetailCenter(next);
                   setScoutSelected(true);
                 } else if (event.key === 'Enter' || event.key === ' ') {
                   event.preventDefault();
                   if (scoutSelected) commitScout();
                   else {
-                    setScout(scout ?? snapshot.camera ?? { x: 0, z: -5 });
+                    const next = scout ?? snapshot.camera ?? { x: 0, z: -5 };
+                    setScout(next);
+                    if (zoomed && !pointInMapBounds(next, viewport)) setDetailCenter(next);
                     setScoutSelected(true);
                   }
                 }
               }}
             />
-            {MAP_LANDMARKS.map((landmark) => {
-              const position = worldToMap(landmark.point);
-              return (
-                <button
-                  key={landmark.id}
-                  className={
-                    'landmark-place-marker' + (landmark.view ? ' viewpoint' : ' trail-rest')
-                  }
-                  style={{ left: `${position.left}%`, top: `${position.top}%` }}
-                  data-label={landmark.label}
-                  data-label-position={position.top < 22 ? 'below' : 'above'}
-                  aria-label={`${landmark.label}: ${landmark.view ? 'open viewpoint' : 'move camera to trail rest'}`}
-                  aria-pressed={
-                    landmark.view ? !following && !customized && view === landmark.view : undefined
-                  }
-                  title={`${landmark.label} — ${landmark.view ? 'open viewpoint' : 'move camera here'}`}
-                  onClick={() => {
-                    if (landmark.view) navigate(landmark.view);
-                    else onScout(landmark.point);
-                    close();
-                  }}
-                >
-                  {landmark.shortLabel}
-                </button>
-              );
-            })}
-            {scoutSelected && scout && (
+            {MAP_LANDMARKS.filter((landmark) => pointInMapBounds(landmark.point, viewport)).map(
+              (landmark) => {
+                const position = worldToMap(landmark.point, viewport);
+                return (
+                  <button
+                    key={landmark.id}
+                    className={
+                      'landmark-place-marker' + (landmark.view ? ' viewpoint' : ' trail-rest')
+                    }
+                    style={{ left: `${position.left}%`, top: `${position.top}%` }}
+                    data-label={landmark.label}
+                    data-label-position={position.top < 22 ? 'below' : 'above'}
+                    aria-label={`${landmark.label}: ${landmark.view ? 'open viewpoint' : 'move camera to trail rest'}`}
+                    aria-pressed={
+                      landmark.view
+                        ? !following && !customized && view === landmark.view
+                        : undefined
+                    }
+                    title={`${landmark.label} — ${landmark.view ? 'open viewpoint' : 'move camera here'}`}
+                    onClick={() => {
+                      if (landmark.view) navigate(landmark.view);
+                      else onScout(landmark.point);
+                      close();
+                    }}
+                  >
+                    {landmark.shortLabel}
+                  </button>
+                );
+              },
+            )}
+            {scoutSelected && scout && pointInMapBounds(scout, viewport) && (
               <span
                 className="landmark-scout-marker"
-                style={{ left: `${worldToMap(scout).left}%`, top: `${worldToMap(scout).top}%` }}
+                style={{
+                  left: `${worldToMap(scout, viewport).left}%`,
+                  top: `${worldToMap(scout, viewport).top}%`,
+                }}
                 aria-hidden="true"
               >
                 <Crosshair size={18} />
@@ -334,6 +394,8 @@ export function LandmarkMap({
             )}
             <LiveMapLayer
               snapshot={snapshot}
+              viewport={viewport}
+              zoomed={zoomed}
               onFind={(id) => {
                 const world = useWorld.getState();
                 world.select(id);
@@ -381,8 +443,9 @@ export function LandmarkMap({
             ))}
           </div>
           <p>
-            Named pins open a viewpoint or move the camera to a trail rest. Scenic terrain may not
-            be walkable. Other chats remain in Residents.
+            Detail zooms around the camera or selected point. Named pins open a viewpoint or move
+            the camera to a trail rest. Scenic terrain may not be walkable. Other chats remain in
+            Residents.
           </p>
         </div>
       )}

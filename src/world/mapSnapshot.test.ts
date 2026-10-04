@@ -5,10 +5,12 @@ import { SOUTHWIND_SHORE } from './scenery/southwindTrailPlacement';
 import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
 import {
   activateMap,
+  detailMapBounds,
   getMapSnapshot,
   groupNearbyMapResidents,
   MAP_LANDMARKS,
   mapToWorld,
+  pointInMapBounds,
   publishMapSnapshot,
   subscribeMapSnapshot,
   visibleMapResidents,
@@ -69,6 +71,35 @@ describe('live landmark map', () => {
       expect(mapToWorld(position).x).toBeCloseTo(landmark.point.x);
       expect(mapToWorld(position).z).toBeCloseTo(landmark.point.z);
     }
+  });
+
+  it('projects 2× detail consistently and keeps the focused frame inside finite bounds', () => {
+    const detail = detailMapBounds({ x: 0, z: -5 });
+    expect(detail).toEqual({ minX: -40, maxX: 40, minZ: -50, maxZ: 40 });
+    expect(worldToMap({ x: 0, z: -5 }, detail)).toEqual({ left: 50, top: 50 });
+    expect(mapToWorld({ left: 50, top: 50 }, detail)).toEqual({ x: 0, z: -5 });
+    expect(pointInMapBounds({ x: 48, z: 31 }, detail)).toBe(false);
+    expect(pointInMapBounds({ x: 36, z: -20 }, detail)).toBe(true);
+    expect(detailMapBounds({ x: 80, z: 85 })).toEqual({ minX: 0, maxX: 80, minZ: -5, maxZ: 85 });
+    expect(detailMapBounds({ x: -80, z: -95 })).toEqual({
+      minX: -80,
+      maxX: 0,
+      minZ: -95,
+      maxZ: -5,
+    });
+    expect(mapToWorld({ left: 100, top: 0 }, detailMapBounds({ x: 80, z: 85 }))).toEqual({
+      x: 80,
+      z: -5,
+    });
+  });
+
+  it('re-groups nearby residents at the detail scale', () => {
+    const residents = [
+      { id: 'one', name: 'One', seat: 0, x: 0, z: 0 },
+      { id: 'two', name: 'Two', seat: 1, x: 8, z: 0 },
+    ];
+    expect(groupNearbyMapResidents(residents)).toHaveLength(1);
+    expect(groupNearbyMapResidents(residents, detailMapBounds({ x: 0, z: 0 }))).toHaveLength(2);
   });
 
   it('includes only current visible seat assignments and copies coordinates', () => {

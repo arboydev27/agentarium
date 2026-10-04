@@ -5,6 +5,8 @@ import { SOUTHWIND_SHORE } from './scenery/southwindTrailPlacement';
 import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
 
 export type MapPoint = { x: number; z: number };
+export type MapBounds = Readonly<{ minX: number; maxX: number; minZ: number; maxZ: number }>;
+export const MAP_OVERVIEW_BOUNDS: MapBounds = CAMERA_PAN_BOUNDS;
 export type MapResident = MapPoint & { id: string; name: string; seat: number };
 export type MapSnapshot = { camera: MapPoint | null; residents: MapResident[] };
 export type ResidentPosition = { point: MapPoint & { y: number }; seat: number };
@@ -72,19 +74,41 @@ const listeners = new Set<() => void>();
 let snapshot = EMPTY_SNAPSHOT;
 let active = false;
 
-// The map covers the same finite x/z area as camera panning. North is -z,
-// so minZ is the top edge and maxZ the bottom edge; x increases to the right.
-// Percentages make this transform independent of the map's rendered size.
-export function worldToMap(point: MapPoint) {
-  const { minX, maxX, minZ, maxZ } = CAMERA_PAN_BOUNDS;
+// Detail uses half the overview's world width and depth (2× zoom). Shift the
+// window at terrain edges rather than shrinking it, so markers retain scale.
+export function detailMapBounds(center: MapPoint): MapBounds {
+  const overview = MAP_OVERVIEW_BOUNDS;
+  const width = (overview.maxX - overview.minX) / 2;
+  const depth = (overview.maxZ - overview.minZ) / 2;
+  const minX = Math.max(overview.minX, Math.min(overview.maxX - width, center.x - width / 2));
+  const minZ = Math.max(overview.minZ, Math.min(overview.maxZ - depth, center.z - depth / 2));
+  return { minX, maxX: minX + width, minZ, maxZ: minZ + depth };
+}
+
+export function pointInMapBounds(point: MapPoint, bounds: MapBounds = MAP_OVERVIEW_BOUNDS) {
+  return (
+    point.x >= bounds.minX &&
+    point.x <= bounds.maxX &&
+    point.z >= bounds.minZ &&
+    point.z <= bounds.maxZ
+  );
+}
+
+// North is -z (top) and x increases to the right. The same viewport drives
+// markers and scout clicks; percentages stay independent of rendered map size.
+export function worldToMap(point: MapPoint, bounds: MapBounds = MAP_OVERVIEW_BOUNDS) {
+  const { minX, maxX, minZ, maxZ } = bounds;
   return {
     left: Math.max(0, Math.min(100, ((point.x - minX) / (maxX - minX)) * 100)),
     top: Math.max(0, Math.min(100, ((point.z - minZ) / (maxZ - minZ)) * 100)),
   };
 }
 
-export function mapToWorld(point: { left: number; top: number }): MapPoint {
-  const { minX, maxX, minZ, maxZ } = CAMERA_PAN_BOUNDS;
+export function mapToWorld(
+  point: { left: number; top: number },
+  bounds: MapBounds = MAP_OVERVIEW_BOUNDS,
+): MapPoint {
+  const { minX, maxX, minZ, maxZ } = bounds;
   const left = Math.max(0, Math.min(100, point.left)) / 100;
   const top = Math.max(0, Math.min(100, point.top)) / 100;
   return { x: minX + left * (maxX - minX), z: minZ + top * (maxZ - minZ) };
@@ -115,11 +139,14 @@ export function visibleMapResidents(
   return result;
 }
 
-export function groupNearbyMapResidents(residents: readonly MapResident[]): MapResidentGroup[] {
+export function groupNearbyMapResidents(
+  residents: readonly MapResident[],
+  bounds: MapBounds = MAP_OVERVIEW_BOUNDS,
+): MapResidentGroup[] {
   const groups: MapResident[][] = [];
   const near = (left: MapResident, right: MapResident) => {
-    const a = worldToMap(left);
-    const b = worldToMap(right);
+    const a = worldToMap(left, bounds);
+    const b = worldToMap(right, bounds);
     return Math.abs(a.left - b.left) < 9 && Math.abs(a.top - b.top) < 14;
   };
   for (const resident of residents) {
