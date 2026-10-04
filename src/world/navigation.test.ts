@@ -756,6 +756,72 @@ describe('navigation graph', () => {
     traffic.release('cedar');
     expect(traffic.acquire('orchard', orchard.ids)).toBe(true);
   });
+  it('keeps a blocked urgent return ahead of a third entrant while freeing its distant tail', () => {
+    const traffic = new NavigationTraffic();
+    const northstar = planRoute('home-0', NORTHSTAR_OUTPOST.id);
+    const lookout = planRoute('home-1', 'meadow:lookout');
+    const third = planRoute('home-2', NORTHSTAR_OUTPOST.id);
+    const distal = planRoute(northstar.ids.at(-8)!, NORTHSTAR_OUTPOST.id);
+    const current = northstar.lengths[northstar.ids.indexOf('northstar:trail-15')];
+    expect(traffic.acquire('leader', northstar.ids)).toBe(true);
+    traffic.releasePassed('leader', current);
+    expect(traffic.acquire('paused-follower', lookout.ids)).toBe(true);
+    expect(traffic.acquireReturn('leader', northstar.ids, current)).toBe(false);
+    expect(traffic.acquire('third', third.ids)).toBe(false);
+    // The paused follower obstructs the return prefix, not the unused outpost tail.
+    expect(traffic.acquire('distal', distal.ids)).toBe(true);
+    traffic.release('paused-follower');
+    expect(traffic.acquireReturn('leader', northstar.ids, current)).toBe(true);
+    expect(traffic.acquire('third', third.ids)).toBe(false);
+    traffic.release('leader');
+    expect(traffic.acquire('third', third.ids)).toBe(false);
+    traffic.release('distal');
+    expect(traffic.acquire('third', third.ids)).toBe(true);
+  });
+  it('protects an occupied destination during a blocked return handoff', () => {
+    const traffic = new NavigationTraffic();
+    const trip = planRoute('home-0', NORTHSTAR_OUTPOST.id);
+    const blocker = planRoute('home-1', 'meadow:lookout');
+    const next = planRoute('northstar:trail-32', NORTHSTAR_OUTPOST.id);
+    const end = trip.lengths.at(-1)!;
+    expect(traffic.reserveDestination('leader', NORTHSTAR_OUTPOST.id)).toBe(true);
+    expect(traffic.acquire('leader', trip.ids)).toBe(true);
+    traffic.releasePassed('leader', end + 1);
+    expect(traffic.acquire('paused-blocker', blocker.ids)).toBe(true);
+    expect(traffic.acquireReturn('leader', trip.ids, end)).toBe(false);
+    traffic.releaseDestination('leader', NORTHSTAR_OUTPOST.id);
+    expect(traffic.reserveDestination('next', NORTHSTAR_OUTPOST.id)).toBe(true);
+    expect(traffic.acquire('next', next.ids)).toBe(false);
+    traffic.release('paused-blocker');
+    expect(traffic.acquireReturn('leader', trip.ids, end)).toBe(true);
+    expect(traffic.acquire('next', next.ids)).toBe(false);
+    traffic.release('leader');
+    expect(traffic.acquire('next', next.ids)).toBe(true);
+  });
+  it("releases only an interrupted trip's unused tail while preserving return priority", () => {
+    const traffic = new NavigationTraffic();
+    const northstar = planRoute('home-0', NORTHSTAR_OUTPOST.id);
+    const current = northstar.lengths[northstar.ids.indexOf('northstar:trail-15')];
+    expect(northstar.lengths.at(-1)! - current).toBeGreaterThan(20);
+    const distalStart = northstar.ids.at(-8)!;
+    const distal = planRoute(distalStart, NORTHSTAR_OUTPOST.id);
+    const third = planRoute('home-1', NORTHSTAR_OUTPOST.id);
+    expect(traffic.reserveDestination('leader', NORTHSTAR_OUTPOST.id)).toBe(true);
+    expect(traffic.acquire('leader', northstar.ids)).toBe(true);
+    traffic.releasePassed('leader', current);
+    // The distal block is still part of the outbound lease before interruption.
+    expect(traffic.acquire('distal', distal.ids)).toBe(false);
+    expect(traffic.acquireReturn('leader', northstar.ids, current)).toBe(true);
+    traffic.releaseDestination('leader', NORTHSTAR_OUTPOST.id);
+    expect(traffic.reserveDestination('distal', NORTHSTAR_OUTPOST.id)).toBe(true);
+    expect(traffic.acquire('distal', distal.ids)).toBe(true);
+    // A third home departure still meets the returner's protected shared lane.
+    expect(traffic.acquire('third', third.ids)).toBe(false);
+    traffic.releasePassed('leader', 0, true);
+    expect(traffic.acquire('third', third.ids)).toBe(false);
+    traffic.release('distal');
+    expect(traffic.acquire('third', third.ids)).toBe(true);
+  });
 });
 
 describe('resident journeys', () => {
@@ -1118,6 +1184,61 @@ describe('resident journeys', () => {
     expect(faded).toBe(false);
     expect(motion.activity).toBe('At desk');
     expect(traffic.reserveDestination('next', NORTHSTAR_OUTPOST.id)).toBe(true);
+  });
+  it('returns continuously while a paused traveler holds the now-unused Northstar tail', () => {
+    const traffic = new NavigationTraffic();
+    const motion = new ResidentJourney(2, 'demo-2', traffic);
+    for (const destination of DESTINATIONS)
+      if (destination.id !== NORTHSTAR_OUTPOST.id)
+        expect(traffic.reserveDestination('scene', destination.id)).toBe(true);
+    let reachedSpur = false;
+    for (let frame = 0; frame < 230 * 60; frame++) {
+      motion.update(agent(2), 1 / 60, options);
+      if (
+        motion.position[0] > 26 &&
+        motion.position[2] < -89 &&
+        motion.activity === `Walking to ${NORTHSTAR_OUTPOST.label}`
+      ) {
+        reachedSpur = true;
+        break;
+      }
+    }
+    expect(reachedSpur).toBe(true);
+    const working = agent(2, 'working');
+    const before = motion.position;
+    motion.update(working, 1 / 60, options);
+    expect(motion.activity).toBe('Returning to desk');
+    expect(traffic.reserveDestination('distal', NORTHSTAR_OUTPOST.id)).toBe(true);
+    const branch = planRoute('northstar:trail-32', NORTHSTAR_OUTPOST.id);
+    expect(traffic.acquire('distal', branch.ids)).toBe(true);
+    const third = planRoute('home-1', NORTHSTAR_OUTPOST.id);
+    expect(traffic.acquire('third', third.ids)).toBe(false);
+    let previous = motion.position;
+    let faded = false;
+    let minSeparation = Infinity;
+    for (let frame = 0; frame < 230 * 60 && motion.activity !== 'At desk'; frame++) {
+      motion.update(working, 1 / 60, options);
+      const next = motion.position;
+      expect(Math.hypot(...next.map((value, axis) => value - previous[axis]))).toBeLessThan(0.06);
+      minSeparation = Math.min(
+        minSeparation,
+        Math.hypot(
+          next[0] - NODES['northstar:trail-32'][0],
+          next[2] - NODES['northstar:trail-32'][2],
+        ),
+      );
+      if (motion.opacity < 0.99) faded = true;
+      previous = next;
+    }
+    expect(
+      Math.hypot(...motion.position.map((value, axis) => value - before[axis])),
+    ).toBeGreaterThan(10);
+    expect(minSeparation).toBeGreaterThan(0.8);
+    expect(faded).toBe(false);
+    expect(motion.activity).toBe('At desk');
+    traffic.release('distal');
+    expect(traffic.reserveDestination('next', NORTHSTAR_OUTPOST.id)).toBe(true);
+    expect(traffic.acquire('third', third.ids)).toBe(true);
   });
   it('keeps Northstar and Orchard trips exclusive on their shared approach', () => {
     const traffic = new NavigationTraffic();

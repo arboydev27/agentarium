@@ -377,7 +377,7 @@ function lanesConflict(a: Resource, b: Resource) {
     ) < 0.7
   );
 }
-function routeResources(ids: string[]) {
+function routeResources(ids: string[], maximumDistance = Infinity) {
   const lengths = ids.every((id) => NODES[id])
     ? routeLengths(ids.map((id) => NODES[id]))
     : ids.map((_, i) => i);
@@ -407,6 +407,11 @@ function routeResources(ids: string[]) {
       to: NODES[ids[i]],
     });
   }
+  // A reversal never traverses the outbound tail beyond the current position.
+  // Keep the containing edge and a small geometric safety margin, then release
+  // unused future resources so independent branches can be admitted.
+  for (const [key, resource] of resources)
+    if (resource.start > maximumDistance) resources.delete(key);
   return resources;
 }
 function resourcesConflict(wanted: Map<string, Resource>, held: Map<string, Resource>) {
@@ -432,8 +437,27 @@ export class NavigationTraffic {
     this.destinations.set(destination, owner);
     return true;
   }
+  releaseDestination(owner: string, destination: string) {
+    if (this.destinations.get(destination) === owner) this.destinations.delete(destination);
+  }
   acquire(owner: string, ids: string[], priority = false) {
-    const wanted = routeResources(ids);
+    return this.acquireResources(owner, routeResources(ids), priority);
+  }
+  // Claim only the traversed prefix when an outbound journey reverses. Its
+  // future tail is no longer useful; keeping it leased would block other
+  // districts even while this resident walks toward home.
+  acquireReturn(owner: string, ids: string[], distance: number) {
+    const maximumDistance = Math.max(0, distance);
+    const wanted = routeResources(ids, maximumDistance + this.clearance);
+    const held = this.corridors.get(owner);
+    if (held) {
+      for (const [key, resource] of held)
+        if (resource.start > maximumDistance + this.clearance) held.delete(key);
+      if (held.size === 0) this.corridors.delete(owner);
+    }
+    return this.acquireResources(owner, wanted, true);
+  }
+  private acquireResources(owner: string, wanted: Map<string, Resource>, priority: boolean) {
     if (priority) this.returning.set(owner, wanted);
     if (!priority)
       for (const [other, waiting] of this.returning) {

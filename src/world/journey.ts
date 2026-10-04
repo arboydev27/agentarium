@@ -97,12 +97,15 @@ export class ResidentJourney extends ResidentMotion {
         !trip.returning
       ) {
         trip.returning = true;
-        // Outbound travel may have released the corridor behind us. Reclaim the
-        // complete return before reversing, or wait here with our current lease.
-        trip.held = this.traffic.acquire(this.identity, trip.path.ids, true);
+        // Outbound travel may have released the corridor behind us. Reclaim
+        // the traversed prefix before reversing, or wait at this point.
+        trip.held = this.traffic.acquireReturn(this.identity, trip.path.ids, trip.distance);
+        // The resident no longer plans to occupy the destination; the pending
+        // return lease still protects their current point until they move away.
+        this.traffic.releaseDestination(this.identity, trip.destination.id);
       }
       if (trip.returning && !trip.held)
-        trip.held = this.traffic.acquire(this.identity, trip.path.ids, true);
+        trip.held = this.traffic.acquireReturn(this.identity, trip.path.ids, trip.distance);
       if (trip.returning && !trip.held) {
         trip.blockedReturn += dt;
         const timeout = leisure ? 25 : 8;
