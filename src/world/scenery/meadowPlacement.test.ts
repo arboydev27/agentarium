@@ -27,6 +27,30 @@ describe('spatial meadow placement', () => {
     expect(buildMeadowPieces(far, 'high')).toEqual({ patches: [], flowers: [], rocks: [] });
   });
 
+  it('changes groundcover character without changing deterministic quality prefixes', () => {
+    const meadow = buildMeadowPieces(detailChunkAt(85, 60)!, 'high');
+    const woodland = buildMeadowPieces(detailChunkAt(-83, -20)!, 'high');
+    const highland = buildMeadowPieces(detailChunkAt(-120, -120)!, 'high');
+    const amber = buildMeadowPieces(detailChunkAt(-104, 88)!, 'high');
+    expect(woodland.patches.length).toBeGreaterThan(meadow.patches.length);
+    expect(highland.patches.length).toBeLessThan(meadow.patches.length);
+    expect(highland.rocks.length).toBeGreaterThan(meadow.rocks.length);
+    expect(highland.flowers).toHaveLength(0);
+    expect(amber.flowers.length).toBeGreaterThan(meadow.flowers.length);
+    for (const [x, z] of [
+      [-83, -20],
+      [-120, -120],
+      [-104, 88],
+    ] as const) {
+      const chunk = detailChunkAt(x, z)!;
+      const high = buildMeadowPieces(chunk, 'high');
+      const low = buildMeadowPieces(chunk, 'low');
+      expect(low.patches).toEqual(high.patches.slice(0, low.patches.length));
+      expect(high.patches.length).toBeLessThanOrEqual(64);
+      expect(high.rocks.length).toBeLessThanOrEqual(20);
+    }
+  });
+
   it('keeps the resident routes, landmarks, and grove floor free of generated props', () => {
     for (const [x, z] of [
       [0, 0],

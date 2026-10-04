@@ -3,6 +3,7 @@ import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useWorld } from '../state';
+import { biomeInfluence } from './biomes';
 import { Box, Cylinder, Sphere, Sign, Tree, Pot, Lamp } from './primitives';
 import { CAMERA_VIEWS, LOOKOUT, ZONES, type ZoneName } from './layout';
 import {
@@ -344,6 +345,10 @@ function Landscape() {
     const meadow = new THREE.Color('#82a171');
     const field = new THREE.Color('#acb78d');
     const ridge = new THREE.Color('#90a397');
+    const woodland = new THREE.Color('#557a56');
+    const highland = new THREE.Color('#85999c');
+    const amber = new THREE.Color('#bf9b61');
+    const biomeColor = new THREE.Color();
     const color = new THREE.Color();
     for (let i = 0; i < positions.count; i++) {
       const x = positions.getX(i);
@@ -356,6 +361,19 @@ function Landscape() {
         .copy(meadow)
         .lerp(field, fieldPatch * 0.42)
         .lerp(ridge, THREE.MathUtils.clamp((y - 2.5) / 12, 0, 0.85));
+      const biome = biomeInfluence(x, z);
+      const weight = biome.woodland + biome.highland + biome.amber;
+      if (weight > 0) {
+        biomeColor.setRGB(
+          (woodland.r * biome.woodland + highland.r * biome.highland + amber.r * biome.amber) /
+            weight,
+          (woodland.g * biome.woodland + highland.g * biome.highland + amber.g * biome.amber) /
+            weight,
+          (woodland.b * biome.woodland + highland.b * biome.highland + amber.b * biome.amber) /
+            weight,
+        );
+        color.lerp(biomeColor, Math.min(0.87, weight * 0.82));
+      }
       colors[i * 3] = color.r;
       colors[i * 3 + 1] = color.g;
       colors[i * 3 + 2] = color.b;
@@ -419,17 +437,41 @@ function LandscapeGroves() {
       [-55, 112],
       [18, 109],
     ];
-    return Array.from({ length: count }, (_, i) => {
-      const [cx, cz] = clusters[i % clusters.length];
-      const ring = Math.floor(i / clusters.length);
-      const spread = Math.sqrt((ring + 0.5) / (count / clusters.length)) * 13;
-      const angle = i * 2.399963;
-      const x = cx + Math.cos(angle) * spread;
-      const z = cz + Math.sin(angle) * spread;
-      const size = 1.15 + ((i * 13) % 17) * 0.1;
-      return { x, y: renderedTerrainHeight(x, z), z, size, shade: i % 3 };
+    const woodlandCount = quality === 'high' ? 120 : 60;
+    const woodlandCenters: [number, number][] = [
+      [-83, -20],
+      [-96, -13],
+      [-71, -27],
+      [-82, -4],
+    ];
+    return Array.from({ length: count + woodlandCount }, (_, i) => {
+      const woodlandExtra = i >= count;
+      let x: number;
+      let z: number;
+      if (woodlandExtra) {
+        const index = i - count;
+        const [cx, cz] = woodlandCenters[index % woodlandCenters.length];
+        const ring = Math.floor(index / woodlandCenters.length);
+        const spread = Math.sqrt((ring + 0.5) / (woodlandCount / woodlandCenters.length)) * 17;
+        const angle = index * 2.399963 + 0.43;
+        x = cx + Math.cos(angle) * spread;
+        z = cz + Math.sin(angle) * spread;
+      } else {
+        const [cx, cz] = clusters[i % clusters.length];
+        const ring = Math.floor(i / clusters.length);
+        const spread = Math.sqrt((ring + 0.5) / (count / clusters.length)) * 13;
+        const angle = i * 2.399963;
+        x = cx + Math.cos(angle) * spread;
+        z = cz + Math.sin(angle) * spread;
+      }
+      const biome = biomeInfluence(x, z);
+      const size =
+        (1.15 + ((i * 13) % 17) * 0.1) *
+        (1 + biome.woodland * 0.08 - biome.highland * 0.12 + biome.amber * 0.02);
+      return { x, y: renderedTerrainHeight(x, z), z, size, shade: i % 3, biome, woodlandExtra };
     }).filter(
-      ({ x, z }) =>
+      ({ x, z, biome, woodlandExtra }) =>
+        (!woodlandExtra || biome.woodland > 0.35) &&
         clearOfOrchard(x, z, 1.8) &&
         clearOfOrchardView(x, z) &&
         clearOfObservatory(x, z, 1.8) &&
@@ -450,26 +492,41 @@ function LandscapeGroves() {
     const scale = new THREE.Vector3();
     const rotation = new THREE.Quaternion();
     const greens = ['#5a7656', '#6e895f', '#78936c'].map((shade) => new THREE.Color(shade));
-    placements.forEach(({ x, y, z, size, shade }, i) => {
+    const woodland = new THREE.Color('#486f57');
+    const highland = new THREE.Color('#71857d');
+    const amber = new THREE.Color('#8a9166');
+    const foliage = new THREE.Color();
+    const tint = (base: THREE.Color, biome: ReturnType<typeof biomeInfluence>) =>
+      foliage
+        .copy(base)
+        .lerp(woodland, biome.woodland * 0.65)
+        .lerp(highland, biome.highland * 0.72)
+        .lerp(amber, biome.amber * 0.7);
+    placements.forEach(({ x, y, z, size, shade, biome }, i) => {
+      const canopy = size * (1 + biome.woodland * 0.22);
       matrix.compose(
         position.set(x, y + size * 0.62, z),
         rotation,
         scale.set(size, size * 1.25, size),
       );
       trunks.current!.setMatrixAt(i, matrix);
-      matrix.compose(position.set(x, y + size * 1.7, z), rotation, scale.setScalar(size));
+      matrix.compose(position.set(x, y + size * 1.7, z), rotation, scale.set(canopy, size, canopy));
       crowns.current!.setMatrixAt(i, matrix);
-      crowns.current!.setColorAt(i, greens[shade]);
-      matrix.compose(position.set(x, y + size * 2.25, z), rotation, scale.setScalar(size * 0.73));
+      crowns.current!.setColorAt(i, tint(greens[shade], biome));
+      matrix.compose(
+        position.set(x, y + size * 2.25, z),
+        rotation,
+        scale.set(canopy * 0.73, size * 0.73, canopy * 0.73),
+      );
       tips.current!.setMatrixAt(i, matrix);
-      tips.current!.setColorAt(i, greens[(shade + 1) % greens.length]);
+      tips.current!.setColorAt(i, tint(greens[(shade + 1) % greens.length], biome));
       matrix.compose(
         position.set(x, y + size * 0.12, z),
         rotation,
-        scale.set(size * 0.8, size * 0.24, size * 0.85),
+        scale.set(canopy * 0.8, size * 0.24, canopy * 0.85),
       );
       understory.current!.setMatrixAt(i, matrix);
-      understory.current!.setColorAt(i, greens[(shade + 2) % greens.length]);
+      understory.current!.setColorAt(i, tint(greens[(shade + 2) % greens.length], biome));
     });
     for (const mesh of [trunks.current, crowns.current, tips.current, understory.current]) {
       mesh.instanceMatrix.needsUpdate = true;

@@ -1,4 +1,5 @@
 import type { DetailChunk } from '../chunks';
+import { biomeInfluence } from '../biomes';
 import { CAMERA_PAN_BOUNDS } from '../cameraPan';
 import { LOOKOUT } from '../layout';
 import { meadowTrailPoint, renderedTerrainHeight } from '../terrain';
@@ -78,8 +79,22 @@ export function buildMeadowPieces(chunk: DetailChunk, quality: 'high' | 'low'): 
   const pieces: MeadowPieces = { patches: [], flowers: [], rocks: [] };
   if (!meadowChunkHasDetail(chunk)) return pieces;
   const nearTrail = Math.abs(chunk.centerX) < 75 && chunk.centerZ > -105 && chunk.centerZ < 45;
-  const patchCount = quality === 'high' ? (nearTrail ? 54 : 32) : nearTrail ? 23 : 14;
-  const rockCount = quality === 'high' ? (nearTrail ? 12 : 8) : nearTrail ? 6 : 4;
+  const biome = biomeInfluence(chunk.centerX, chunk.centerZ);
+  const basePatches = quality === 'high' ? (nearTrail ? 54 : 32) : nearTrail ? 23 : 14;
+  const baseRocks = quality === 'high' ? (nearTrail ? 12 : 8) : nearTrail ? 6 : 4;
+  // Preserve the same seeded candidate sequence across quality levels. The
+  // biome only changes how many candidates are used and their local treatment.
+  const patchCount = Math.max(
+    8,
+    basePatches +
+      Math.round(biome.woodland * (quality === 'high' ? 10 : 5)) +
+      Math.round(biome.amber * (quality === 'high' ? 8 : 4)) -
+      Math.round(biome.highland * basePatches * 0.3),
+  );
+  const rockCount =
+    baseRocks +
+    Math.round(biome.highland * (quality === 'high' ? 8 : 4)) +
+    Math.round(biome.amber * (quality === 'high' ? 2 : 1));
   const seed = Math.imul(chunk.col + 1, 73856093) ^ Math.imul(chunk.row + 1, 19349663);
   const patchRandom = random(seed ^ 0x65776f64);
   const rockRandom = random(seed ^ 0x726f636b);
@@ -88,18 +103,24 @@ export function buildMeadowPieces(chunk: DetailChunk, quality: 'high' | 'low'): 
   for (let index = 0; index < patchCount; index++) {
     const x = minX + 3 + patchRandom() * 54;
     const z = minZ + 3 + patchRandom() * 54;
-    const size = 0.52 + patchRandom() * 0.7;
+    const baseSize = 0.52 + patchRandom() * 0.7;
     const shade = Math.floor(patchRandom() * 4);
+    const local = biomeInfluence(x, z);
+    const size =
+      baseSize * (1 + local.woodland * 0.12 + local.amber * 0.03 - local.highland * 0.22);
     if (!clearOfMeadowRoutes(x, z, size * 0.6)) continue;
     const piece = { x, y: renderedTerrainHeight(x, z), z, size, shade };
     pieces.patches.push(piece);
-    if (quality === 'high' && index % 4 === 0) pieces.flowers.push(piece);
+    if (quality === 'high' && local.highland < 0.65 && index % (local.amber > 0.45 ? 3 : 4) === 0)
+      pieces.flowers.push(piece);
   }
   for (let index = 0; index < rockCount; index++) {
     const x = minX + 3 + rockRandom() * 54;
     const z = minZ + 3 + rockRandom() * 54;
-    const size = 0.27 + rockRandom() * 0.32;
+    const baseSize = 0.27 + rockRandom() * 0.32;
     const shade = Math.floor(rockRandom() * 3);
+    const local = biomeInfluence(x, z);
+    const size = baseSize * (1 + local.highland * 0.45 + local.amber * 0.2);
     if (!clearOfMeadowRoutes(x, z, size)) continue;
     pieces.rocks.push({ x, y: renderedTerrainHeight(x, z), z, size, shade });
   }
