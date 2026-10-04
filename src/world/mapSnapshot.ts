@@ -1,5 +1,6 @@
 import { CAMERA_PAN_BOUNDS } from './cameraPan';
 import { LOOKOUT, OBSERVATORY, ORCHARD, type WorldView } from './layout';
+import { AMBER_BLUFF } from './scenery/amberPlacement';
 import { DAWNLIGHT_GLASSHOUSE } from './scenery/dawnlightPlacement';
 import { SOUTHWIND_SHORE } from './scenery/southwindTrailPlacement';
 import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
@@ -19,6 +20,7 @@ export type MapLandmark = {
   shortLabel: string;
   point: MapPoint;
   view?: WorldView;
+  scenicOnly?: boolean;
 };
 
 // These named pins use world coordinates, unlike the decorative contour art.
@@ -58,6 +60,14 @@ export const MAP_LANDMARKS: readonly MapLandmark[] = [
     shortLabel: 'W',
     point: { x: WINDWARD_MILL.centerX, z: WINDWARD_MILL.centerZ },
     view: 'windward',
+  },
+  {
+    id: 'amber',
+    label: AMBER_BLUFF.label,
+    shortLabel: 'A',
+    point: { x: AMBER_BLUFF.x, z: AMBER_BLUFF.z },
+    view: 'amber',
+    scenicOnly: true,
   },
   {
     id: 'mere',

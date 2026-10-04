@@ -2070,6 +2070,9 @@ h1 span {
 .landmark-place-marker.trail-rest {
   background: #857340;
 }
+.landmark-place-marker.scenic-only {
+  background: #a96835;
+}
 .landmark-place-marker[aria-pressed='true'] {
   box-shadow:
     0 0 0 3px #ecc56e,
@@ -2096,6 +2099,15 @@ h1 span {
   font-weight: 600;
   white-space: nowrap;
   pointer-events: none;
+}
+.landmark-place-marker[data-label-align='start']::after {
+  left: 0;
+  transform: none;
+}
+.landmark-place-marker[data-label-align='end']::after {
+  right: 0;
+  left: auto;
+  transform: none;
 }
 .landmark-place-marker[data-label-position='below']::after {
   top: calc(100% + 6px);
@@ -2325,6 +2337,24 @@ h1 span {
 .landmark-pin[aria-pressed='true'] {
   background: #e8f0dc;
   border-color: #acc79e;
+}
+.landmark-pin-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+}
+.landmark-pin-text small {
+  margin-top: 2px;
+  color: #8a643d;
+  font-size: 8px;
+  font-weight: 700;
+}
+.landmark-pin.amber {
+  min-height: 42px;
+}
+.landmark-pin.amber .landmark-pin-icon {
+  background: #a96835;
 }
 .landmark-pin-icon {
   display: grid;

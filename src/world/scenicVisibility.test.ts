@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CAMERA_VIEWS } from './layout';
 import { WINDWARD_MILL } from './scenery/windwardPlacement';
+import { AMBER_BLUFF } from './scenery/amberPlacement';
 import {
   SCENIC_ENTER_PADDING,
   SCENIC_EXIT_PADDING,
@@ -30,7 +31,15 @@ const preset = (name: keyof typeof CAMERA_VIEWS) => ({
 
 describe('fixed scenic-region visibility', () => {
   it('has stable authored identities and keeps every region in Horizon', () => {
-    const expected = ['lookout', 'orchard', 'observatory', 'dawnlight', 'slate', 'windward'];
+    const expected = [
+      'lookout',
+      'orchard',
+      'observatory',
+      'dawnlight',
+      'slate',
+      'windward',
+      'amber',
+    ];
     expect(SCENIC_REGIONS.map((region) => region.id)).toEqual(expected);
     const horizon: ScenicVisibilityInput = { ...frame(away), mode: 'horizon' };
     expect(ids(horizon)).toEqual(expected);
@@ -51,6 +60,7 @@ describe('fixed scenic-region visibility', () => {
       ['observatory', 'observatory'],
       ['dawnlight', 'dawnlight'],
       ['windward', 'windward'],
+      ['amber', 'amber'],
     ] as const)
       expect(ids({ mode: 'orthographic', ...preset(view) }), view).toContain(region);
     expect(ids({ mode: 'orthographic', ...preset('observatory') })).toContain('slate');
@@ -58,6 +68,9 @@ describe('fixed scenic-region visibility', () => {
     expect(mill.bounds.minX).toBeLessThan(WINDWARD_MILL.centerX);
     expect(mill.bounds.maxX).toBeGreaterThan(WINDWARD_MILL.x);
     expect(mill.bounds.maxZ).toBeGreaterThan(WINDWARD_MILL.z);
+    const bluff = SCENIC_REGIONS.find((region) => region.id === 'amber')!;
+    expect(bluff.bounds.minX).toBeLessThan(AMBER_BLUFF.x - AMBER_BLUFF.footprintRadius);
+    expect(bluff.bounds.maxZ).toBeGreaterThan(AMBER_BLUFF.z + AMBER_BLUFF.footprintRadius);
   });
 
   it('prefetches ahead of the frustum and keeps a selected region through the exit band', () => {
@@ -96,6 +109,9 @@ describe('fixed scenic-region visibility', () => {
       target: orchard,
     };
     expect(ids(movingToOrchard)).toContain('orchard');
+    expect(ids({ mode: 'orthographic', ...preset('overview'), target: preset('amber') })).toContain(
+      'amber',
+    );
     expect(
       ids({ mode: 'orthographic', ...preset('overview'), target: preset('windward') }),
     ).toContain('windward');

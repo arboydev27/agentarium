@@ -6,6 +6,7 @@ import {
   Focus,
   Map,
   MapPin,
+  Mountain,
   Telescope,
   Trees,
   Waves,
@@ -39,6 +40,12 @@ const LANDMARKS = [
   { view: 'mere', label: 'Southwind Mere', icon: Waves, detail: 'Dry eastern shore' },
   { view: 'dawnlight', label: 'Dawnlight', icon: Flower2, detail: 'Dawnlight Glasshouse' },
   { view: 'windward', label: 'Windward', icon: Wind, detail: 'Windward Mill' },
+  {
+    view: 'amber',
+    label: 'Amber Bluff',
+    icon: Mountain,
+    detail: 'Scenic only · no resident route',
+  },
   { view: 'horizon', label: 'Horizon', icon: Eye, detail: 'Ridge and sky' },
 ] as const;
 
@@ -359,18 +366,23 @@ export function LandmarkMap({
                   <button
                     key={landmark.id}
                     className={
-                      'landmark-place-marker' + (landmark.view ? ' viewpoint' : ' trail-rest')
+                      'landmark-place-marker' +
+                      (landmark.view ? ' viewpoint' : ' trail-rest') +
+                      (landmark.scenicOnly ? ' scenic-only' : '')
                     }
                     style={{ left: `${position.left}%`, top: `${position.top}%` }}
-                    data-label={landmark.label}
+                    data-label={`${landmark.label}${landmark.scenicOnly ? ' · scenic only' : ''}`}
                     data-label-position={position.top < 22 ? 'below' : 'above'}
-                    aria-label={`${landmark.label}: ${landmark.view ? 'open viewpoint' : 'move camera to trail rest'}`}
+                    data-label-align={
+                      position.left < 30 ? 'start' : position.left > 70 ? 'end' : 'center'
+                    }
+                    aria-label={`${landmark.label}: ${landmark.scenicOnly ? 'scenic only, no resident route; ' : ''}${landmark.view ? 'open viewpoint' : 'move camera to trail rest'}`}
                     aria-pressed={
                       landmark.view
                         ? !following && !customized && view === landmark.view
                         : undefined
                     }
-                    title={`${landmark.label} — ${landmark.view ? 'open viewpoint' : 'move camera here'}`}
+                    title={`${landmark.label} — ${landmark.scenicOnly ? 'scenic only, no resident route; ' : ''}${landmark.view ? 'open viewpoint' : 'move camera here'}`}
                     onClick={() => {
                       if (landmark.view) navigate(landmark.view);
                       else onScout(landmark.point);
@@ -440,7 +452,10 @@ export function LandmarkMap({
                 <span className="landmark-pin-icon">
                   <Icon size={13} aria-hidden="true" />
                 </span>
-                <span>{label}</span>
+                <span className="landmark-pin-text">
+                  {label}
+                  {landmark === 'amber' && <small>Scenic only · no resident route</small>}
+                </span>
               </button>
             ))}
           </div>

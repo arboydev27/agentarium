@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { OrthographicCamera, Vector3 } from 'three';
 import { CAMERA_PAN_BOUNDS } from './cameraPan';
+import { AMBER_BLUFF } from './scenery/amberPlacement';
 import {
   WORLD,
   ZONES,
@@ -141,9 +142,39 @@ describe('expanded world layout', () => {
       expect(Math.abs(projected.y)).toBeLessThan(1);
     }
   });
+  it('frames scenic-only Amber Bluff inside the expanded camera travel area', () => {
+    const preset = CAMERA_VIEWS.amber;
+    expect(WORLD_VIEWS).toContain('amber');
+    expect(WORLD_VIEW_LABELS.amber).toContain('scenic only');
+    expect(preset.look[0]).toBe(AMBER_BLUFF.x);
+    expect(preset.look[2]).toBe(AMBER_BLUFF.z);
+    for (const [x, z] of [
+      [preset.pos[0], preset.pos[2]],
+      [preset.look[0], preset.look[2]],
+    ]) {
+      expect(x).toBeGreaterThanOrEqual(CAMERA_PAN_BOUNDS.minX);
+      expect(x).toBeLessThanOrEqual(CAMERA_PAN_BOUNDS.maxX);
+      expect(z).toBeGreaterThanOrEqual(CAMERA_PAN_BOUNDS.minZ);
+      expect(z).toBeLessThanOrEqual(CAMERA_PAN_BOUNDS.maxZ);
+    }
+    const camera = new OrthographicCamera(
+      -preset.span[0] / 2,
+      preset.span[0] / 2,
+      preset.span[1] / 2,
+      -preset.span[1] / 2,
+      0.1,
+      400,
+    );
+    camera.position.fromArray(preset.pos);
+    camera.lookAt(new Vector3(...preset.look));
+    camera.updateMatrixWorld();
+    const center = new Vector3(AMBER_BLUFF.x, 5, AMBER_BLUFF.z).project(camera);
+    expect(Math.abs(center.x)).toBeLessThan(1);
+    expect(Math.abs(center.y)).toBeLessThan(1);
+  });
   it('bookmarks Cedar Observatory west of the meadow trail', () => {
     expect(WORLD_VIEWS).toContain('observatory');
-    expect(WORLD_VIEWS).toHaveLength(12);
+    expect(WORLD_VIEWS).toHaveLength(13);
     expect(OBSERVATORY).toMatchObject({ x: -30, z: -50 });
     expect(OBSERVATORY.focusRadius).toBeGreaterThan(OBSERVATORY.clearingRadius);
     expect(CAMERA_VIEWS.observatory.look[0]).toBe(OBSERVATORY.x);

@@ -9,6 +9,7 @@ import {
   type WorldLocation,
   type ZoneName,
 } from './layout';
+import { AMBER_BLUFF } from './scenery/amberPlacement';
 import { DAWNLIGHT_GLASSHOUSE } from './scenery/dawnlightPlacement';
 import { SOUTHWIND_SHORE } from './scenery/southwindTrailPlacement';
 import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
@@ -54,6 +55,7 @@ export function districtAt(x: number, z: number): WorldLocation {
     return 'dawnlight';
   if (Math.hypot(x - WINDWARD_MILL.centerX, z - WINDWARD_MILL.centerZ) <= WINDWARD_MILL.focusRadius)
     return 'windward';
+  if (Math.hypot(x - AMBER_BLUFF.x, z - AMBER_BLUFF.z) <= AMBER_BLUFF.focusRadius) return 'amber';
   for (const turnout of TRAIL_TURNOUTS) {
     const [tx, , tz] = turnoutPoint(turnout.trailIndex, turnout.side, 4.8);
     if (Math.hypot(x - tx, z - tz) <= 3.6) return turnout.id;

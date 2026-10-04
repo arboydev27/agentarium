@@ -43,6 +43,7 @@ import {
   Waves,
   Flower2,
   Wind,
+  Mountain,
   ScanEye,
 } from 'lucide-react';
 import { useWorld, STATUS_LABEL } from './state';
@@ -980,6 +981,8 @@ export default function App() {
               <Flower2 size={15} />
             ) : view === 'windward' ? (
               <Wind size={15} />
+            ) : view === 'amber' ? (
+              <Mountain size={15} />
             ) : (
               <Eye size={15} />
             )}
@@ -992,7 +995,9 @@ export default function App() {
                     ? 'Cedar'
                     : view === 'windward'
                       ? 'Windward'
-                      : view[0].toUpperCase() + view.slice(1)}
+                      : view === 'amber'
+                        ? 'Amber'
+                        : view[0].toUpperCase() + view.slice(1)}
             </span>
           </button>
         ))}

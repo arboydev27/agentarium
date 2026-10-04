@@ -3,6 +3,8 @@ import { initialAgents } from '../state';
 import { districtAt, worldCounts } from './hud';
 import { filterResidents, sessionKey } from '../sessions';
 import { DAWNLIGHT_GLASSHOUSE } from './scenery/dawnlightPlacement';
+import { AMBER_BLUFF } from './scenery/amberPlacement';
+import { DESTINATIONS } from './navigation';
 import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
 import { WINDWARD_MILL } from './scenery/windwardPlacement';
 it('keeps counts and task filters aligned, including hidden and unseated work', () => {
@@ -59,6 +61,12 @@ it('identifies named places and ordinary open terrain independently of the camer
   expect(
     districtAt(WINDWARD_MILL.centerX - WINDWARD_MILL.focusRadius - 1, WINDWARD_MILL.centerZ),
   ).toBe('open-landscape');
+  expect(districtAt(AMBER_BLUFF.x, AMBER_BLUFF.z)).toBe('amber');
+  expect(districtAt(AMBER_BLUFF.x + AMBER_BLUFF.focusRadius - 1, AMBER_BLUFF.z)).toBe('amber');
+  expect(districtAt(AMBER_BLUFF.x + AMBER_BLUFF.focusRadius + 1, AMBER_BLUFF.z)).toBe(
+    'open-landscape',
+  );
+  expect(DESTINATIONS.some((destination) => destination.id === AMBER_BLUFF.id)).toBe(false);
   expect(districtAt(0, -50)).toBe('open-landscape');
   for (const turnout of TRAIL_TURNOUTS) {
     const [x, , z] = turnoutPoint(turnout.trailIndex, turnout.side, 4.8);
