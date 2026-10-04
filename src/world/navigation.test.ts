@@ -20,6 +20,14 @@ import {
   waterRadiusAt,
 } from './scenery/merePlacement';
 import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
+import {
+  WOODLAND_BRANCH,
+  WOODLAND_HOLLOW,
+  WOODLAND_SHELTER_XZ,
+  WOODLAND_TRAIL_XZ,
+  clearOfWoodlandHollow,
+  clearOfWoodlandShelter,
+} from './scenery/woodlandPlacement';
 import { SOUTHWIND_SHORE, SOUTHWIND_TRAIL_XZ } from './scenery/southwindTrailPlacement';
 import {
   DAWNLIGHT_GLASSHOUSE,
@@ -71,6 +79,58 @@ describe('navigation graph', () => {
         ).toBeGreaterThan(0.8);
       }
     }
+  });
+  it('connects Lantern Hollow as a terminal spur with reversible, terrain-clear chords', () => {
+    expect(WOODLAND_BRANCH[0]).toEqual([-27, -50]);
+    expect(WOODLAND_TRAIL_XZ[0]).toEqual([-27, -50]);
+    expect(WOODLAND_TRAIL_XZ.at(-1)).toEqual([WOODLAND_HOLLOW.x, WOODLAND_HOLLOW.z]);
+    expect(clearOfWoodlandHollow(-55, -29)).toBe(false);
+    expect(clearOfWoodlandShelter(...WOODLAND_SHELTER_XZ)).toBe(false);
+    expect(clearOfWoodlandShelter(WOODLAND_HOLLOW.x, WOODLAND_HOLLOW.z)).toBe(true);
+    expect(
+      Math.hypot(
+        WOODLAND_SHELTER_XZ[0] - WOODLAND_HOLLOW.x,
+        WOODLAND_SHELTER_XZ[1] - WOODLAND_HOLLOW.z,
+      ),
+    ).toBeGreaterThan(WOODLAND_HOLLOW.clearingRadius);
+    expect(clearOfWoodlandHollow(WOODLAND_HOLLOW.x, WOODLAND_HOLLOW.z)).toBe(false);
+    expect(clearOfWoodlandHollow(-55, -15)).toBe(true);
+    expect(
+      EDGES.filter(([a, b]) => a === WOODLAND_HOLLOW.id || b === WOODLAND_HOLLOW.id),
+    ).toHaveLength(1);
+    for (let seat = 0; seat < 8; seat++) {
+      const outward = planRoute(`home-${seat}`, WOODLAND_HOLLOW.id);
+      expect(outward.ids).toContain('observatory:branch-8');
+      expect(outward.ids.at(-1)).toBe(WOODLAND_HOLLOW.id);
+      expect(outward.ids).not.toContain('observatory:cedar');
+      expect(planRoute(WOODLAND_HOLLOW.id, `home-${seat}`).points).toEqual(
+        [...outward.points].reverse(),
+      );
+    }
+    let highestWoodlandGrade = 0;
+    for (const [start, end] of EDGES) {
+      if (!start.startsWith('woodland:') && !end.startsWith('woodland:')) continue;
+      const from = NODES[start],
+        to = NODES[end];
+      const horizontal = Math.hypot(to[0] - from[0], to[2] - from[2]);
+      expect(horizontal, `${start} → ${end} length`).toBeLessThan(2.1);
+      highestWoodlandGrade = Math.max(highestWoodlandGrade, Math.abs(to[1] - from[1]) / horizontal);
+      expect(Math.abs(to[1] - from[1]) / horizontal, `${start} → ${end} grade`).toBeLessThan(0.38);
+      for (let step = 0; step <= 20; step++) {
+        const t = step / 20;
+        const x = from[0] + (to[0] - from[0]) * t;
+        const y = from[1] + (to[1] - from[1]) * t;
+        const z = from[2] + (to[2] - from[2]) * t;
+        expect(
+          Math.hypot(x - WOODLAND_SHELTER_XZ[0], z - WOODLAND_SHELTER_XZ[1]),
+          `${start} → ${end} shelter clearance`,
+        ).toBeGreaterThan(4.8 + 0.8);
+        const clearance = y - renderedTerrainHeight(x, z);
+        expect(clearance, `${start} → ${end} at ${t}`).toBeGreaterThan(0.015);
+        expect(clearance, `${start} → ${end} at ${t}`).toBeLessThan(0.24);
+      }
+    }
+    expect(highestWoodlandGrade).toBeLessThan(0.38);
   });
   it('connects Windward Mill on a clear branch of the Dawnlight trail for all seats', () => {
     const anchor = `dawnlight:trail-${WINDWARD_DAWNLIGHT_BRANCH_INDEX}`;
@@ -355,6 +415,7 @@ describe('navigation graph', () => {
             id.startsWith('meadow:') ||
             id.startsWith('orchard:') ||
             id.startsWith('observatory:') ||
+            id.startsWith('woodland:') ||
             id.startsWith('southwind:'),
         )
       )
@@ -394,6 +455,7 @@ describe('navigation graph', () => {
             route.ids[index].startsWith('meadow:') ||
             route.ids[index].startsWith('orchard:') ||
             route.ids[index].startsWith('observatory:') ||
+            route.ids[index].startsWith('woodland:') ||
             route.ids[index].startsWith('southwind:') ||
             route.ids[index].startsWith('dawnlight:') ||
             route.ids[index].startsWith('windward:')
@@ -865,6 +927,69 @@ describe('resident journeys', () => {
     expect(working.status).toBe('working');
     expect(traffic.reserveDestination('next', 'observatory:cedar')).toBe(true);
   });
+  it('walks the long woodland branch and returns continuously after an interruption', () => {
+    const traffic = new NavigationTraffic();
+    const motion = new ResidentJourney(2, 'demo-2', traffic);
+    for (const destination of DESTINATIONS)
+      if (destination.id !== WOODLAND_HOLLOW.id)
+        expect(traffic.reserveDestination('scene', destination.id)).toBe(true);
+    let reachedBranch = false;
+    let previous = motion.position;
+    for (let frame = 0; frame < 220 * 60; frame++) {
+      motion.update(agent(2), 1 / 60, options);
+      const next = motion.position;
+      expect(Math.hypot(...next.map((value, axis) => value - previous[axis]))).toBeLessThan(0.06);
+      previous = next;
+      if (
+        next[0] < -45 &&
+        next[2] > -45 &&
+        motion.activity === `Walking to ${WOODLAND_HOLLOW.label}`
+      ) {
+        reachedBranch = true;
+        break;
+      }
+    }
+    expect(reachedBranch).toBe(true);
+    const working = agent(2, 'working');
+    let faded = false;
+    for (let frame = 0; frame < 220 * 60 && motion.activity !== 'At desk'; frame++) {
+      motion.update(working, 1 / 60, options);
+      const next = motion.position;
+      const jump = Math.hypot(...next.map((value, axis) => value - previous[axis]));
+      expect(jump).toBeLessThan(0.06);
+      if (motion.opacity < 0.99) faded = true;
+      previous = next;
+    }
+    expect(faded).toBe(false);
+    expect(motion.activity).toBe('At desk');
+    expect(working.status).toBe('working');
+    expect(traffic.reserveDestination('next', WOODLAND_HOLLOW.id)).toBe(true);
+  });
+  it('completes a visit to Lantern Hollow before returning', () => {
+    const traffic = new NavigationTraffic();
+    const motion = new ResidentJourney(3, 'demo-3', traffic);
+    for (const destination of DESTINATIONS)
+      if (destination.id !== WOODLAND_HOLLOW.id)
+        expect(traffic.reserveDestination('scene', destination.id)).toBe(true);
+    let arrived = false;
+    let previous = motion.position;
+    for (let frame = 0; frame < 240 * 60; frame++) {
+      motion.update(agent(3), 1 / 60, options);
+      const next = motion.position;
+      expect(Math.hypot(...next.map((value, axis) => value - previous[axis]))).toBeLessThan(0.06);
+      previous = next;
+      if (motion.activity === `Resting at ${WOODLAND_HOLLOW.label}`) {
+        arrived = true;
+        break;
+      }
+    }
+    expect(arrived).toBe(true);
+    expect(motion.position[0]).toBeCloseTo(WOODLAND_HOLLOW.x);
+    expect(motion.position[2]).toBeCloseTo(WOODLAND_HOLLOW.z);
+    advance(motion, agent(3, 'working'), 240);
+    expect(motion.activity).toBe('At desk');
+    expect(traffic.reserveDestination('next', WOODLAND_HOLLOW.id)).toBe(true);
+  });
   it('does not roam from unknown, disconnected, stale, paused, or reduced states', () => {
     for (const state of [
       agent(0, 'unknown'),
@@ -1256,14 +1381,23 @@ it('keeps eight mixed-status residents moving without collisions or indefinite r
   expect(completedReturns).toBeGreaterThan(0);
   const longestDirectReturn =
     Math.max(
-      ...SEATS.map((_, seat) => planRoute('orchard:commons', `home-${seat}`).lengths.at(-1)!),
+      ...SEATS.flatMap((_, seat) =>
+        DESTINATIONS.map((destination) =>
+          planRoute(destination.node, `home-${seat}`).lengths.at(-1)!,
+        ),
+      ),
     ) / 1.08;
   const returnBudget = longestDirectReturn + 20;
   const pendingReturns = returningSince.filter((since) => since >= 0);
   expect(maxWait).toBeLessThan(90);
   expect(longestReturn).toBeLessThan(returnBudget);
   expect(interruptions - completedReturns).toBe(pendingReturns.length);
-  expect(pendingReturns.length).toBeLessThanOrEqual(1);
-  for (const since of pendingReturns) expect(960 - since).toBeLessThan(returnBudget);
+  // Two residents can enter their working phase in the final 18 seconds of this run.
+  // Bound both unfinished returns by elapsed time as well as the longest route.
+  expect(pendingReturns.length).toBeLessThanOrEqual(2);
+  for (const since of pendingReturns) {
+    expect(960 - since).toBeLessThan(returnBudget);
+    expect(960 - since).toBeLessThan(20);
+  }
   expect(closest).toBeGreaterThan(0.6);
 });

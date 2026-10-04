@@ -1,6 +1,7 @@
 import { routeForSeat, routeLengths, type Point } from './motion';
+import { WOODLAND_HOLLOW, WOODLAND_TRAIL_XZ } from './scenery/woodlandPlacement';
 import { LOOKOUT, OBSERVATORY, ORCHARD } from './layout';
-import { meadowTrailPoint, terrainHeight, walkwayHeight } from './terrain';
+import { meadowTrailPoint, renderedTerrainHeight, terrainHeight, walkwayHeight } from './terrain';
 import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
 import { SOUTHWIND_SHORE, SOUTHWIND_TRAIL_XZ } from './scenery/southwindTrailPlacement';
 import { DAWNLIGHT_GLASSHOUSE, EAST_TRAIL_XZ } from './scenery/dawnlightPlacement';
@@ -73,6 +74,13 @@ export const DESTINATIONS: Destination[] = [
     label: 'cedar observatory',
     node: 'observatory:cedar',
     facing: -0.7,
+    clip: 'GardenLook',
+  },
+  {
+    id: WOODLAND_HOLLOW.id,
+    label: WOODLAND_HOLLOW.label,
+    node: WOODLAND_HOLLOW.id,
+    facing: 0.5,
     clip: 'GardenLook',
   },
   {
@@ -196,6 +204,12 @@ for (let index = 0; index < observatoryBranch.length; index++) {
   const [x, z] = observatoryBranch[index];
   NODES[`observatory:branch-${index + 1}`] = [x, walkwayHeight(x, z, 0.105), z];
 }
+for (let index = 1; index < WOODLAND_TRAIL_XZ.length; index++) {
+  const [x, z] = WOODLAND_TRAIL_XZ[index];
+  const id =
+    index === WOODLAND_TRAIL_XZ.length - 1 ? WOODLAND_HOLLOW.id : `woodland:branch-${index}`;
+  NODES[id] = [x, renderedTerrainHeight(x, z) + 0.105, z];
+}
 const chains = [
   ['west', 'center', 'east'],
   ['west', 'cafe-step', 'cafe-door', 'cafe-aisle'],
@@ -247,6 +261,12 @@ const chains = [
     'meadow:trail-16',
     ...observatoryBranch.map((_, index) => `observatory:branch-${index + 1}`),
     'observatory:cedar',
+  ],
+  [
+    'observatory:branch-8',
+    ...WOODLAND_TRAIL_XZ.slice(1).map((_, index) =>
+      index === WOODLAND_TRAIL_XZ.length - 2 ? WOODLAND_HOLLOW.id : `woodland:branch-${index + 1}`,
+    ),
   ],
 ];
 for (const turnout of TRAIL_TURNOUTS)
