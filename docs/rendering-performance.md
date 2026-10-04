@@ -49,6 +49,10 @@ The first Dawnlight visit after a clean reload showed 702 geometries and 42 text
 
 October 3; 1280 × 720 development browser, eight paused simulated residents, daylight/high quality. The settled Windward view showed **68 draws, 59,332 triangles, 795 geometries, and 44 textures** after the shared scene resources had warmed. Horizon showed **930 draws, 283,808 triangles, 820 geometries, and 45 textures**; a second Horizon → Windward cycle returned to the same 820 → 795 geometry and 45 → 44 texture counts. A separate evening/low-quality/reduced-motion look at Windward rendered without browser warnings. These are individual development-browser observations, not a device performance budget.
 
+## Expanded terrain and Amber Bluff spot check
+
+October 3; 1280 × 720 development browser, eight paused simulated residents, daylight/high quality. After the ground grew from 600 × 600 at 128 segments to 1,020 × 1,020 at 216 segments, a settled Horizon view showed about **925 draws, 353,608 triangles, 797 geometries, and 45 textures** (p95 9.1 ms on this 120 Hz display). The settled Amber Bluff view showed **30 draws, 123,634 triangles, 728 geometries, and 42 textures** after shared resources warmed. Evening/low-quality/reduced-motion Amber rendered at **29 draws and 123,394 triangles** with no browser warning. Ground geometry alone grows from 32,768 to 93,312 triangles, so these snapshots do not establish a cross-device frame-rate budget or a controlled before/after improvement.
+
 ## Repeatable review procedure
 
 1. Use the same browser, viewport, display, camera preset, quality, and resident state. Prefer a production build with `npm run build` and `npm run preview` for formal profiling.
