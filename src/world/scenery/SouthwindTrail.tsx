@@ -1,7 +1,9 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
-import { walkwayHeight } from '../terrain';
-import { SOUTHWIND_TRAIL_XZ } from './southwindTrailPlacement';
+import { useWorld } from '../../state';
+import { renderedTerrainHeight, walkwayHeight } from '../terrain';
+import { clearOfSouthwindTrail, SOUTHWIND_TRAIL_XZ } from './southwindTrailPlacement';
+import { clearOfSouthwindMere } from './merePlacement';
 
 // The same authored centerline drives navigation and this visible walking surface.
 // Short subsegments keep the ribbon above the coarse Landscape triangles.
@@ -19,7 +21,7 @@ function trailSamples() {
   return samples;
 }
 
-export function SouthwindTrail() {
+function TrailRibbon() {
   const geometry = useMemo(() => {
     const samples = trailSamples();
     const positions: number[] = [];
@@ -63,5 +65,118 @@ export function SouthwindTrail() {
     <mesh name="southwind-walking-trail" geometry={geometry} receiveShadow>
       <meshStandardMaterial vertexColors roughness={1} side={THREE.DoubleSide} />
     </mesh>
+  );
+}
+
+function TrailVerge() {
+  const quality = useWorld((state) => state.quality);
+  const grasses = useRef<THREE.InstancedMesh>(null);
+  const markers = useRef<THREE.InstancedMesh>(null);
+  const markerCaps = useRef<THREE.InstancedMesh>(null);
+  const sites = useMemo(() => {
+    const grass: { x: number; z: number; height: number }[] = [];
+    const count = quality === 'high' ? 56 : 22;
+    for (let index = 0; index < count; index++) {
+      const segment = 2 + ((index * 7) % 14);
+      const [ax, az] = SOUTHWIND_TRAIL_XZ[segment];
+      const [bx, bz] = SOUTHWIND_TRAIL_XZ[segment + 1];
+      const t = ((index * 37) % 97) / 97;
+      const tangent = Math.hypot(bx - ax, bz - az) || 1;
+      const side = index % 2 ? 1 : -1;
+      const offset = side * (3.1 + ((index * 11) % 9) * 0.23);
+      const x = THREE.MathUtils.lerp(ax, bx, t) - ((bz - az) / tangent) * offset;
+      const z = THREE.MathUtils.lerp(az, bz, t) + ((bx - ax) / tangent) * offset;
+      if (clearOfSouthwindTrail(x, z) && clearOfSouthwindMere(x, z, 0.2))
+        grass.push({ x, z, height: 0.55 + ((index * 13) % 8) * 0.085 });
+    }
+    const marker = [3, 6, 9, 12, 15]
+      .map((index, order) => {
+        const [ax, az] = SOUTHWIND_TRAIL_XZ[index];
+        const [bx, bz] = SOUTHWIND_TRAIL_XZ[index + 1];
+        const tangent = Math.hypot(bx - ax, bz - az) || 1;
+        const side = order % 2 ? 1 : -1;
+        return {
+          x: ax - ((bz - az) / tangent) * 2.95 * side,
+          z: az + ((bx - ax) / tangent) * 2.95 * side,
+        };
+      })
+      .filter(({ x, z }) => clearOfSouthwindTrail(x, z) && clearOfSouthwindMere(x, z));
+    return { grass, marker };
+  }, [quality]);
+  useEffect(() => {
+    const matrix = new THREE.Matrix4();
+    const position = new THREE.Vector3();
+    const rotation = new THREE.Quaternion();
+    const scale = new THREE.Vector3();
+    if (grasses.current) {
+      const shades = ['#779164', '#8a9f73', '#a6aa77'].map((color) => new THREE.Color(color));
+      sites.grass.forEach(({ x, z, height }, index) => {
+        matrix.compose(
+          position.set(x, renderedTerrainHeight(x, z) + height * 0.48, z),
+          rotation,
+          scale.set(0.24, height, 0.24),
+        );
+        grasses.current!.setMatrixAt(index, matrix);
+        grasses.current!.setColorAt(index, shades[index % shades.length]);
+      });
+      grasses.current.instanceMatrix.needsUpdate = true;
+      if (grasses.current.instanceColor) grasses.current.instanceColor.needsUpdate = true;
+      grasses.current.computeBoundingSphere();
+    }
+    if (markers.current) {
+      sites.marker.forEach(({ x, z }, index) => {
+        matrix.compose(
+          position.set(x, renderedTerrainHeight(x, z) + 0.75, z),
+          rotation,
+          scale.set(1, 1.5, 1),
+        );
+        markers.current!.setMatrixAt(index, matrix);
+        markers.current!.setColorAt(index, new THREE.Color(index % 2 ? '#9a835f' : '#b3a077'));
+      });
+      markers.current.instanceMatrix.needsUpdate = true;
+      if (markers.current.instanceColor) markers.current.instanceColor.needsUpdate = true;
+      markers.current.computeBoundingSphere();
+    }
+    if (markerCaps.current) {
+      sites.marker.forEach(({ x, z }, index) => {
+        matrix.compose(
+          position.set(x, renderedTerrainHeight(x, z) + 1.48, z),
+          rotation,
+          scale.set(0.29, 0.17, 0.29),
+        );
+        markerCaps.current!.setMatrixAt(index, matrix);
+      });
+      markerCaps.current.instanceMatrix.needsUpdate = true;
+      markerCaps.current.computeBoundingSphere();
+    }
+    const instances = [grasses.current, markers.current, markerCaps.current].filter(
+      (mesh): mesh is THREE.InstancedMesh => mesh !== null,
+    );
+    return () => instances.forEach((mesh) => mesh.dispose());
+  }, [sites]);
+  return (
+    <group key={quality} name="southwind-trail-verge">
+      <instancedMesh ref={grasses} args={[undefined, undefined, sites.grass.length]}>
+        <coneGeometry args={[0.75, 1, 5]} />
+        <meshStandardMaterial roughness={1} flatShading />
+      </instancedMesh>
+      <instancedMesh ref={markers} args={[undefined, undefined, sites.marker.length]} castShadow>
+        <cylinderGeometry args={[0.035, 0.12, 1, 5]} />
+        <meshStandardMaterial roughness={1} flatShading />
+      </instancedMesh>
+      <instancedMesh ref={markerCaps} args={[undefined, undefined, sites.marker.length]} castShadow>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color="#e3d6ad" roughness={1} />
+      </instancedMesh>
+    </group>
+  );
+}
+
+export function SouthwindTrail() {
+  return (
+    <group name="southwind-trail-scenery">
+      <TrailRibbon />
+      <TrailVerge />
+    </group>
   );
 }

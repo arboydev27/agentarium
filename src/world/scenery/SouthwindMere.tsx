@@ -5,6 +5,7 @@ import { renderedTerrainHeight, SOUTHWIND_WATER_Y, walkwayHeight } from '../terr
 import { Box, Cylinder, Sign } from '../primitives';
 import { SOUTHWIND_SHORE } from './southwindTrailPlacement';
 import { SOUTHWIND_MERE, waterRadiusAt } from './merePlacement';
+import { SouthwindShoreDetail } from './SouthwindShoreDetail';
 
 const REEDS_HIGH = 44;
 const REEDS_LOW = 18;
@@ -251,6 +252,7 @@ export function SouthwindMere() {
       <Shoreline />
       <Water />
       <Shore quality={quality} />
+      <SouthwindShoreDetail />
       <OverlookSurface />
       <OverlookFurniture quality={quality} />
     </group>
