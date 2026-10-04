@@ -2251,6 +2251,38 @@ h1 span {
 .landmark-ridge {
   fill: #adc3ad;
 }
+.landmark-biome-tint {
+  opacity: 0.24;
+  pointer-events: none;
+}
+.landmark-biome-tint.woodland {
+  fill: #57926e;
+}
+.landmark-biome-tint.highland {
+  fill: #9eafbd;
+}
+.landmark-biome-tint.amber {
+  fill: #cf9b61;
+}
+.landmark-biome-label {
+  position: absolute;
+  z-index: 0;
+  padding: 2px 4px;
+  transform: translate(-50%, -50%);
+  border-radius: 4px;
+  background: #f8faedc9;
+  color: #526650;
+  font-size: 8px;
+  font-weight: 650;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.landmark-biome-label.highland {
+  color: #546a75;
+}
+.landmark-biome-label.amber {
+  color: #85603d;
+}
 .landmark-contour {
   fill: none;
   stroke: #8fae8f;

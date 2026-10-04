@@ -1,6 +1,8 @@
 import { expect, it } from 'vitest';
 import { initialAgents } from '../state';
 import { districtAt, worldCounts } from './hud';
+import { WORLD_LOCATION_LABELS } from './layout';
+import { landscapeBiomeAt } from './biomes';
 import { filterResidents, sessionKey } from '../sessions';
 import { DAWNLIGHT_GLASSHOUSE } from './scenery/dawnlightPlacement';
 import { AMBER_BLUFF } from './scenery/amberPlacement';
@@ -64,7 +66,7 @@ it('identifies named places and ordinary open terrain independently of the camer
   expect(districtAt(AMBER_BLUFF.x, AMBER_BLUFF.z)).toBe('amber');
   expect(districtAt(AMBER_BLUFF.x + AMBER_BLUFF.focusRadius - 1, AMBER_BLUFF.z)).toBe('amber');
   expect(districtAt(AMBER_BLUFF.x + AMBER_BLUFF.focusRadius + 1, AMBER_BLUFF.z)).toBe(
-    'open-landscape',
+    'amber-foothills',
   );
   expect(DESTINATIONS.some((destination) => destination.id === AMBER_BLUFF.id)).toBe(false);
   expect(districtAt(0, -50)).toBe('open-landscape');
@@ -74,4 +76,18 @@ it('identifies named places and ordinary open terrain independently of the camer
   }
   expect(districtAt(25, 0)).toBe('open-landscape');
   expect(districtAt(99, 99)).toBe('open-landscape');
+});
+it('names unnamed broad terrain from the shared biome classifier without overriding authored places', () => {
+  expect(landscapeBiomeAt(-80, -20)).toBe('woodland');
+  expect(landscapeBiomeAt(0, -90)).toBe('highland');
+  expect(landscapeBiomeAt(-104, 88)).toBe('amber');
+  expect(landscapeBiomeAt(-80, 68)).toBe('amber'); // overview map label
+  expect(districtAt(-80, -20)).toBe('western-woods');
+  expect(districtAt(0, -90)).toBe('northern-highlands');
+  expect(districtAt(-87, 88)).toBe('amber-foothills');
+  expect(districtAt(AMBER_BLUFF.x, AMBER_BLUFF.z)).toBe('amber');
+  expect(districtAt(0, 0)).toBe('overview');
+  expect(WORLD_LOCATION_LABELS['western-woods']).toBe('Western Woods');
+  expect(WORLD_LOCATION_LABELS['northern-highlands']).toBe('Northern Highlands');
+  expect(WORLD_LOCATION_LABELS['amber-foothills']).toBe('Amber Foothills');
 });

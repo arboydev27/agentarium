@@ -1,5 +1,6 @@
 import type { Agent } from '../state';
 import { attentionFor } from '../shared/work.mjs';
+import { landscapeBiomeAt } from './biomes';
 import {
   LOOKOUT,
   OBSERVATORY,
@@ -60,7 +61,15 @@ export function districtAt(x: number, z: number): WorldLocation {
     const [tx, , tz] = turnoutPoint(turnout.trailIndex, turnout.side, 4.8);
     if (Math.hypot(x - tx, z - tz) <= 3.6) return turnout.id;
   }
-  return Math.abs(x) <= WORLD.width / 2 + 5 && Math.abs(z) <= WORLD.depth / 2 + 5
-    ? 'overview'
-    : 'open-landscape';
+  if (Math.abs(x) <= WORLD.width / 2 + 5 && Math.abs(z) <= WORLD.depth / 2 + 5) return 'overview';
+  switch (landscapeBiomeAt(x, z)) {
+    case 'woodland':
+      return 'western-woods';
+    case 'highland':
+      return 'northern-highlands';
+    case 'amber':
+      return 'amber-foothills';
+    default:
+      return 'open-landscape';
+  }
 }

@@ -31,6 +31,39 @@ import {
   type MapPoint,
 } from './world/mapSnapshot';
 import { CAMERA_PAN_BOUNDS } from './world/cameraPan';
+import { landscapeBiomeAt } from './world/biomes';
+
+type TintBiome = Exclude<ReturnType<typeof landscapeBiomeAt>, 'meadow'>;
+const BIOME_LABELS = [
+  { kind: 'woodland', label: 'Western Woods', point: { x: -80, z: -20 } },
+  { kind: 'highland', label: 'Northern Highlands', point: { x: 35, z: -110 } },
+  { kind: 'amber', label: 'Amber Foothills', point: { x: -80, z: 68 } },
+] as const;
+
+// Coarse world-coordinate samples give the illustrated map a biome hint.
+// Live markers and scout clicks keep using the exact viewport transform.
+const BIOME_TINT_PATHS = (() => {
+  const columns = 20;
+  const rows = 16;
+  const cellWidth = (CAMERA_PAN_BOUNDS.maxX - CAMERA_PAN_BOUNDS.minX) / columns;
+  const cellDepth = (CAMERA_PAN_BOUNDS.maxZ - CAMERA_PAN_BOUNDS.minZ) / rows;
+  const paths: Record<TintBiome, string[]> = { woodland: [], highland: [], amber: [] };
+  for (let row = 0; row < rows; row++) {
+    for (let column = 0; column < columns; column++) {
+      const x = CAMERA_PAN_BOUNDS.minX + column * cellWidth;
+      const z = CAMERA_PAN_BOUNDS.minZ + row * cellDepth;
+      const kind = landscapeBiomeAt(x + cellWidth / 2, z + cellDepth / 2);
+      if (kind === 'meadow') continue;
+      const origin = worldToMap({ x, z });
+      const left = (origin.left * 2.8).toFixed(2);
+      const top = (origin.top * 1.7).toFixed(2);
+      const width = (280 / columns).toFixed(2);
+      const height = (170 / rows).toFixed(2);
+      paths[kind].push(`M${left} ${top}h${width}v${height}h-${width}Z`);
+    }
+  }
+  return paths;
+})();
 
 const LANDMARKS = [
   { view: 'overview', label: 'Overview', icon: Focus, detail: 'The resident grove' },
@@ -275,7 +308,7 @@ export function LandmarkMap({
           <div
             className={'landmark-map-art' + (zoomed ? ' detail' : '')}
             role="group"
-            aria-label={`${zoomed ? 'Two-times detail' : 'Travel area'} locator and camera scout. North is up. Named place pins use world coordinates; resident markers show only the eight visible world seats.`}
+            aria-label={`${zoomed ? 'Two-times detail' : 'Travel area with schematic biome regions'} locator and camera scout. North is up. Named place pins use world coordinates; resident markers show only the eight visible world seats.`}
           >
             <svg
               viewBox="0 0 280 170"
@@ -287,12 +320,35 @@ export function LandmarkMap({
                 className="landmark-ridge"
                 d="M0 57 29 36 57 48 91 20 122 43 153 17 190 48 224 29 254 50 280 33V0H0Z"
               />
+              {!zoomed &&
+                (['woodland', 'highland', 'amber'] as const).map((kind) => (
+                  <path
+                    key={kind}
+                    className={`landmark-biome-tint ${kind}`}
+                    d={BIOME_TINT_PATHS[kind].join('')}
+                  />
+                ))}
               <path
                 className="landmark-contour"
                 d="M-6 73C35 57 66 67 100 54s61-12 87 2 63 9 102-8M-8 94c35-13 70-17 104-7s60-2 92-14 65-7 100 4M-9 118c42-11 79-3 118-9s66-3 91-13 53-4 90 4M-5 143c45-10 74-3 107-5s61-10 94-4 58 8 92-4"
               />
               {!zoomed && <ellipse className="landmark-mere" cx="44" cy="132" rx="11" ry="6" />}
             </svg>
+            {!zoomed &&
+              BIOME_LABELS.filter(
+                ({ kind, point }) => landscapeBiomeAt(point.x, point.z) === kind,
+              ).map(({ kind, label, point }) => {
+                const position = worldToMap(point, viewport);
+                return (
+                  <span
+                    key={kind}
+                    className={`landmark-biome-label ${kind}`}
+                    style={{ left: `${position.left}%`, top: `${position.top}%` }}
+                  >
+                    {label}
+                  </span>
+                );
+              })}
             <span className="landmark-north" aria-hidden="true">
               N ↑
             </span>
