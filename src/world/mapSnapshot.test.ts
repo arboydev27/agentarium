@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { CAMERA_PAN_BOUNDS } from './cameraPan';
+import { SOUTHWIND_SHORE } from './scenery/southwindTrailPlacement';
+import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
 import {
   activateMap,
   getMapSnapshot,
   groupNearbyMapResidents,
+  MAP_LANDMARKS,
   mapToWorld,
   publishMapSnapshot,
   subscribeMapSnapshot,
@@ -31,6 +34,36 @@ describe('live landmark map', () => {
       x: CAMERA_PAN_BOUNDS.minX,
       z: CAMERA_PAN_BOUNDS.maxZ,
     });
+  });
+
+  it('plots named outside places at their shared world destinations', () => {
+    expect(MAP_LANDMARKS).toHaveLength(6);
+    expect(MAP_LANDMARKS.map((landmark) => landmark.id)).toEqual([
+      'lookout',
+      'orchard',
+      'observatory',
+      'mere',
+      'meadow:rest-west',
+      'meadow:rest-east',
+    ]);
+    const mere = MAP_LANDMARKS.find((landmark) => landmark.id === 'mere')!;
+    expect(mere.point).toEqual({ x: SOUTHWIND_SHORE.x, z: SOUTHWIND_SHORE.z });
+    expect(mere.view).toBe('mere');
+    for (const turnout of TRAIL_TURNOUTS) {
+      const [x, , z] = turnoutPoint(turnout.trailIndex, turnout.side, 4.8);
+      const landmark = MAP_LANDMARKS.find((item) => item.id === turnout.id);
+      expect(landmark?.point).toEqual({ x, z });
+      expect(landmark?.view).toBeUndefined();
+    }
+    for (const landmark of MAP_LANDMARKS) {
+      const position = worldToMap(landmark.point);
+      expect(position.left).toBeGreaterThan(0);
+      expect(position.left).toBeLessThan(100);
+      expect(position.top).toBeGreaterThan(0);
+      expect(position.top).toBeLessThan(100);
+      expect(mapToWorld(position).x).toBeCloseTo(landmark.point.x);
+      expect(mapToWorld(position).z).toBeCloseTo(landmark.point.z);
+    }
   });
 
   it('includes only current visible seat assignments and copies coordinates', () => {

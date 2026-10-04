@@ -2012,6 +2012,61 @@ h1 span {
   outline: 3px solid #bc8542;
   outline-offset: -4px;
 }
+.landmark-place-marker {
+  position: absolute;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  transform: translate(-50%, -50%);
+  border: 2px solid #f8f9ed;
+  border-radius: 50%;
+  background: #77583c;
+  color: #fffdf0;
+  box-shadow: 0 2px 5px #29382e8c;
+  font-size: 9px;
+  font-weight: 800;
+}
+.landmark-place-marker.trail-rest {
+  background: #857340;
+}
+.landmark-place-marker[aria-pressed='true'] {
+  box-shadow:
+    0 0 0 3px #ecc56e,
+    0 2px 5px #29382e8c;
+}
+.landmark-place-marker:hover,
+.landmark-place-marker:focus-visible {
+  z-index: 7;
+  outline: 2px solid #fff5cf;
+  outline-offset: 2px;
+}
+.landmark-place-marker::after {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  display: none;
+  padding: 3px 5px;
+  transform: translateX(-50%);
+  border-radius: 5px;
+  background: #284d3b;
+  color: #fffdf1;
+  content: attr(data-label);
+  font-size: 9px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.landmark-place-marker[data-label-position='below']::after {
+  top: calc(100% + 6px);
+  bottom: auto;
+}
+.landmark-place-marker:hover::after,
+.landmark-place-marker:focus-visible::after {
+  display: block;
+}
 .landmark-scout-marker {
   position: absolute;
   z-index: 5;
@@ -2075,7 +2130,7 @@ h1 span {
   pointer-events: none;
 }
 .landmark-resident-marker {
-  z-index: 4;
+  z-index: 5;
   width: 24px;
   height: 24px;
   border: 2px solid #f9faec;
@@ -2193,6 +2248,10 @@ h1 span {
   background: #325f47;
   box-shadow: 0 0 0 1px #f9faec;
 }
+.landmark-legend-place {
+  background: #77583c;
+  box-shadow: 0 0 0 1px #f9faec;
+}
 .landmark-shortcut-label {
   margin: 0 2px 6px;
   color: #63745c;
@@ -2274,6 +2333,11 @@ h1 span {
   .landmark-map-art {
     height: 112px;
     flex: none;
+  }
+  .landmark-place-marker {
+    width: 16px;
+    height: 16px;
+    font-size: 8px;
   }
   .landmark-map p {
     display: none;

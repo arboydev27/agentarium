@@ -1,4 +1,7 @@
 import { CAMERA_PAN_BOUNDS } from './cameraPan';
+import { LOOKOUT, OBSERVATORY, ORCHARD, type WorldView } from './layout';
+import { SOUTHWIND_SHORE } from './scenery/southwindTrailPlacement';
+import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
 
 export type MapPoint = { x: number; z: number };
 export type MapResident = MapPoint & { id: string; name: string; seat: number };
@@ -6,6 +9,55 @@ export type MapSnapshot = { camera: MapPoint | null; residents: MapResident[] };
 export type ResidentPosition = { point: MapPoint & { y: number }; seat: number };
 export type SeatedResident = { id: string; name: string; seat: number };
 export type MapResidentGroup = { key: string; point: MapPoint; residents: MapResident[] };
+export type MapLandmark = {
+  id: string;
+  label: string;
+  shortLabel: string;
+  point: MapPoint;
+  view?: WorldView;
+};
+
+// These named pins use world coordinates, unlike the decorative contour art.
+// Trail rests have no camera preset, so their pins scout their exact destination.
+export const MAP_LANDMARKS: readonly MapLandmark[] = [
+  {
+    id: 'lookout',
+    label: 'Lookout',
+    shortLabel: 'L',
+    point: { x: LOOKOUT.x, z: LOOKOUT.z },
+    view: 'lookout',
+  },
+  {
+    id: 'orchard',
+    label: 'Orchard Commons',
+    shortLabel: 'O',
+    point: { x: ORCHARD.x, z: ORCHARD.z },
+    view: 'orchard',
+  },
+  {
+    id: 'observatory',
+    label: 'Cedar Observatory',
+    shortLabel: 'C',
+    point: { x: OBSERVATORY.x, z: OBSERVATORY.z },
+    view: 'observatory',
+  },
+  {
+    id: 'mere',
+    label: 'Southwind Mere shore',
+    shortLabel: 'M',
+    point: { x: SOUTHWIND_SHORE.x, z: SOUTHWIND_SHORE.z },
+    view: 'mere',
+  },
+  ...TRAIL_TURNOUTS.map((turnout) => {
+    const [x, , z] = turnoutPoint(turnout.trailIndex, turnout.side, 4.8);
+    return {
+      id: turnout.id,
+      label: turnout.label,
+      shortLabel: turnout.side < 0 ? 'W' : 'E',
+      point: { x, z },
+    };
+  }),
+];
 
 const EMPTY_SNAPSHOT: MapSnapshot = { camera: null, residents: [] };
 const listeners = new Set<() => void>();

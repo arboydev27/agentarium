@@ -6,6 +6,7 @@ import {
   activateMap,
   getMapSnapshot,
   groupNearbyMapResidents,
+  MAP_LANDMARKS,
   mapToWorld,
   subscribeMapSnapshot,
   worldToMap,
@@ -207,7 +208,7 @@ export function LandmarkMap({
           <div
             className="landmark-map-art"
             role="group"
-            aria-label="Live position locator and camera scout. North is up. Markers show only residents occupying the eight visible world seats."
+            aria-label="World locator and camera scout. North is up. Named place pins use world coordinates; resident markers show only the eight visible world seats."
           >
             <svg
               viewBox="0 0 280 170"
@@ -284,6 +285,32 @@ export function LandmarkMap({
                 }
               }}
             />
+            {MAP_LANDMARKS.map((landmark) => {
+              const position = worldToMap(landmark.point);
+              return (
+                <button
+                  key={landmark.id}
+                  className={
+                    'landmark-place-marker' + (landmark.view ? ' viewpoint' : ' trail-rest')
+                  }
+                  style={{ left: `${position.left}%`, top: `${position.top}%` }}
+                  data-label={landmark.label}
+                  data-label-position={position.top < 22 ? 'below' : 'above'}
+                  aria-label={`${landmark.label}: ${landmark.view ? 'open viewpoint' : 'move camera to trail rest'}`}
+                  aria-pressed={
+                    landmark.view ? !following && !customized && view === landmark.view : undefined
+                  }
+                  title={`${landmark.label} — ${landmark.view ? 'open viewpoint' : 'move camera here'}`}
+                  onClick={() => {
+                    if (landmark.view) navigate(landmark.view);
+                    else onScout(landmark.point);
+                    close();
+                  }}
+                >
+                  {landmark.shortLabel}
+                </button>
+              );
+            })}
             {scoutSelected && scout && (
               <span
                 className="landmark-scout-marker"
@@ -316,6 +343,9 @@ export function LandmarkMap({
             <span>
               <i className="landmark-legend-resident" /> Visible resident
             </span>
+            <span>
+              <i className="landmark-legend-place" /> Named place
+            </span>
           </div>
           <div className="landmark-shortcut-label">Viewpoints</div>
           <div className="landmark-viewpoints" role="group" aria-label="Viewpoint shortcuts">
@@ -338,7 +368,10 @@ export function LandmarkMap({
               </button>
             ))}
           </div>
-          <p>Camera only. Scenic terrain may not be walkable. Other chats remain in Residents.</p>
+          <p>
+            Named pins open a viewpoint or move the camera to a trail rest. Scenic terrain may not
+            be walkable. Other chats remain in Residents.
+          </p>
         </div>
       )}
     </section>
