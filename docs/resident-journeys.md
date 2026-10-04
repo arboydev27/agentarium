@@ -12,25 +12,26 @@ The shared rig's standing rest, bench rest, café break, and garden look loops n
 
 ## Destinations and routes
 
-Thirteen destination slots are available:
+Fourteen destination slots are available:
 
-| Destination         | Visual activity          |
-| ------------------- | ------------------------ |
-| Café counter        | Standing café-break pose |
-| Café window         | Looking around           |
-| Garden west terrace | Looking around           |
-| Garden east terrace | Relaxing                 |
-| Courtyard bench     | Seated rest              |
-| Courtyard basin     | Looking at the water     |
-| Studio terrace      | Relaxing                 |
-| Tree-lined path     | Looking around           |
-| Meadow Lookout      | Looking around           |
-| Orchard Commons     | Looking around           |
-| Cedar Observatory   | Looking around           |
-| Western Trail Rest  | Looking around           |
-| Eastern Trail Rest  | Relaxing                 |
+| Destination          | Visual activity          |
+| -------------------- | ------------------------ |
+| Café counter         | Standing café-break pose |
+| Café window          | Looking around           |
+| Garden west terrace  | Looking around           |
+| Garden east terrace  | Relaxing                 |
+| Courtyard bench      | Seated rest              |
+| Courtyard basin      | Looking at the water     |
+| Studio terrace       | Relaxing                 |
+| Tree-lined path      | Looking around           |
+| Meadow Lookout       | Looking around           |
+| Orchard Commons      | Looking around           |
+| Cedar Observatory    | Looking around           |
+| Western Trail Rest   | Looking around           |
+| Eastern Trail Rest   | Relaxing                 |
+| Southwind Mere shore | Looking around           |
 
-The navigation graph connects each desk's existing resting point to authored clear lanes, central paths, stairs, and destination branches. Shortest-path planning uses geometric edge distance. Routes include floor heights, studio stair elevations, and terrain-aligned trail samples leading to Meadow Lookout, Orchard Commons, west to Cedar Observatory, and two side rests along the main trail. The western rest has a bench; the eastern rest has a wayfinder. Destinations are terminal branches so a resting resident does not occupy a through-route. The rests are ordinary destinations, not passing lanes or traffic-control points. This is pathfinding over authored waypoints, not a generated navmesh, physics engine, or arbitrary obstacle avoidance.
+The navigation graph connects each desk's existing resting point to authored clear lanes, central paths, stairs, and destination branches. Shortest-path planning uses geometric edge distance. Routes include floor heights, studio stair elevations, terrain-aligned northern trail samples leading to Meadow Lookout, Orchard Commons, Cedar Observatory, and two side rests, plus a southern path from the courtyard to Southwind Mere's dry eastern shore. The western rest has a bench; the eastern rest has a wayfinder. Destinations are terminal branches so a resting resident does not occupy a through-route. The rests are ordinary destinations, not passing lanes or traffic-control points. This is pathfinding over authored waypoints, not a generated navmesh, physics engine, or arbitrary obstacle avoidance.
 
 A resident first finishes its local desk transition and any eligible completion reaction. After its profile's rest interval, it attempts an outing. It tries preferred destinations in a rotating order, visits an available one, rests, and returns home. If no route is available, it waits near its desk and retries after roughly one second.
 
@@ -54,7 +55,7 @@ When a session is removed near its desk, the existing walk-out/fade remains. Whe
 
 Select a resident to see its cosmetic activity in its world label—for example, Walking to café counter, Resting at courtyard bench, or Returning to desk. All resident-label tooltips expose that activity. The inspector identifies the assigned zone as **Home**, which remains stable while the resident travels. Follow resident tracks actual moving position; camera presets, including WebMCP view changes, cancel follow. The raised follow angle reduces foreground obstruction but does not guarantee an unobstructed view from every direction.
 
-Demo automatic ticks leave idle residents alone for at least 60 seconds while outings are enabled so visits can be seen. One demo resident now prefers Meadow Lookout on its first outing, making the distant route observable during ordinary simulation; other destinations remain in rotation. Manual task/status controls remain immediate, and live telemetry has no such delay. Simulation speed controls event scheduling; walking pace remains measured in real seconds. Outing preferences and positions are temporary, not saved journeys.
+Demo automatic ticks leave idle residents alone for at least 60 seconds while outings are enabled so visits can be seen. One demo resident prefers Southwind Mere and another Meadow Lookout on their first outings, making both distant routes observable during ordinary simulation; other destinations remain in rotation. Manual task/status controls remain immediate, and live telemetry has no such delay. Simulation speed controls event scheduling; walking pace remains measured in real seconds. Outing preferences and positions are temporary, not saved journeys.
 
 ## Expanding safely
 
@@ -64,4 +65,4 @@ Demo automatic ticks leave idle residents alone for at least 60 seconds while ou
 4. Add destination poses in `rig.ts` and verify the shared skeleton contract. Keep accessory geometry independent of body animation tracks.
 5. Run layout, navigation, traffic, interruption, pause/removal, and asset tests. Inspect the new route in the browser, including reduced motion and follow mode.
 
-Tests cover all 104 home-to-destination routes, reverse paths, desk/chair and selected major-prop clearance, outside trail grade and clearance, atomic leases, returning priority, overlapping lanes with different waypoint names, interrupted travel, and multi-resident simulations without body overlaps. These authored-footprint checks do not replace visual inspection or constitute a general collision solver.
+Tests cover all 112 home-to-destination routes, reverse paths, desk/chair and selected major-prop clearance, outside trail grade and clearance, a dry Southwind route, atomic leases, returning priority, overlapping lanes with different waypoint names, interrupted travel, and multi-resident simulations without body overlaps. These authored-footprint checks do not replace visual inspection or constitute a general collision solver.

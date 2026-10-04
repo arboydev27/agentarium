@@ -1,6 +1,6 @@
 # Toward an explorable Agentarium world
 
-Agentarium's inhabited district contains the café, studio, garden, courtyard, eight resident seats, and authored paths between them. Routes now leave that district for Meadow Lookout, Orchard Commons, Cedar Observatory, and two side rests along the meadow trail. Most surrounding terrain and distant groves remain visual scenery, not a general navigation surface. This distinction matters to users and to future navigation code.
+Agentarium's inhabited district contains the café, studio, garden, courtyard, eight resident seats, and authored paths between them. Routes now leave that district for Meadow Lookout, Orchard Commons, Cedar Observatory, two side rests along the meadow trail, and Southwind Mere shore to the south. Most surrounding terrain and distant groves remain visual scenery, not a general navigation surface. This distinction matters to users and to future navigation code.
 
 ## Experience target
 
@@ -8,11 +8,11 @@ A user should be able to pan from the original district toward a visible horizon
 
 The spatial model should have three layers:
 
-| Layer           | Purpose                                                        | Current state                                                 |
-| --------------- | -------------------------------------------------------------- | ------------------------------------------------------------- |
-| Active district | Desks, routes, destinations, interactive selection             | Four-zone island implemented                                  |
-| Near landscape  | Connected paths and landmarks that can become future districts | Three landmarks, two trail rests, and their authored branches |
-| Far horizon     | Silhouette and atmosphere without unnecessary detail           | Perspective view, terrain, ridge, arch, and fog               |
+| Layer           | Purpose                                                        | Current state                                                                 |
+| --------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Active district | Desks, routes, destinations, interactive selection             | Four-zone island implemented                                                  |
+| Near landscape  | Connected paths and landmarks that can become future districts | Three northern landmarks, two trail rests, the southern mere, and their paths |
+| Far horizon     | Silhouette and atmosphere without unnecessary detail           | Perspective view, terrain, ridge, arch, and fog                               |
 
 ## Milestones
 
@@ -20,13 +20,13 @@ The spatial model should have three layers:
 
 Extend the visible ground well beyond the current island, keep the existing desk/navigation geometry clear, and give users an explicit horizon view. Use inexpensive geometry and instance repeated trees. Match fog to the terrain edge so zooming or panning does not expose an abrupt empty border. Test day/night, low/high quality, reduced motion, watch/follow, and different window sizes.
 
-The current implementation uses a finite 600 × 600 landscape. A raised plateau blends the original district into meadow, with a winding trail, clustered groves, meadow groundcover, a distinctive amber oak, and a northern rise. A low-poly ridge and ruined arch add depth behind the orchard. Slate Reach adds a northern rock silhouette, while Southwind Mere adds a scenic basin and lake in the southern camera-travel area. Horizon uses perspective to show a lower skyline and far land. Terrain and placement are deterministic; selected meadow-detail cells generate locally on mount, while the base terrain and distant silhouettes remain continuously mounted. No background asset loading or terrain streaming runs yet. Authored routes along the trail carry residents to the lookout, Orchard Commons, Cedar Observatory, and two trail rests. Route nodes and visible ribbons share a height rule checked against the actual rendered terrain triangles.
+The current implementation uses a finite 600 × 600 landscape. A raised plateau blends the original district into meadow, with a winding trail, clustered groves, meadow groundcover, a distinctive amber oak, and a northern rise. A low-poly ridge and ruined arch add depth behind the orchard. Slate Reach adds a northern rock silhouette, while Southwind Mere adds a basin, lake, and reachable eastern overlook in the southern camera-travel area. Horizon uses perspective to show a lower skyline and far land. Terrain and placement are deterministic; selected meadow-detail cells generate locally on mount, while the base terrain and distant silhouettes remain continuously mounted. No background asset loading or terrain streaming runs yet. Authored northern routes carry residents to the lookout, Orchard Commons, Cedar Observatory, and two trail rests; a separate southern route reaches Southwind Mere shore. Route nodes and visible ribbons share a height rule checked against the actual rendered terrain triangles.
 
 ### 2. Make the first outside area truly traversable
 
 Choose one neighboring district with a purpose and clear silhouette, then author its floor, route connections, destination slots, sightlines, and camera bookmark. Move from an isolated floating island toward continuous paths. Preserve a path back to every current seat and a way to distinguish the home district from a resident's current destination. Add collision/clearance checks for every new prop, not only the old eight seats.
 
-Meadow Lookout is the first outside area, with an open-sided shelter, an authored branch from the trail, a terminal destination, terrain-aligned route samples, and a camera bookmark. Orchard Commons extends the same trail farther north to a second terminal destination. Cedar Observatory branches west from the trail into a wooded terrace. Each landmark has a terminal destination and camera bookmark. The two smaller trail rests branch to opposite sides of the main trail, with a bench to the west and a wayfinder to the east. Their IDs are district-qualified and their routes are covered by grade, clearance, and interruption tests. The current global graph can serve these small areas, but its conservative corridor reservations can make long trips wait; the rests do not yet provide passing or convoy control. Further expansion needs more route capacity and passing behavior. Keep visual availability separate from provider activity: an offscreen resident must not become idle merely because its scenery unmounts.
+Meadow Lookout is the first outside area, with an open-sided shelter, an authored branch from the trail, a terminal destination, terrain-aligned route samples, and a camera bookmark. Orchard Commons extends the same trail farther north to a second terminal destination. Cedar Observatory branches west from the trail into a wooded terrace. Each landmark has a terminal destination and camera bookmark. The two smaller trail rests branch to opposite sides of the main trail, with a bench to the west and a wayfinder to the east. A separate southern path leaves the courtyard for a dry overlook at Southwind Mere. All outside IDs are district-qualified, and their routes are covered by grade, clearance, and interruption tests. The current global graph can serve these small areas, but its conservative corridor reservations can make long trips wait; the rests do not yet provide passing or convoy control. Further expansion needs more route capacity and passing behavior. Keep visual availability separate from provider activity: an offscreen resident must not become idle merely because its scenery unmounts.
 
 ### 3. Add spatial streaming before multiplying districts
 
@@ -48,6 +48,6 @@ A release of a larger district should meet these gates: no resident clips throug
 
 ## Current constraints
 
-The finite authored node graph, eight seated residents, and single-scene renderer are good for the original district, three outside landmarks, and two trail rests. They are not an infinite-world engine. Orthographic views serve close places and the perspective Horizon serves the vista. Most wide terrain is still visual context; expansion should proceed in measured districts rather than treating distant decorative geometry as completed world scale.
+The finite authored node graph, eight seated residents, and single-scene renderer are good for the original district, three northern landmarks, two trail rests, and the southern mere. They are not an infinite-world engine. Orthographic views serve close places and the perspective Horizon serves the vista. Most wide terrain is still visual context; expansion should proceed in measured districts rather than treating distant decorative geometry as completed world scale.
 
 See [World layout and rendering](world-layout.md), [Resident identity and journeys](resident-journeys.md), and [Rendering performance](rendering-performance.md) for the current contracts and measurement method.
