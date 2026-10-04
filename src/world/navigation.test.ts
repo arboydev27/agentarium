@@ -26,6 +26,13 @@ import {
   EAST_TRAIL_XZ,
   clearOfDawnlightTrail,
 } from './scenery/dawnlightPlacement';
+import {
+  WINDWARD_BRANCH_XZ,
+  WINDWARD_DAWNLIGHT_BRANCH_INDEX,
+  WINDWARD_MILL,
+  WINDWARD_TRAIL_XZ,
+  clearOfWindwardTrail,
+} from './scenery/windwardPlacement';
 const options = { reduced: false, playing: true, leaving: false, now: 10000, outings: true };
 const agent = (seat = 0, status: ReturnType<typeof initialAgents>[number]['status'] = 'idle') => ({
   ...initialAgents()[seat],
@@ -37,6 +44,77 @@ function advance(motion: ResidentJourney, a = agent(), seconds = 1, overrides = 
 }
 
 describe('navigation graph', () => {
+  it('keeps promenade resting terminal and the shared east trail free for through traffic', () => {
+    const rest = DESTINATIONS.find((destination) => destination.id === 'promenade');
+    expect(rest?.node).toBe('promenade-rest');
+    expect(EDGES.filter(([from, to]) => from === rest?.node || to === rest?.node)).toHaveLength(1);
+    expect(
+      Math.hypot(
+        NODES.promenade[0] - NODES['promenade-rest'][0],
+        NODES.promenade[2] - NODES['promenade-rest'][2],
+      ),
+    ).toBeGreaterThan(1.4);
+    expect(planRoute('home-0', WINDWARD_MILL.id).ids).not.toContain(rest?.node);
+    expect(planRoute('home-0', DAWNLIGHT_GLASSHOUSE.id).ids).not.toContain(rest?.node);
+    for (const [from, to] of EDGES) {
+      if (from === 'promenade-rest' || to === 'promenade-rest') continue;
+      const a = NODES[from],
+        b = NODES[to];
+      for (let step = 0; step <= 20; step++) {
+        const t = step / 20;
+        expect(
+          Math.hypot(
+            NODES['promenade-rest'][0] - a[0] - (b[0] - a[0]) * t,
+            NODES['promenade-rest'][2] - a[2] - (b[2] - a[2]) * t,
+          ),
+          `${from} → ${to} near promenade rest`,
+        ).toBeGreaterThan(0.8);
+      }
+    }
+  });
+  it('connects Windward Mill on a clear branch of the Dawnlight trail for all seats', () => {
+    const anchor = `dawnlight:trail-${WINDWARD_DAWNLIGHT_BRANCH_INDEX}`;
+    expect(WINDWARD_BRANCH_XZ[0]).toEqual(EAST_TRAIL_XZ[WINDWARD_DAWNLIGHT_BRANCH_INDEX]);
+    expect(WINDWARD_TRAIL_XZ[0]).toEqual([NODES.promenade[0], NODES.promenade[2]]);
+    expect(WINDWARD_TRAIL_XZ.at(-1)).toEqual([WINDWARD_MILL.x, WINDWARD_MILL.z]);
+    expect(clearOfWindwardTrail(WINDWARD_MILL.centerX, WINDWARD_MILL.centerZ)).toBe(false);
+    expect(clearOfWindwardTrail(52, 30)).toBe(true);
+    expect(DESTINATIONS.some((destination) => destination.id === WINDWARD_MILL.id)).toBe(true);
+    expect(
+      EDGES.filter(([from, to]) => from === WINDWARD_MILL.id || to === WINDWARD_MILL.id),
+    ).toHaveLength(1);
+    for (let seat = 0; seat < 8; seat++) {
+      const outward = planRoute(`home-${seat}`, WINDWARD_MILL.id);
+      expect(outward.ids).toContain('promenade');
+      expect(outward.ids).toContain(anchor);
+      expect(outward.ids.at(-1)).toBe(WINDWARD_MILL.id);
+      expect(outward.ids).not.toContain(DAWNLIGHT_GLASSHOUSE.id);
+      expect(planRoute(WINDWARD_MILL.id, `home-${seat}`).points).toEqual(
+        [...outward.points].reverse(),
+      );
+    }
+    for (const [start, end] of EDGES) {
+      if (!start.startsWith('windward:') && !end.startsWith('windward:')) continue;
+      const from = NODES[start],
+        to = NODES[end];
+      const horizontal = Math.hypot(to[0] - from[0], to[2] - from[2]);
+      expect(horizontal).toBeLessThan(2.2);
+      expect(Math.abs(to[1] - from[1]) / horizontal, `${start} → ${end} grade`).toBeLessThan(0.35);
+      for (let step = 0; step <= 20; step++) {
+        const t = step / 20;
+        const x = from[0] + (to[0] - from[0]) * t;
+        const y = from[1] + (to[1] - from[1]) * t;
+        const z = from[2] + (to[2] - from[2]) * t;
+        const clearance = y - renderedTerrainHeight(x, z);
+        expect(clearance, `${start} → ${end} at ${t}`).toBeGreaterThan(0.015);
+        expect(clearance, `${start} → ${end} at ${t}`).toBeLessThan(0.24);
+        expect(
+          Math.hypot(x - WINDWARD_MILL.centerX, z - WINDWARD_MILL.centerZ),
+          `${start} → ${end} mill footprint`,
+        ).toBeGreaterThan(WINDWARD_MILL.footprintRadius + 0.8);
+      }
+    }
+  });
   it('connects Dawnlight Glasshouse by a distinct reversible east trail with clear terrain chords', () => {
     expect(EAST_TRAIL_XZ[0]).toEqual([NODES.promenade[0], NODES.promenade[2]]);
     expect(EAST_TRAIL_XZ.at(-1)).toEqual([DAWNLIGHT_GLASSHOUSE.x, DAWNLIGHT_GLASSHOUSE.z]);
@@ -90,7 +168,14 @@ describe('navigation graph', () => {
       return Math.hypot(x - from[0] - t * dx, z - from[2] - t * dz);
     };
     for (const [start, end] of EDGES) {
-      if (start.startsWith('dawnlight:') || end.startsWith('dawnlight:') || end === 'promenade')
+      if (
+        start.startsWith('dawnlight:') ||
+        end.startsWith('dawnlight:') ||
+        start.startsWith('windward:') ||
+        end.startsWith('windward:') ||
+        end === 'promenade-rest' ||
+        end === 'promenade'
+      )
         continue;
       for (let index = 1; index < EAST_TRAIL_XZ.length; index++) {
         const from = EAST_TRAIL_XZ[index - 1];
@@ -119,6 +204,21 @@ describe('navigation graph', () => {
     expect(traffic.acquire('third', planRoute('home-2', DAWNLIGHT_GLASSHOUSE.id).ids)).toBe(false);
     traffic.release('meadow');
     expect(traffic.acquire('east', east.ids, true)).toBe(true);
+  });
+  it('keeps Windward and Dawnlight exclusive at their fork, then prioritizes return', () => {
+    const traffic = new NavigationTraffic();
+    const mill = planRoute('home-0', WINDWARD_MILL.id);
+    const glasshouse = planRoute('home-1', DAWNLIGHT_GLASSHOUSE.id);
+    expect(traffic.reserveDestination('mill', WINDWARD_MILL.id)).toBe(true);
+    expect(traffic.reserveDestination('another', WINDWARD_MILL.id)).toBe(false);
+    expect(traffic.acquire('mill', mill.ids)).toBe(true);
+    expect(traffic.acquire('glasshouse', glasshouse.ids)).toBe(false);
+    traffic.releasePassed('mill', mill.lengths[mill.ids.indexOf('windward:branch-8')] + 1);
+    expect(traffic.acquire('glasshouse', glasshouse.ids)).toBe(true);
+    expect(traffic.acquire('mill', mill.ids, true)).toBe(false);
+    expect(traffic.acquire('third', planRoute('home-2', WINDWARD_MILL.id).ids)).toBe(false);
+    traffic.release('glasshouse');
+    expect(traffic.acquire('mill', mill.ids, true)).toBe(true);
   });
   it('connects both trail turnouts as clear terminal branches for every seat', () => {
     for (const turnout of TRAIL_TURNOUTS) {
@@ -295,11 +395,13 @@ describe('navigation graph', () => {
             route.ids[index].startsWith('orchard:') ||
             route.ids[index].startsWith('observatory:') ||
             route.ids[index].startsWith('southwind:') ||
-            route.ids[index].startsWith('dawnlight:')
+            route.ids[index].startsWith('dawnlight:') ||
+            route.ids[index].startsWith('windward:')
           ) {
             if (
               !route.ids[index].startsWith('southwind:') &&
-              !route.ids[index].startsWith('dawnlight:')
+              !route.ids[index].startsWith('dawnlight:') &&
+              !route.ids[index].startsWith('windward:')
             )
               expect(z).toBeLessThan(-10);
             expect(y - renderedTerrainHeight(x, z)).toBeGreaterThanOrEqual(0.04);
@@ -536,6 +638,31 @@ describe('navigation graph', () => {
 });
 
 describe('resident journeys', () => {
+  it('visits Windward Mill and reverses continuously when work resumes', () => {
+    const traffic = new NavigationTraffic();
+    const motion = new ResidentJourney(3, 'demo-3', traffic);
+    for (const destination of DESTINATIONS)
+      if (destination.id !== WINDWARD_MILL.id)
+        expect(traffic.reserveDestination('scene', destination.id)).toBe(true);
+    let arrived = false;
+    let previous = motion.position;
+    for (let frame = 0; frame < 220 * 60; frame++) {
+      motion.update(agent(3), 1 / 60, options);
+      const next = motion.position;
+      expect(Math.hypot(...next.map((value, axis) => value - previous[axis]))).toBeLessThan(0.06);
+      previous = next;
+      if (motion.activity === `Resting at ${WINDWARD_MILL.label}`) {
+        arrived = true;
+        break;
+      }
+    }
+    expect(arrived).toBe(true);
+    expect(motion.position[0]).toBeCloseTo(WINDWARD_MILL.x);
+    expect(motion.position[2]).toBeCloseTo(WINDWARD_MILL.z);
+    advance(motion, agent(3, 'working'), 220);
+    expect(motion.activity).toBe('At desk');
+    expect(traffic.reserveDestination('next', WINDWARD_MILL.id)).toBe(true);
+  });
   it('visits Dawnlight and retraces the eastern route when work resumes', () => {
     const traffic = new NavigationTraffic();
     const motion = new ResidentJourney(2, 'demo-2', traffic);

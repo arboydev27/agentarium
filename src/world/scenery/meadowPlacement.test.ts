@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { detailChunkAt } from '../chunks';
 import { LOOKOUT, OBSERVATORY, ORCHARD } from '../layout';
 import { meadowTrailPoint } from '../terrain';
+import { WINDWARD_MILL, WINDWARD_BRANCH_XZ } from './windwardPlacement';
 import { buildMeadowPieces, clearOfMeadowRoutes, meadowChunkHasDetail } from './meadowPlacement';
 
 describe('spatial meadow placement', () => {
@@ -33,6 +34,8 @@ describe('spatial meadow placement', () => {
       [OBSERVATORY.x, OBSERVATORY.z],
       [18.5, -44],
       [-20, -79],
+      [WINDWARD_MILL.centerX, WINDWARD_MILL.centerZ],
+      ...WINDWARD_BRANCH_XZ,
     ]) {
       expect(clearOfMeadowRoutes(x, z)).toBe(false);
     }

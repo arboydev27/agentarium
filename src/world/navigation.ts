@@ -4,6 +4,11 @@ import { meadowTrailPoint, terrainHeight, walkwayHeight } from './terrain';
 import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
 import { SOUTHWIND_SHORE, SOUTHWIND_TRAIL_XZ } from './scenery/southwindTrailPlacement';
 import { DAWNLIGHT_GLASSHOUSE, EAST_TRAIL_XZ } from './scenery/dawnlightPlacement';
+import {
+  WINDWARD_BRANCH_XZ,
+  WINDWARD_DAWNLIGHT_BRANCH_INDEX,
+  WINDWARD_MILL,
+} from './scenery/windwardPlacement';
 
 export type Destination = {
   id: string;
@@ -49,7 +54,13 @@ export const DESTINATIONS: Destination[] = [
     clip: 'GardenLook',
   },
   { id: 'studio-break', label: 'studio terrace', node: 'studio-break', facing: 0, clip: 'Rest' },
-  { id: 'promenade', label: 'tree-lined path', node: 'promenade', facing: 0, clip: 'GardenLook' },
+  {
+    id: 'promenade',
+    label: 'tree-lined path',
+    node: 'promenade-rest',
+    facing: 0,
+    clip: 'GardenLook',
+  },
   {
     id: 'orchard:commons',
     label: 'orchard commons',
@@ -69,6 +80,13 @@ export const DESTINATIONS: Destination[] = [
     label: DAWNLIGHT_GLASSHOUSE.label,
     node: DAWNLIGHT_GLASSHOUSE.id,
     facing: -Math.PI / 2,
+    clip: 'GardenLook',
+  },
+  {
+    id: WINDWARD_MILL.id,
+    label: WINDWARD_MILL.label,
+    node: WINDWARD_MILL.id,
+    facing: -2.62,
     clip: 'GardenLook',
   },
   ...TRAIL_TURNOUTS.map<Destination>((turnout) => ({
@@ -112,6 +130,7 @@ export const NODES: Record<string, Point> = {
   'court-front': [-6.2, 0.49, 7.7],
   basin: [-3.7, 0.49, 7.7],
   promenade: [0.1, 0.46, 8],
+  'promenade-rest': [0.1, 0.46, 10],
   'meadow:branch-1': [8, walkwayHeight(8, -38.25, 0.09), -38.25],
   'meadow:branch-2': [10.5, walkwayHeight(10.5, -38.1, 0.09), -38.1],
   'meadow:lookout': [LOOKOUT.x, terrainHeight(LOOKOUT.x, LOOKOUT.z) + 0.1, LOOKOUT.z],
@@ -141,6 +160,12 @@ for (let index = 1; index < EAST_TRAIL_XZ.length; index++) {
   const [x, z] = EAST_TRAIL_XZ[index];
   const id =
     index === EAST_TRAIL_XZ.length - 1 ? DAWNLIGHT_GLASSHOUSE.id : `dawnlight:trail-${index}`;
+  NODES[id] = [x, walkwayHeight(x, z, 0.105), z];
+}
+for (let index = 1; index < WINDWARD_BRANCH_XZ.length; index++) {
+  const [x, z] = WINDWARD_BRANCH_XZ[index];
+  const id =
+    index === WINDWARD_BRANCH_XZ.length - 1 ? WINDWARD_MILL.id : `windward:branch-${index}`;
   NODES[id] = [x, walkwayHeight(x, z, 0.105), z];
 }
 const orchardOrigin = meadowTrailPoint(22);
@@ -198,10 +223,17 @@ const chains = [
   ],
   ['court-aisle', 'bench-approach', 'bench'],
   ['center', 'promenade'],
+  ['promenade', 'promenade-rest'],
   [
     'promenade',
     ...EAST_TRAIL_XZ.slice(1).map((_, index) =>
       index === EAST_TRAIL_XZ.length - 2 ? DAWNLIGHT_GLASSHOUSE.id : `dawnlight:trail-${index + 1}`,
+    ),
+  ],
+  [
+    `dawnlight:trail-${WINDWARD_DAWNLIGHT_BRANCH_INDEX}`,
+    ...WINDWARD_BRANCH_XZ.slice(1).map((_, index) =>
+      index === WINDWARD_BRANCH_XZ.length - 2 ? WINDWARD_MILL.id : `windward:branch-${index + 1}`,
     ),
   ],
   ['center', ...Array.from({ length: 23 }, (_, index) => `meadow:trail-${index}`)],
