@@ -1333,8 +1333,8 @@ h1 span {
     bottom: 70px;
   }
   .camera-presets {
-    left: calc((100% - 290px) / 2);
-    max-width: calc(100% - 314px);
+    left: calc((100% - 290px) / 2 + 35px);
+    max-width: calc(100% - 430px);
   }
   .world-heading {
     pointer-events: none;
@@ -1362,7 +1362,9 @@ h1 span {
     font-size: 10px;
   }
   .camera-presets button {
-    font-size: 12px;
+    padding: 8px;
+    gap: 4px;
+    font-size: 11px;
   }
   .toolbar-title,
   .spawn-button {
@@ -1386,7 +1388,8 @@ h1 span {
     right: 340px;
   }
   .camera-presets {
-    left: calc((100% - 340px) / 2);
+    left: calc((100% - 340px) / 2 + 35px);
+    max-width: calc(100% - 480px);
   }
 }
 @media (max-width: 800px) {
@@ -2203,7 +2206,7 @@ h1 span {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 5px;
 }
-.landmark-viewpoints .landmark-pin:last-child {
+.landmark-viewpoints .landmark-pin:last-child:nth-child(odd) {
   grid-column: 1 / -1;
   justify-content: center;
 }

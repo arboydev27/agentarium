@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { Crosshair, Eye, Focus, Map, MapPin, Telescope, Trees, X } from 'lucide-react';
+import { Crosshair, Eye, Focus, Map, MapPin, Telescope, Trees, Waves, X } from 'lucide-react';
 import { useWorld } from './state';
 import type { WorldView } from './world/layout';
 import {
@@ -18,6 +18,7 @@ const LANDMARKS = [
   { view: 'lookout', label: 'Lookout', icon: MapPin, detail: 'Northern clearing' },
   { view: 'orchard', label: 'Orchard', icon: Trees, detail: 'Orchard Commons' },
   { view: 'observatory', label: 'Observatory', icon: Telescope, detail: 'Cedar Observatory' },
+  { view: 'mere', label: 'Southwind Mere', icon: Waves, detail: 'Dry eastern shore' },
   { view: 'horizon', label: 'Horizon', icon: Eye, detail: 'Ridge and sky' },
 ] as const;
 

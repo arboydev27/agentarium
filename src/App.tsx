@@ -40,6 +40,7 @@ import {
   MapPin,
   Trees,
   Telescope,
+  Waves,
   ScanEye,
 } from 'lucide-react';
 import { useWorld, STATUS_LABEL } from './state';
@@ -939,6 +940,8 @@ export default function App() {
               <Trees size={15} />
             ) : view === 'observatory' ? (
               <Telescope size={15} />
+            ) : view === 'mere' ? (
+              <Waves size={15} />
             ) : (
               <Eye size={15} />
             )}

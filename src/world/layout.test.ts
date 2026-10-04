@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { WORLD, ZONES, SEATS, CAMERA_VIEWS, OBSERVATORY, ORCHARD, WORLD_VIEWS } from './layout';
+import {
+  WORLD,
+  ZONES,
+  SEATS,
+  CAMERA_VIEWS,
+  OBSERVATORY,
+  ORCHARD,
+  WORLD_VIEWS,
+  WORLD_VIEW_LABELS,
+} from './layout';
+import { SOUTHWIND_SHORE } from './scenery/southwindTrailPlacement';
 import { routeForSeat } from './motion';
 import { showFineDetail } from './detail';
 
@@ -55,9 +65,21 @@ describe('expanded world layout', () => {
     expect(CAMERA_VIEWS.orchard.look[2]).toBe(ORCHARD.z);
     expect(CAMERA_VIEWS.orchard.span.every((value) => value > 0)).toBe(true);
   });
+  it('bookmarks Southwind Mere with the shore and lake in frame', () => {
+    const camera = CAMERA_VIEWS.mere;
+    expect(WORLD_VIEWS).toContain('mere');
+    expect(WORLD_VIEW_LABELS.mere).toBe('Southwind Mere');
+    expect(SOUTHWIND_SHORE).toMatchObject({ x: -42, z: 43 });
+    expect(
+      Math.hypot(camera.look[0] - SOUTHWIND_SHORE.x, camera.look[2] - SOUTHWIND_SHORE.z),
+    ).toBeLessThanOrEqual(SOUTHWIND_SHORE.focusRadius);
+    expect(camera.look[0]).toBeLessThan(SOUTHWIND_SHORE.x);
+    expect(camera.pos[0]).toBeGreaterThan(SOUTHWIND_SHORE.x);
+    expect(camera.span.every((value) => value > 0)).toBe(true);
+  });
   it('bookmarks Cedar Observatory west of the meadow trail', () => {
     expect(WORLD_VIEWS).toContain('observatory');
-    expect(WORLD_VIEWS).toHaveLength(9);
+    expect(WORLD_VIEWS).toHaveLength(10);
     expect(OBSERVATORY).toMatchObject({ x: -30, z: -50 });
     expect(OBSERVATORY.focusRadius).toBeGreaterThan(OBSERVATORY.clearingRadius);
     expect(CAMERA_VIEWS.observatory.look[0]).toBe(OBSERVATORY.x);
