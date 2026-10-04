@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { OrthographicCamera, Vector3 } from 'three';
 import {
   WORLD,
   ZONES,
@@ -9,6 +10,7 @@ import {
   WORLD_VIEWS,
   WORLD_VIEW_LABELS,
 } from './layout';
+import { DAWNLIGHT_GLASSHOUSE } from './scenery/dawnlightPlacement';
 import { SOUTHWIND_SHORE } from './scenery/southwindTrailPlacement';
 import { routeForSeat } from './motion';
 import { showFineDetail } from './detail';
@@ -77,9 +79,31 @@ describe('expanded world layout', () => {
     expect(camera.pos[0]).toBeGreaterThan(SOUTHWIND_SHORE.x);
     expect(camera.span.every((value) => value > 0)).toBe(true);
   });
+  it('frames Dawnlight Glasshouse and its resident arrival from the eastern view', () => {
+    const preset = CAMERA_VIEWS.dawnlight;
+    expect(WORLD_VIEWS).toContain('dawnlight');
+    expect(WORLD_VIEW_LABELS.dawnlight).toBe('Dawnlight Glasshouse');
+    expect(preset.look[0]).toBeCloseTo(DAWNLIGHT_GLASSHOUSE.centerX + 1);
+    expect(preset.look[2]).toBeCloseTo(DAWNLIGHT_GLASSHOUSE.centerZ + 1);
+    expect(preset.span.every((value) => value > 0)).toBe(true);
+    const camera = new OrthographicCamera(
+      -preset.span[0] / 2,
+      preset.span[0] / 2,
+      preset.span[1] / 2,
+      -preset.span[1] / 2,
+      0.1,
+      400,
+    );
+    camera.position.fromArray(preset.pos);
+    camera.lookAt(new Vector3(...preset.look));
+    camera.updateMatrixWorld();
+    const arrival = new Vector3(DAWNLIGHT_GLASSHOUSE.x, 0, DAWNLIGHT_GLASSHOUSE.z).project(camera);
+    expect(Math.abs(arrival.x)).toBeLessThan(1);
+    expect(Math.abs(arrival.y)).toBeLessThan(1);
+  });
   it('bookmarks Cedar Observatory west of the meadow trail', () => {
     expect(WORLD_VIEWS).toContain('observatory');
-    expect(WORLD_VIEWS).toHaveLength(10);
+    expect(WORLD_VIEWS).toHaveLength(11);
     expect(OBSERVATORY).toMatchObject({ x: -30, z: -50 });
     expect(OBSERVATORY.focusRadius).toBeGreaterThan(OBSERVATORY.clearingRadius);
     expect(CAMERA_VIEWS.observatory.look[0]).toBe(OBSERVATORY.x);

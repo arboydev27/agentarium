@@ -2,6 +2,7 @@ import { expect, it } from 'vitest';
 import { initialAgents } from '../state';
 import { districtAt, worldCounts } from './hud';
 import { filterResidents, sessionKey } from '../sessions';
+import { DAWNLIGHT_GLASSHOUSE } from './scenery/dawnlightPlacement';
 import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
 it('keeps counts and task filters aligned, including hidden and unseated work', () => {
   const agents = initialAgents().map((a, i) => ({
@@ -44,6 +45,14 @@ it('identifies named places and ordinary open terrain independently of the camer
   expect(districtAt(-42, 43)).toBe('mere');
   expect(districtAt(-48, 45)).toBe('mere');
   expect(districtAt(-50, 43)).toBe('open-landscape');
+  expect(districtAt(DAWNLIGHT_GLASSHOUSE.centerX, DAWNLIGHT_GLASSHOUSE.centerZ)).toBe('dawnlight');
+  expect(districtAt(DAWNLIGHT_GLASSHOUSE.x, DAWNLIGHT_GLASSHOUSE.z)).toBe('dawnlight');
+  expect(
+    districtAt(
+      DAWNLIGHT_GLASSHOUSE.centerX + DAWNLIGHT_GLASSHOUSE.focusRadius + 1,
+      DAWNLIGHT_GLASSHOUSE.centerZ,
+    ),
+  ).toBe('open-landscape');
   expect(districtAt(0, -50)).toBe('open-landscape');
   for (const turnout of TRAIL_TURNOUTS) {
     const [x, , z] = turnoutPoint(turnout.trailIndex, turnout.side, 4.8);

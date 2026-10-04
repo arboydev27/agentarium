@@ -41,6 +41,7 @@ import {
   Trees,
   Telescope,
   Waves,
+  Flower2,
   ScanEye,
 } from 'lucide-react';
 import { useWorld, STATUS_LABEL } from './state';
@@ -220,6 +221,7 @@ export default function App() {
   const [modal, setModal] = useState<'settings' | 'connections' | 'help' | 'sessions' | null>(null);
   const [collapsed, setCollapsed] = useState(() => window.innerWidth < 801);
   const mapPreviousCollapsed = useRef<boolean | null>(null);
+  const cameraPresetRef = useRef<HTMLDivElement>(null);
   const [toast, setToast] = useState('');
   const [fullscreen, setFullscreen] = useState(false);
   const [sound, setSound] = useState(false);
@@ -229,6 +231,12 @@ export default function App() {
   const set = useWorld((s) => s.set);
   const waiting = agents.filter((a) => attentionFor(a)).length;
   const idle = agents.filter((a) => a.status === 'idle' || a.status === 'completed').length;
+  useEffect(() => {
+    if (followAgent || cameraCustomized) return;
+    cameraPresetRef.current
+      ?.querySelector<HTMLButtonElement>('button.active')
+      ?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }, [camera, cameraCustomized, followAgent]);
   useEffect(() => {
     const t = setInterval(() => useWorld.getState().tick(), 6500 / speed);
     return () => clearInterval(t);
@@ -915,7 +923,32 @@ export default function App() {
           }}
         />
       )}
-      <div className="camera-presets" aria-label="Camera views">
+      <div
+        ref={cameraPresetRef}
+        className="camera-presets"
+        role="group"
+        tabIndex={0}
+        aria-label="Camera views. Use Left and Right Arrow to move between views."
+        onKeyDown={(event) => {
+          if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+          event.preventDefault();
+          const buttons = Array.from(
+            event.currentTarget.querySelectorAll<HTMLButtonElement>('button'),
+          );
+          const current = buttons.indexOf(event.target as HTMLButtonElement);
+          const next =
+            current < 0
+              ? event.key === 'ArrowRight'
+                ? 0
+                : buttons.length - 1
+              : Math.max(
+                  0,
+                  Math.min(buttons.length - 1, current + (event.key === 'ArrowRight' ? 1 : -1)),
+                );
+          buttons[next]?.focus({ preventScroll: true });
+          buttons[next]?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        }}
+      >
         {WORLD_VIEWS.map((view) => (
           <button
             className={camera === view && !followAgent && !cameraCustomized ? 'active' : ''}
@@ -942,10 +975,20 @@ export default function App() {
               <Telescope size={15} />
             ) : view === 'mere' ? (
               <Waves size={15} />
+            ) : view === 'dawnlight' ? (
+              <Flower2 size={15} />
             ) : (
               <Eye size={15} />
             )}
-            <span>{view === 'overview' ? 'Overview' : view[0].toUpperCase() + view.slice(1)}</span>
+            <span>
+              {view === 'overview'
+                ? 'Overview'
+                : view === 'courtyard'
+                  ? 'Court'
+                  : view === 'observatory'
+                    ? 'Cedar'
+                    : view[0].toUpperCase() + view.slice(1)}
+            </span>
           </button>
         ))}
       </div>

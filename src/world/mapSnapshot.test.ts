@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CAMERA_PAN_BOUNDS } from './cameraPan';
+import { DAWNLIGHT_GLASSHOUSE } from './scenery/dawnlightPlacement';
 import { SOUTHWIND_SHORE } from './scenery/southwindTrailPlacement';
 import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
 import {
@@ -37,11 +38,12 @@ describe('live landmark map', () => {
   });
 
   it('plots named outside places at their shared world destinations', () => {
-    expect(MAP_LANDMARKS).toHaveLength(6);
+    expect(MAP_LANDMARKS).toHaveLength(7);
     expect(MAP_LANDMARKS.map((landmark) => landmark.id)).toEqual([
       'lookout',
       'orchard',
       'observatory',
+      'dawnlight',
       'mere',
       'meadow:rest-west',
       'meadow:rest-east',
@@ -49,6 +51,9 @@ describe('live landmark map', () => {
     const mere = MAP_LANDMARKS.find((landmark) => landmark.id === 'mere')!;
     expect(mere.point).toEqual({ x: SOUTHWIND_SHORE.x, z: SOUTHWIND_SHORE.z });
     expect(mere.view).toBe('mere');
+    const dawnlight = MAP_LANDMARKS.find((landmark) => landmark.id === 'dawnlight')!;
+    expect(dawnlight.point).toEqual({ x: DAWNLIGHT_GLASSHOUSE.x, z: DAWNLIGHT_GLASSHOUSE.z });
+    expect(dawnlight.view).toBe('dawnlight');
     for (const turnout of TRAIL_TURNOUTS) {
       const [x, , z] = turnoutPoint(turnout.trailIndex, turnout.side, 4.8);
       const landmark = MAP_LANDMARKS.find((item) => item.id === turnout.id);

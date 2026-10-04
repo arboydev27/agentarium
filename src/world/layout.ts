@@ -1,4 +1,5 @@
 import type { Point } from './motion';
+import { DAWNLIGHT_GLASSHOUSE } from './scenery/dawnlightPlacement';
 
 export const WORLD = { width: 29.25, depth: 22.2 };
 // Bounds include the entire walkable floor; y is its top surface.
@@ -22,6 +23,7 @@ export const WORLD_VIEWS = [
   'orchard',
   'observatory',
   'mere',
+  'dawnlight',
   'horizon',
 ] as const;
 export type WorldView = (typeof WORLD_VIEWS)[number];
@@ -37,6 +39,7 @@ export const WORLD_VIEW_LABELS: Record<WorldView, string> = {
   orchard: 'Orchard Commons',
   observatory: 'Cedar Observatory',
   mere: 'Southwind Mere',
+  dawnlight: 'Dawnlight Glasshouse',
   horizon: 'Horizon',
 };
 export const WORLD_LOCATION_LABELS: Record<WorldLocation, string> = {
@@ -66,5 +69,10 @@ export const CAMERA_VIEWS: Record<WorldView, { pos: Point; look: Point; span: [n
     orchard: { pos: [53, 24, -51], look: [ORCHARD.x, 9.7, ORCHARD.z], span: [28, 20] },
     observatory: { pos: [-45, 20, -30], look: [OBSERVATORY.x, 5.5, OBSERVATORY.z], span: [27, 19] },
     mere: { pos: [-27, 15, 65], look: [-48, 1.5, 45], span: [28, 20] },
+    dawnlight: {
+      pos: [63, 18, 48],
+      look: [DAWNLIGHT_GLASSHOUSE.centerX + 1, 2, DAWNLIGHT_GLASSHOUSE.centerZ + 1],
+      span: [27, 19],
+    },
     horizon: { pos: [0, 12, 35], look: [0, 2, -22], span: [50, 28] },
   };

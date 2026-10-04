@@ -1,5 +1,6 @@
 import { CAMERA_PAN_BOUNDS } from './cameraPan';
 import { LOOKOUT, OBSERVATORY, ORCHARD, type WorldView } from './layout';
+import { DAWNLIGHT_GLASSHOUSE } from './scenery/dawnlightPlacement';
 import { SOUTHWIND_SHORE } from './scenery/southwindTrailPlacement';
 import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
 
@@ -40,6 +41,13 @@ export const MAP_LANDMARKS: readonly MapLandmark[] = [
     shortLabel: 'C',
     point: { x: OBSERVATORY.x, z: OBSERVATORY.z },
     view: 'observatory',
+  },
+  {
+    id: 'dawnlight',
+    label: 'Dawnlight Glasshouse',
+    shortLabel: 'D',
+    point: { x: DAWNLIGHT_GLASSHOUSE.x, z: DAWNLIGHT_GLASSHOUSE.z },
+    view: 'dawnlight',
   },
   {
     id: 'mere',

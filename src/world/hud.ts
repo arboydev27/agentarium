@@ -9,6 +9,7 @@ import {
   type WorldLocation,
   type ZoneName,
 } from './layout';
+import { DAWNLIGHT_GLASSHOUSE } from './scenery/dawnlightPlacement';
 import { SOUTHWIND_SHORE } from './scenery/southwindTrailPlacement';
 import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
 export type WorkFilter = 'working' | 'completed' | 'unknown' | 'here';
@@ -45,6 +46,11 @@ export function districtAt(x: number, z: number): WorldLocation {
     return 'observatory';
   if (Math.hypot(x - SOUTHWIND_SHORE.x, z - SOUTHWIND_SHORE.z) <= SOUTHWIND_SHORE.focusRadius)
     return 'mere';
+  if (
+    Math.hypot(x - DAWNLIGHT_GLASSHOUSE.centerX, z - DAWNLIGHT_GLASSHOUSE.centerZ) <=
+    DAWNLIGHT_GLASSHOUSE.focusRadius
+  )
+    return 'dawnlight';
   for (const turnout of TRAIL_TURNOUTS) {
     const [tx, , tz] = turnoutPoint(turnout.trailIndex, turnout.side, 4.8);
     if (Math.hypot(x - tx, z - tz) <= 3.6) return turnout.id;
