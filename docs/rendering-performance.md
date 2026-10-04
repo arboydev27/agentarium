@@ -45,6 +45,10 @@ October 3; 1280 × 720 development browser, eight paused simulated residents. Af
 
 The first Dawnlight visit after a clean reload showed 702 geometries and 42 textures. A trip through Horizon warmed other shared resources; subsequent Horizon → Dawnlight cycles consistently returned to **787 → 742 geometries** and **45 → 43 textures**, without further growth across two cycles. These values are resource-count evidence, not measured GPU memory bytes or a guaranteed performance improvement. A separate evening/low-quality/reduced-motion sample at Southwind was 31 draws, 42,484 triangles, 716 geometries, and 42 textures; Horizon was 910 draws, 261,484 triangles, 780 geometries, and 45 textures. The ridge, trails, lake, and resident state remained present in both quality tiers.
 
+## Windward Mill spot check
+
+October 3; 1280 × 720 development browser, eight paused simulated residents, daylight/high quality. The settled Windward view showed **68 draws, 59,332 triangles, 795 geometries, and 44 textures** after the shared scene resources had warmed. Horizon showed **930 draws, 283,808 triangles, 820 geometries, and 45 textures**; a second Horizon → Windward cycle returned to the same 820 → 795 geometry and 45 → 44 texture counts. A separate evening/low-quality/reduced-motion look at Windward rendered without browser warnings. These are individual development-browser observations, not a device performance budget.
+
 ## Repeatable review procedure
 
 1. Use the same browser, viewport, display, camera preset, quality, and resident state. Prefer a production build with `npm run build` and `npm run preview` for formal profiling.

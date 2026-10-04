@@ -11,7 +11,7 @@ See the [detailed documentation](docs/README.md) for setup, architecture, agent 
 - A 29.25 × 22.2 inhabited district with an expanded café, studio, garden, and courtyard inside a 600 × 600 scenic landscape of meadow, groves, an amber oak, a trail, and distant rise.
 - Gentle tree sway, drifting leaves, courtyard water ripples, and evening lamp glows, with reduced-motion and low-quality alternatives.
 - Eight expressive CC0 robot residents with distinct procedural accessories, trim palettes, walking pace, and skeletal work/rest animations. Working residents open their laptops; idle residents close them.
-- Idle residents visit destinations in the inhabited district and along northern and southern trails, including Southwind Mere; live work sends them back to their desks.
+- Idle residents visit destinations in the inhabited district and along northern, southern, and eastern trails, including Southwind Mere and Windward Mill; live work sends them back to their desks.
 - Orbit and zoom controls, camera presets including a perspective Horizon and outside landmarks, a compact landmark map with 2× detail zoom, slow camera orbit, ambient audio, reduced motion, and rendering-quality controls.
 - A clearly labeled simulator with tasks, delegation, waiting, completion, failure, pause, speed, reset, an activity feed, and an inspector.
 - Opt-in local session discovery for Codex, Claude Code CLI, and Gemini CLI; up to eight sessions occupy stable seats, with pinned sessions first.
