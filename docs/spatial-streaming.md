@@ -18,6 +18,8 @@ Nine authored scenic regions use a second selector: Meadow Lookout shelter, Orch
 
 The Northstar trail, arrival pad, and the opened ridge saddle remain in the permanent scene. Its signal tower and local highland detail belong to the Northstar scenic region. Both meadow groundcover and instanced grove placement clear the trail and tower footprint, so remounting detail cannot block travel.
 
+The outer landscape belt is also permanent, not a streamed chunk. Four shared instanced meshes draw deterministic trunks, pine crowns, broad crowns, and stones across the wooded west, Amber foothills, eastern meadow, and northern highlands. Route and landmark exclusions keep its props away from authored travel. Low quality uses fewer instances. This adds depth during camera travel while keeping task and route state independent of scenery visibility; future larger-map streaming can give these distant groups their own stable cells.
+
 These policies control which objects exist in the renderer. Three.js frustum culling still decides which mounted meshes are drawn. Shared meadow geometry and materials are kept while individual chunk instance buffers are released on unmount. Authored regions release their owned instance buffers when they unmount; resources shared by the permanent scene remain. Meadow detail and pine placements exclude the Orchard and Cedar Observatory arrivals and branch corridors, while forest placement also clears the Lantern Hollow trail, arrival, shelter, and sightline. Remounting detail cannot obstruct these walkable routes.
 
 ## Next expansion gates
