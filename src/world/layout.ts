@@ -1,5 +1,6 @@
 import type { Point } from './motion';
 import { DAWNLIGHT_GLASSHOUSE } from './scenery/dawnlightPlacement';
+import { WINDWARD_MILL } from './scenery/windwardPlacement';
 
 export const WORLD = { width: 29.25, depth: 22.2 };
 // Bounds include the entire walkable floor; y is its top surface.
@@ -24,6 +25,7 @@ export const WORLD_VIEWS = [
   'observatory',
   'mere',
   'dawnlight',
+  'windward',
   'horizon',
 ] as const;
 export type WorldView = (typeof WORLD_VIEWS)[number];
@@ -40,6 +42,7 @@ export const WORLD_VIEW_LABELS: Record<WorldView, string> = {
   observatory: 'Cedar Observatory',
   mere: 'Southwind Mere',
   dawnlight: 'Dawnlight Glasshouse',
+  windward: 'Windward Mill',
   horizon: 'Horizon',
 };
 export const WORLD_LOCATION_LABELS: Record<WorldLocation, string> = {
@@ -73,6 +76,11 @@ export const CAMERA_VIEWS: Record<WorldView, { pos: Point; look: Point; span: [n
       pos: [63, 18, 48],
       look: [DAWNLIGHT_GLASSHOUSE.centerX + 1, 2, DAWNLIGHT_GLASSHOUSE.centerZ + 1],
       span: [27, 19],
+    },
+    windward: {
+      pos: [57, 20, 1],
+      look: [WINDWARD_MILL.centerX, 5, WINDWARD_MILL.centerZ],
+      span: [30, 21],
     },
     horizon: { pos: [0, 12, 35], look: [0, 2, -22], span: [50, 28] },
   };

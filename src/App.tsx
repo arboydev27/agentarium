@@ -42,6 +42,7 @@ import {
   Telescope,
   Waves,
   Flower2,
+  Wind,
   ScanEye,
 } from 'lucide-react';
 import { useWorld, STATUS_LABEL } from './state';
@@ -977,6 +978,8 @@ export default function App() {
               <Waves size={15} />
             ) : view === 'dawnlight' ? (
               <Flower2 size={15} />
+            ) : view === 'windward' ? (
+              <Wind size={15} />
             ) : (
               <Eye size={15} />
             )}
@@ -987,7 +990,9 @@ export default function App() {
                   ? 'Court'
                   : view === 'observatory'
                     ? 'Cedar'
-                    : view[0].toUpperCase() + view.slice(1)}
+                    : view === 'windward'
+                      ? 'Windward'
+                      : view[0].toUpperCase() + view.slice(1)}
             </span>
           </button>
         ))}

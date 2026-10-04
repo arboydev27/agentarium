@@ -9,6 +9,7 @@ import {
   Telescope,
   Trees,
   Waves,
+  Wind,
   X,
   ZoomIn,
   ZoomOut,
@@ -37,6 +38,7 @@ const LANDMARKS = [
   { view: 'observatory', label: 'Observatory', icon: Telescope, detail: 'Cedar Observatory' },
   { view: 'mere', label: 'Southwind Mere', icon: Waves, detail: 'Dry eastern shore' },
   { view: 'dawnlight', label: 'Dawnlight', icon: Flower2, detail: 'Dawnlight Glasshouse' },
+  { view: 'windward', label: 'Windward', icon: Wind, detail: 'Windward Mill' },
   { view: 'horizon', label: 'Horizon', icon: Eye, detail: 'Ridge and sky' },
 ] as const;
 

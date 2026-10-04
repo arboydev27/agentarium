@@ -3,6 +3,7 @@ import { LOOKOUT, OBSERVATORY, ORCHARD, type WorldView } from './layout';
 import { DAWNLIGHT_GLASSHOUSE } from './scenery/dawnlightPlacement';
 import { SOUTHWIND_SHORE } from './scenery/southwindTrailPlacement';
 import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
+import { WINDWARD_MILL } from './scenery/windwardPlacement';
 
 export type MapPoint = { x: number; z: number };
 export type MapBounds = Readonly<{ minX: number; maxX: number; minZ: number; maxZ: number }>;
@@ -50,6 +51,13 @@ export const MAP_LANDMARKS: readonly MapLandmark[] = [
     shortLabel: 'D',
     point: { x: DAWNLIGHT_GLASSHOUSE.x, z: DAWNLIGHT_GLASSHOUSE.z },
     view: 'dawnlight',
+  },
+  {
+    id: 'windward',
+    label: 'Windward Mill',
+    shortLabel: 'W',
+    point: { x: WINDWARD_MILL.centerX, z: WINDWARD_MILL.centerZ },
+    view: 'windward',
   },
   {
     id: 'mere',

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CAMERA_VIEWS } from './layout';
+import { WINDWARD_MILL } from './scenery/windwardPlacement';
 import {
   SCENIC_ENTER_PADDING,
   SCENIC_EXIT_PADDING,
@@ -29,7 +30,7 @@ const preset = (name: keyof typeof CAMERA_VIEWS) => ({
 
 describe('fixed scenic-region visibility', () => {
   it('has stable authored identities and keeps every region in Horizon', () => {
-    const expected = ['lookout', 'orchard', 'observatory', 'dawnlight', 'slate'];
+    const expected = ['lookout', 'orchard', 'observatory', 'dawnlight', 'slate', 'windward'];
     expect(SCENIC_REGIONS.map((region) => region.id)).toEqual(expected);
     const horizon: ScenicVisibilityInput = { ...frame(away), mode: 'horizon' };
     expect(ids(horizon)).toEqual(expected);
@@ -49,9 +50,14 @@ describe('fixed scenic-region visibility', () => {
       ['orchard', 'orchard'],
       ['observatory', 'observatory'],
       ['dawnlight', 'dawnlight'],
+      ['windward', 'windward'],
     ] as const)
       expect(ids({ mode: 'orthographic', ...preset(view) }), view).toContain(region);
     expect(ids({ mode: 'orthographic', ...preset('observatory') })).toContain('slate');
+    const mill = SCENIC_REGIONS.find((region) => region.id === 'windward')!;
+    expect(mill.bounds.minX).toBeLessThan(WINDWARD_MILL.centerX);
+    expect(mill.bounds.maxX).toBeGreaterThan(WINDWARD_MILL.x);
+    expect(mill.bounds.maxZ).toBeGreaterThan(WINDWARD_MILL.z);
   });
 
   it('prefetches ahead of the frustum and keeps a selected region through the exit band', () => {
@@ -90,6 +96,9 @@ describe('fixed scenic-region visibility', () => {
       target: orchard,
     };
     expect(ids(movingToOrchard)).toContain('orchard');
+    expect(
+      ids({ mode: 'orthographic', ...preset('overview'), target: preset('windward') }),
+    ).toContain('windward');
     const nearOrchard: ScenicVisibilityInput = {
       mode: 'orthographic',
       ...orchard,

@@ -1,8 +1,10 @@
 import { LOOKOUT, OBSERVATORY, ORCHARD } from './layout';
 import { DAWNLIGHT_GLASSHOUSE } from './scenery/dawnlightPlacement';
 import { SLATE_REACH } from './scenery/slatePlacement';
+import { WINDWARD_MILL } from './scenery/windwardPlacement';
 
-export type ScenicRegionId = 'lookout' | 'orchard' | 'observatory' | 'dawnlight' | 'slate';
+export type ScenicRegionId =
+  'lookout' | 'orchard' | 'observatory' | 'dawnlight' | 'slate' | 'windward';
 export type ScenicPoint = Readonly<{ x: number; z: number }>;
 export type ScenicBounds = Readonly<{
   minX: number;
@@ -45,6 +47,10 @@ export const SCENIC_REGIONS: readonly ScenicRegion[] = Object.freeze([
     ),
   ),
   region('slate', box(SLATE_REACH.x, SLATE_REACH.z, SLATE_REACH.radius + 7)),
+  region(
+    'windward',
+    box(WINDWARD_MILL.centerX, WINDWARD_MILL.centerZ, WINDWARD_MILL.clearingRadius + 8),
+  ),
 ]);
 
 export const SCENIC_ENTER_PADDING = 18;

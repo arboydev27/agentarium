@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { OrthographicCamera, Vector3 } from 'three';
+import { CAMERA_PAN_BOUNDS } from './cameraPan';
 import {
   WORLD,
   ZONES,
@@ -12,6 +13,7 @@ import {
 } from './layout';
 import { DAWNLIGHT_GLASSHOUSE } from './scenery/dawnlightPlacement';
 import { SOUTHWIND_SHORE } from './scenery/southwindTrailPlacement';
+import { WINDWARD_MILL } from './scenery/windwardPlacement';
 import { routeForSeat } from './motion';
 import { showFineDetail } from './detail';
 
@@ -101,9 +103,47 @@ describe('expanded world layout', () => {
     expect(Math.abs(arrival.x)).toBeLessThan(1);
     expect(Math.abs(arrival.y)).toBeLessThan(1);
   });
+  it('frames Windward Mill and its arrival within the finite camera area', () => {
+    const preset = CAMERA_VIEWS.windward;
+    expect(WORLD_VIEWS).toContain('windward');
+    expect(WORLD_VIEW_LABELS.windward).toBe('Windward Mill');
+    expect(preset.look[0]).toBe(WINDWARD_MILL.centerX);
+    expect(preset.look[2]).toBe(WINDWARD_MILL.centerZ);
+    expect(
+      Math.hypot(WINDWARD_MILL.x - WINDWARD_MILL.centerX, WINDWARD_MILL.z - WINDWARD_MILL.centerZ),
+    ).toBeLessThan(WINDWARD_MILL.focusRadius);
+    for (const [x, z] of [
+      [preset.pos[0], preset.pos[2]],
+      [preset.look[0], preset.look[2]],
+    ]) {
+      expect(x).toBeGreaterThanOrEqual(CAMERA_PAN_BOUNDS.minX);
+      expect(x).toBeLessThanOrEqual(CAMERA_PAN_BOUNDS.maxX);
+      expect(z).toBeGreaterThanOrEqual(CAMERA_PAN_BOUNDS.minZ);
+      expect(z).toBeLessThanOrEqual(CAMERA_PAN_BOUNDS.maxZ);
+    }
+    const camera = new OrthographicCamera(
+      -preset.span[0] / 2,
+      preset.span[0] / 2,
+      preset.span[1] / 2,
+      -preset.span[1] / 2,
+      0.1,
+      400,
+    );
+    camera.position.fromArray(preset.pos);
+    camera.lookAt(new Vector3(...preset.look));
+    camera.updateMatrixWorld();
+    for (const point of [
+      [WINDWARD_MILL.centerX, 0, WINDWARD_MILL.centerZ],
+      [WINDWARD_MILL.x, 0, WINDWARD_MILL.z],
+    ] as const) {
+      const projected = new Vector3(...point).project(camera);
+      expect(Math.abs(projected.x)).toBeLessThan(1);
+      expect(Math.abs(projected.y)).toBeLessThan(1);
+    }
+  });
   it('bookmarks Cedar Observatory west of the meadow trail', () => {
     expect(WORLD_VIEWS).toContain('observatory');
-    expect(WORLD_VIEWS).toHaveLength(11);
+    expect(WORLD_VIEWS).toHaveLength(12);
     expect(OBSERVATORY).toMatchObject({ x: -30, z: -50 });
     expect(OBSERVATORY.focusRadius).toBeGreaterThan(OBSERVATORY.clearingRadius);
     expect(CAMERA_VIEWS.observatory.look[0]).toBe(OBSERVATORY.x);

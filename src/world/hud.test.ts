@@ -4,6 +4,7 @@ import { districtAt, worldCounts } from './hud';
 import { filterResidents, sessionKey } from '../sessions';
 import { DAWNLIGHT_GLASSHOUSE } from './scenery/dawnlightPlacement';
 import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
+import { WINDWARD_MILL } from './scenery/windwardPlacement';
 it('keeps counts and task filters aligned, including hidden and unseated work', () => {
   const agents = initialAgents().map((a, i) => ({
     ...a,
@@ -52,6 +53,11 @@ it('identifies named places and ordinary open terrain independently of the camer
       DAWNLIGHT_GLASSHOUSE.centerX + DAWNLIGHT_GLASSHOUSE.focusRadius + 1,
       DAWNLIGHT_GLASSHOUSE.centerZ,
     ),
+  ).toBe('open-landscape');
+  expect(districtAt(WINDWARD_MILL.centerX, WINDWARD_MILL.centerZ)).toBe('windward');
+  expect(districtAt(WINDWARD_MILL.x, WINDWARD_MILL.z)).toBe('windward');
+  expect(
+    districtAt(WINDWARD_MILL.centerX - WINDWARD_MILL.focusRadius - 1, WINDWARD_MILL.centerZ),
   ).toBe('open-landscape');
   expect(districtAt(0, -50)).toBe('open-landscape');
   for (const turnout of TRAIL_TURNOUTS) {

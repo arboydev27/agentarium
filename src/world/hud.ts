@@ -12,6 +12,7 @@ import {
 import { DAWNLIGHT_GLASSHOUSE } from './scenery/dawnlightPlacement';
 import { SOUTHWIND_SHORE } from './scenery/southwindTrailPlacement';
 import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
+import { WINDWARD_MILL } from './scenery/windwardPlacement';
 export type WorkFilter = 'working' | 'completed' | 'unknown' | 'here';
 export function matchesWorkFilter(agent: Agent, filter: WorkFilter, paused = false) {
   if (filter === 'here') return agent.seat >= 0 && agent.seat < 8;
@@ -51,6 +52,8 @@ export function districtAt(x: number, z: number): WorldLocation {
     DAWNLIGHT_GLASSHOUSE.focusRadius
   )
     return 'dawnlight';
+  if (Math.hypot(x - WINDWARD_MILL.centerX, z - WINDWARD_MILL.centerZ) <= WINDWARD_MILL.focusRadius)
+    return 'windward';
   for (const turnout of TRAIL_TURNOUTS) {
     const [tx, , tz] = turnoutPoint(turnout.trailIndex, turnout.side, 4.8);
     if (Math.hypot(x - tx, z - tz) <= 3.6) return turnout.id;

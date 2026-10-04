@@ -3,6 +3,7 @@ import { CAMERA_PAN_BOUNDS } from './cameraPan';
 import { DAWNLIGHT_GLASSHOUSE } from './scenery/dawnlightPlacement';
 import { SOUTHWIND_SHORE } from './scenery/southwindTrailPlacement';
 import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
+import { WINDWARD_MILL } from './scenery/windwardPlacement';
 import {
   activateMap,
   detailMapBounds,
@@ -40,12 +41,13 @@ describe('live landmark map', () => {
   });
 
   it('plots named outside places at their shared world destinations', () => {
-    expect(MAP_LANDMARKS).toHaveLength(7);
+    expect(MAP_LANDMARKS).toHaveLength(8);
     expect(MAP_LANDMARKS.map((landmark) => landmark.id)).toEqual([
       'lookout',
       'orchard',
       'observatory',
       'dawnlight',
+      'windward',
       'mere',
       'meadow:rest-west',
       'meadow:rest-east',
@@ -56,6 +58,13 @@ describe('live landmark map', () => {
     const dawnlight = MAP_LANDMARKS.find((landmark) => landmark.id === 'dawnlight')!;
     expect(dawnlight.point).toEqual({ x: DAWNLIGHT_GLASSHOUSE.x, z: DAWNLIGHT_GLASSHOUSE.z });
     expect(dawnlight.view).toBe('dawnlight');
+    const windward = MAP_LANDMARKS.find((landmark) => landmark.id === 'windward')!;
+    expect(windward.point).toEqual({ x: WINDWARD_MILL.centerX, z: WINDWARD_MILL.centerZ });
+    expect(windward.view).toBe('windward');
+    expect(worldToMap(windward.point).left).toBeLessThan(96); // keep its entire pin inside the eastern edge
+    expect(worldToMap({ x: WINDWARD_MILL.x, z: WINDWARD_MILL.z }).left).toBeGreaterThan(
+      worldToMap(windward.point).left,
+    );
     for (const turnout of TRAIL_TURNOUTS) {
       const [x, , z] = turnoutPoint(turnout.trailIndex, turnout.side, 4.8);
       const landmark = MAP_LANDMARKS.find((item) => item.id === turnout.id);

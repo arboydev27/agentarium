@@ -31,7 +31,9 @@ import { SlateReach } from './scenery/SlateReach';
 import { clearOfSlateReach } from './scenery/slatePlacement';
 import { SouthwindMere } from './scenery/SouthwindMere';
 import { DawnlightGlasshouse, DawnlightGround } from './scenery/DawnlightGlasshouse';
+import { WindwardMill, WindwardGround } from './scenery/WindwardMill';
 import { clearOfDawnlightTrail } from './scenery/dawnlightPlacement';
+import { clearOfWindwardTrail } from './scenery/windwardPlacement';
 import { clearOfSouthwindMere } from './scenery/merePlacement';
 import { SouthwindTrail } from './scenery/SouthwindTrail';
 import { clearOfSouthwindTrail } from './scenery/southwindTrailPlacement';
@@ -317,6 +319,7 @@ function ScenicMounts() {
       {active.has('orchard') && <OrchardCommons key={`orchard-${quality}`} />}
       {active.has('observatory') && <CedarObservatory key={`observatory-${quality}`} />}
       {active.has('dawnlight') && <DawnlightGlasshouse key={`dawnlight-${quality}`} />}
+      {active.has('windward') && <WindwardMill key={`windward-${quality}`} />}
       {active.has('slate') && <SlateReach key={`slate-${quality}`} />}
     </group>
   );
@@ -372,6 +375,7 @@ function Landscape() {
       <SouthwindTrail />
       <SouthwindMere />
       <DawnlightGround />
+      <WindwardGround />
       <FarRidge />
       <LandscapeGroves />
       <MeadowScenery />
@@ -421,6 +425,7 @@ function LandscapeGroves() {
         clearOfSouthwindMere(x, z, 1.5) &&
         clearOfSouthwindTrail(x, z, 1.5) &&
         clearOfDawnlightTrail(x, z, 1.5) &&
+        clearOfWindwardTrail(x, z, 1.5) &&
         clearOfTurnouts(x, z, 1.5),
     );
   }, [quality]);
