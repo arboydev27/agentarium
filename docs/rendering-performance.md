@@ -30,6 +30,21 @@ With the distant ridge and stone arch added, the same paused Horizon setup showe
 
 On October 3, after meadow detail expanded across camera-reachable cells, a paused Horizon spot check in the 1280 × 720 development browser showed about **912 draws, 284,626 triangles, 757 geometries, and 44 textures** in daylight/high quality (p95 9.3 ms on a 120 Hz display). Returning through Observatory and Orchard to Horizon yielded **918 draws, 285,518 triangles, 757 geometries, and 44 textures**. An evening/low-quality snapshot read **897 draws, 261,866 triangles, 747 geometries, and 44 textures**. Resident poses and both lighting and quality differed, so these are scene-counter and resource-stability observations, not controlled performance comparisons. Repeat with a production build before setting a budget.
 
+## Spatial landmark mounting spot check
+
+October 3; 1280 × 720 development browser, eight paused simulated residents. After spatial mounting was added for five authored scenic regions, settled daylight/high-quality views gave these individual readings. The renderer still frustum-culls offscreen meshes, so the intended gain is fewer resident scene resources near a landmark, not necessarily fewer draw calls in that close view.
+
+| View                 | Draws | Triangles | Geometries | Textures |
+| -------------------- | ----: | --------: | ---------: | -------: |
+| Overview             |   843 |   263,108 |        692 |       41 |
+| Horizon              |   929 |   283,588 |        787 |       45 |
+| Dawnlight Glasshouse |    34 |    55,586 |        742 |       43 |
+| Orchard Commons      |    40 |    61,230 |        750 |       43 |
+| Cedar Observatory    |    52 |    61,026 |        773 |       44 |
+| Southwind Mere       |    37 |    53,334 |        724 |       42 |
+
+The first Dawnlight visit after a clean reload showed 702 geometries and 42 textures. A trip through Horizon warmed other shared resources; subsequent Horizon → Dawnlight cycles consistently returned to **787 → 742 geometries** and **45 → 43 textures**, without further growth across two cycles. These values are resource-count evidence, not measured GPU memory bytes or a guaranteed performance improvement. A separate evening/low-quality/reduced-motion sample at Southwind was 31 draws, 42,484 triangles, 716 geometries, and 42 textures; Horizon was 910 draws, 261,484 triangles, 780 geometries, and 45 textures. The ridge, trails, lake, and resident state remained present in both quality tiers.
+
 ## Repeatable review procedure
 
 1. Use the same browser, viewport, display, camera preset, quality, and resident state. Prefer a production build with `npm run build` and `npm run preview` for formal profiling.

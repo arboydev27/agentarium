@@ -1,6 +1,6 @@
 # Spatial scenery chunks
 
-The world is a finite 600 × 600 scene. Splitting optional scenery into chunks is the first step toward a larger map; it does not make the terrain infinite or stream assets from a server. The broad ground, trail, lookout, and distant silhouettes stay visible while close details can mount near the camera and unmount after it moves away.
+The world is a finite 600 × 600 scene. Splitting optional scenery into chunks and authored regions is a step toward a larger map; it does not make the terrain infinite or stream assets from a server. The broad ground, trails, arrival pads, lake, and distant ridge stay visible while nearby decorative scenery mounts around the camera.
 
 ## Ownership boundary
 
@@ -14,7 +14,9 @@ Chunk identity comes from fixed world coordinates, not React mount order or rand
 
 The policy divides the square world into 60-unit cells with stable `detail-chunk:column:row` IDs. It selects optional detail near the camera's ground focus and position; the policy also accepts resident positions for later use. A larger exit distance than entry distance avoids flicker as the camera crosses a boundary. Selection runs every 0.2 seconds and caps mounted cells at 24, so moving toward the far horizon cannot mount the whole map at once. Selected cells across the camera-reachable meadow now generate deterministic hummocks, flowers, and stones when mounted, including beyond the three named destinations. Low quality uses fewer instances and no flowers. Unselected cells do not build their instance buffers. Placement uses rendered terrain height and excludes the inhabited floors, trails, landmark arrivals, oak, and ridge face. No network fetch or terrain eviction occurs.
 
-This policy is about which details exist in the renderer. Three.js frustum culling still decides which mounted meshes are drawn. The oak, lookout, orchard, observatory, trails, and distant groves remain visible base scenery even when their surrounding fine-detail cell is not selected. Shared meadow geometry and materials are kept while individual chunk instance buffers are released on unmount. Meadow detail and pine placements exclude the Orchard and Cedar Observatory arrivals and branch corridors so remounting a chunk cannot obstruct their walkable routes.
+Five authored scenic regions use a second selector: Meadow Lookout shelter, Orchard Commons décor, Cedar Observatory décor, Dawnlight Glasshouse structure and garden, and the scenic-only Slate Reach outcrop. Their fixed bounds and IDs are independent of the meadow cells. Every 0.2 seconds, the selector measures a conservative ground footprint from the orthographic camera, adds a margin for tall scenery, and keeps regions through a wider exit band. The camera position also anchors prefetch. A new preset or map-scout target prefetches its destination immediately, before the camera travels; Horizon mounts all five regions. If the frustum cannot be projected safely, all five remain mounted. Ground, route ribbons, pads, Southwind Mere, and the far ridge never pass through this selector.
+
+These policies control which objects exist in the renderer. Three.js frustum culling still decides which mounted meshes are drawn. Shared meadow geometry and materials are kept while individual chunk instance buffers are released on unmount. Authored regions release their owned instance buffers when they unmount; resources shared by the permanent scene remain. Meadow detail and pine placements exclude the Orchard and Cedar Observatory arrivals and branch corridors so remounting a chunk cannot obstruct their walkable routes.
 
 ## Next expansion gates
 
