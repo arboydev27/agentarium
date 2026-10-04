@@ -3,6 +3,7 @@ import { CAMERA_VIEWS } from './layout';
 import { WINDWARD_MILL } from './scenery/windwardPlacement';
 import { AMBER_BLUFF } from './scenery/amberPlacement';
 import { WOODLAND_HOLLOW } from './scenery/woodlandPlacement';
+import { NORTHSTAR_OUTPOST } from './scenery/northstarPlacement';
 import {
   SCENIC_ENTER_PADDING,
   SCENIC_EXIT_PADDING,
@@ -41,6 +42,7 @@ describe('fixed scenic-region visibility', () => {
       'windward',
       'amber',
       'woodland',
+      'northstar',
     ];
     expect(SCENIC_REGIONS.map((region) => region.id)).toEqual(expected);
     const horizon: ScenicVisibilityInput = { ...frame(away), mode: 'horizon' };
@@ -64,6 +66,7 @@ describe('fixed scenic-region visibility', () => {
       ['windward', 'windward'],
       ['amber', 'amber'],
       ['hollow', 'woodland'],
+      ['northstar', 'northstar'],
     ] as const)
       expect(ids({ mode: 'orthographic', ...preset(view) }), view).toContain(region);
     expect(ids({ mode: 'orthographic', ...preset('observatory') })).toContain('slate');
@@ -77,6 +80,13 @@ describe('fixed scenic-region visibility', () => {
     const hollow = SCENIC_REGIONS.find((region) => region.id === 'woodland')!;
     expect(hollow.bounds.minX).toBeLessThan(WOODLAND_HOLLOW.x - WOODLAND_HOLLOW.clearingRadius);
     expect(hollow.bounds.maxZ).toBeGreaterThan(WOODLAND_HOLLOW.z + WOODLAND_HOLLOW.clearingRadius);
+    const northstar = SCENIC_REGIONS.find((region) => region.id === 'northstar')!;
+    expect(northstar.bounds.minX).toBeLessThan(
+      NORTHSTAR_OUTPOST.x - NORTHSTAR_OUTPOST.clearingRadius,
+    );
+    expect(northstar.bounds.minZ).toBeLessThan(
+      NORTHSTAR_OUTPOST.z - NORTHSTAR_OUTPOST.clearingRadius,
+    );
   });
 
   it('prefetches ahead of the frustum and keeps a selected region through the exit band', () => {
@@ -135,5 +145,8 @@ describe('fixed scenic-region visibility', () => {
     };
     expect(ids(switched, mounted)).toEqual(expect.arrayContaining(['orchard', 'observatory']));
     expect(ids({ mode: 'orthographic', ...observatory })).toContain('observatory');
+    expect(
+      ids({ mode: 'orthographic', ...preset('overview'), target: preset('northstar') }),
+    ).toContain('northstar');
   });
 });

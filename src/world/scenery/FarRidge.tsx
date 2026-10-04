@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { useWorld } from '../../state';
 import { terrainHeight } from '../terrain';
 import { Box } from '../primitives';
+import { clearOfNorthstarTrail } from './northstarPlacement';
 
 const ROWS = [-84, -95, -109] as const;
 const SPAN = 204;
@@ -12,14 +13,22 @@ function ridgeFold(x: number) {
   return Math.sin(x * 0.052) * 2.1 + Math.sin(x * 0.133 + 0.8) * 1.15 + Math.cos(x * 0.024) * 1.5;
 }
 
+function northstarPassWeight(x: number, z: number) {
+  // Open a diagonal saddle where the connected Northstar trail crosses the ridge.
+  const centerX = 28 + ((-z - 95) / 14) * 12;
+  return THREE.MathUtils.smoothstep(Math.abs(x - centerX), 20, 38);
+}
+
 function ridgeRowHeight(x: number, row: number) {
   const z = ROWS[row];
   const rise = [0.14, 6.7, 12.7][row];
   const fold = ridgeFold(x) * [0, 0.62, 1.12][row];
-  return terrainHeight(x, z) + rise + fold;
+  const passWeight = northstarPassWeight(x, z);
+  // The scenic strip is coarser than Landscape; tuck its pass below that mesh.
+  return terrainHeight(x, z) + (rise + fold) * passWeight - 2.0 * (1 - passWeight);
 }
 
-function ridgeHeight(x: number, z: number) {
+export function ridgeHeight(x: number, z: number) {
   const row = z >= ROWS[1] ? 0 : 1;
   const t = THREE.MathUtils.clamp((ROWS[row] - z) / (ROWS[row] - ROWS[row + 1]), 0, 1);
   return THREE.MathUtils.lerp(ridgeRowHeight(x, row), ridgeRowHeight(x, row + 1), t);
@@ -60,7 +69,7 @@ function RidgeFace() {
 }
 
 function WeatheredArch() {
-  const x = 45;
+  const x = 73;
   const z = -99;
   return (
     <group name="distant-weathered-arch" position={[x, ridgeHeight(x, z), z]}>
@@ -79,6 +88,16 @@ function WeatheredArch() {
 
 function RidgeStones() {
   const stones = useRef<THREE.InstancedMesh>(null);
+  const sites = useMemo(
+    () =>
+      Array.from({ length: 28 }, (_, index) => {
+        const x = -84 + index * 6.1;
+        const z = -88 - ((index * 7) % 17);
+        const size = 0.4 + ((index * 11) % 7) * 0.12;
+        return { x, z, size, index };
+      }).filter(({ x, z, size }) => clearOfNorthstarTrail(x, z, size + 0.7)),
+    [],
+  );
   useEffect(() => {
     if (!stones.current) return;
     const matrix = new THREE.Matrix4();
@@ -86,24 +105,25 @@ function RidgeStones() {
     const position = new THREE.Vector3();
     const scale = new THREE.Vector3();
     const shades = ['#aeb5a5', '#8e9e92', '#b9b4a2'].map((value) => new THREE.Color(value));
-    for (let i = 0; i < 28; i++) {
-      const x = -84 + i * 6.1;
-      const z = -88 - ((i * 7) % 17);
-      const size = 0.4 + ((i * 11) % 7) * 0.12;
+    sites.forEach(({ x, z, size, index }, slot) => {
       matrix.compose(
         position.set(x, ridgeHeight(x, z) + size * 0.28, z),
         rotation,
         scale.set(size, size * 0.55, size * 0.85),
       );
-      stones.current.setMatrixAt(i, matrix);
-      stones.current.setColorAt(i, shades[i % shades.length]);
-    }
-    stones.current.instanceMatrix.needsUpdate = true;
-    if (stones.current.instanceColor) stones.current.instanceColor.needsUpdate = true;
-    stones.current.computeBoundingSphere();
-  }, []);
+      stones.current!.setMatrixAt(slot, matrix);
+      stones.current!.setColorAt(slot, shades[index % shades.length]);
+    });
+    const mesh = stones.current;
+    mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    mesh.computeBoundingSphere();
+    return () => {
+      mesh.dispose();
+    };
+  }, [sites]);
   return (
-    <instancedMesh ref={stones} args={[undefined, undefined, 28]}>
+    <instancedMesh ref={stones} args={[undefined, undefined, sites.length]}>
       <dodecahedronGeometry args={[1, 0]} />
       <meshStandardMaterial roughness={1} flatShading />
     </instancedMesh>

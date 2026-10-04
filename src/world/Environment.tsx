@@ -36,6 +36,12 @@ import { DawnlightGlasshouse, DawnlightGround } from './scenery/DawnlightGlassho
 import { WindwardMill, WindwardGround } from './scenery/WindwardMill';
 import { AmberBluff } from './scenery/AmberBluff';
 import { LanternHollow, WoodlandGround } from './scenery/WoodlandHollow';
+import { NorthstarOutpost, NorthstarGround } from './scenery/NorthstarOutpost';
+import {
+  NORTHSTAR_OUTPOST,
+  clearOfNorthstarTrail,
+  clearOfNorthstarStructure,
+} from './scenery/northstarPlacement';
 import { clearOfDawnlightTrail } from './scenery/dawnlightPlacement';
 import { clearOfWindwardTrail } from './scenery/windwardPlacement';
 import { clearOfAmberBluff } from './scenery/amberPlacement';
@@ -332,6 +338,7 @@ function ScenicMounts() {
       {active.has('windward') && <WindwardMill key={`windward-${quality}`} />}
       {active.has('amber') && <AmberBluff key={`amber-${quality}`} />}
       {active.has('woodland') && <LanternHollow key={`woodland-${quality}`} />}
+      {active.has('northstar') && <NorthstarOutpost key={`northstar-${quality}`} />}
       {active.has('slate') && <SlateReach key={`slate-${quality}`} />}
     </group>
   );
@@ -402,6 +409,7 @@ function Landscape() {
       <OrchardGround />
       <ObservatoryGround />
       <WoodlandGround />
+      <NorthstarGround />
       <SouthwindTrail />
       <SouthwindMere />
       <DawnlightGround />
@@ -423,6 +431,17 @@ function clearOfHollowSightline(x: number, z: number) {
     ? THREE.MathUtils.clamp(((x - cameraX) * dx + (z - cameraZ) * dz) / lengthSquared, 0, 1)
     : 0;
   return Math.hypot(x - cameraX - t * dx, z - cameraZ - t * dz) >= 10;
+}
+
+function clearOfNorthstarSightline(x: number, z: number) {
+  const [cameraX, , cameraZ] = CAMERA_VIEWS.northstar.pos;
+  const dx = NORTHSTAR_OUTPOST.x - cameraX;
+  const dz = NORTHSTAR_OUTPOST.z - cameraZ;
+  const lengthSquared = dx * dx + dz * dz;
+  const t = lengthSquared
+    ? THREE.MathUtils.clamp(((x - cameraX) * dx + (z - cameraZ) * dz) / lengthSquared, 0, 1)
+    : 0;
+  return Math.hypot(x - cameraX - t * dx, z - cameraZ - t * dz) >= 5.2;
 }
 
 function LandscapeGroves() {
@@ -504,6 +523,9 @@ function LandscapeGroves() {
         clearOfWoodlandHollow(x, z, 3.5) &&
         clearOfWoodlandShelter(x, z, 5.5) &&
         clearOfHollowSightline(x, z) &&
+        clearOfNorthstarTrail(x, z, 3) &&
+        clearOfNorthstarStructure(x, z, 3) &&
+        clearOfNorthstarSightline(x, z) &&
         clearOfTurnouts(x, z, 1.5),
     );
   }, [quality]);

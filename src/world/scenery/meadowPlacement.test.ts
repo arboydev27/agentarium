@@ -5,6 +5,7 @@ import { meadowTrailPoint } from '../terrain';
 import { WINDWARD_MILL, WINDWARD_BRANCH_XZ } from './windwardPlacement';
 import { AMBER_BLUFF } from './amberPlacement';
 import { WOODLAND_HOLLOW, WOODLAND_TRAIL_XZ, WOODLAND_SHELTER_XZ } from './woodlandPlacement';
+import { NORTHSTAR_OUTPOST, NORTHSTAR_TOWER_XZ, NORTHSTAR_TRAIL_XZ } from './northstarPlacement';
 import { buildMeadowPieces, clearOfMeadowRoutes, meadowChunkHasDetail } from './meadowPlacement';
 
 describe('spatial meadow placement', () => {
@@ -66,6 +67,9 @@ describe('spatial meadow placement', () => {
       [WOODLAND_HOLLOW.x, WOODLAND_HOLLOW.z],
       WOODLAND_SHELTER_XZ,
       ...WOODLAND_TRAIL_XZ,
+      [NORTHSTAR_OUTPOST.x, NORTHSTAR_OUTPOST.z],
+      NORTHSTAR_TOWER_XZ,
+      ...NORTHSTAR_TRAIL_XZ,
     ]) {
       expect(clearOfMeadowRoutes(x, z)).toBe(false);
     }

@@ -4,9 +4,18 @@ import { DAWNLIGHT_GLASSHOUSE } from './scenery/dawnlightPlacement';
 import { SLATE_REACH } from './scenery/slatePlacement';
 import { WINDWARD_MILL } from './scenery/windwardPlacement';
 import { WOODLAND_HOLLOW } from './scenery/woodlandPlacement';
+import { NORTHSTAR_OUTPOST } from './scenery/northstarPlacement';
 
 export type ScenicRegionId =
-  'lookout' | 'orchard' | 'observatory' | 'dawnlight' | 'slate' | 'windward' | 'amber' | 'woodland';
+  | 'lookout'
+  | 'orchard'
+  | 'observatory'
+  | 'dawnlight'
+  | 'slate'
+  | 'windward'
+  | 'amber'
+  | 'woodland'
+  | 'northstar';
 export type ScenicPoint = Readonly<{ x: number; z: number }>;
 export type ScenicBounds = Readonly<{
   minX: number;
@@ -55,6 +64,10 @@ export const SCENIC_REGIONS: readonly ScenicRegion[] = Object.freeze([
   ),
   region('amber', box(AMBER_BLUFF.x, AMBER_BLUFF.z, AMBER_BLUFF.clearingRadius + 8)),
   region('woodland', box(WOODLAND_HOLLOW.x, WOODLAND_HOLLOW.z, WOODLAND_HOLLOW.focusRadius + 7)),
+  region(
+    'northstar',
+    box(NORTHSTAR_OUTPOST.x, NORTHSTAR_OUTPOST.z, NORTHSTAR_OUTPOST.focusRadius + 8),
+  ),
 ]);
 
 export const SCENIC_ENTER_PADDING = 18;
