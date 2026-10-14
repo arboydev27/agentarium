@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useLayoutEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useWorld } from '../../state';
 import { Box, Cylinder, Sign } from '../primitives';
@@ -166,7 +166,7 @@ function HighlandFringe() {
   const trunks = useRef<THREE.InstancedMesh>(null);
   const crowns = useRef<THREE.InstancedMesh>(null);
   const scree = useRef<THREE.InstancedMesh>(null);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const matrix = new THREE.Matrix4();
     const position = new THREE.Vector3();
     const rotation = new THREE.Quaternion();

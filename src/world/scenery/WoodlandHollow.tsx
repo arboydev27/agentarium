@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useLayoutEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useWorld } from '../../state';
 import { Box, Cylinder, Sign } from '../primitives';
@@ -133,7 +133,7 @@ function HollowFerns() {
         Math.hypot(x + 88.5, z + 23.4) > 2.3,
     );
   }, [quality]);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!ferns.current) return;
     const matrix = new THREE.Matrix4();
     const position = new THREE.Vector3();

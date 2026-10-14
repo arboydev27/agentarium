@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useWorld } from '../../state';
 import { renderedTerrainHeight } from '../terrain';
@@ -109,7 +109,7 @@ function BluffPines({ baseY }: { baseY: number }) {
   const sites = PINE_SITES.slice(0, quality === 'high' ? PINE_SITES.length : 3);
   const trunks = useRef<THREE.InstancedMesh>(null);
   const crowns = useRef<THREE.InstancedMesh>(null);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!trunks.current || !crowns.current) return;
     const matrix = new THREE.Matrix4();
     const position = new THREE.Vector3();
@@ -202,7 +202,7 @@ function BluffDetails({ baseY }: { baseY: number }) {
       };
     });
   }, [quality]);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const matrix = new THREE.Matrix4();
     const position = new THREE.Vector3();
     const rotation = new THREE.Quaternion();

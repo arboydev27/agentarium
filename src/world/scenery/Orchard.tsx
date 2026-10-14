@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useLayoutEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useWorld } from '../../state';
 import { terrainHeight } from '../terrain';
@@ -36,7 +36,7 @@ function OrchardTrees() {
   const crowns = useRef<THREE.InstancedMesh>(null);
   const lobes = useRef<THREE.InstancedMesh>(null);
   const fruit = useRef<THREE.InstancedMesh>(null);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (
       !mulch.current ||
       !trunks.current ||
@@ -160,7 +160,7 @@ function OrchardTrees() {
 function CommonsPavilion() {
   const { x, z } = ORCHARD_PAVILION;
   const posts = useRef<THREE.InstancedMesh>(null);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!posts.current) return;
     const matrix = new THREE.Matrix4();
     const scale = new THREE.Vector3(1, 1, 1);
@@ -228,7 +228,7 @@ function HarvestDetails() {
   const plantSites = useMemo(() => PLANT_SITES.slice(0, quality === 'high' ? 12 : 8), [quality]);
   const plants = useRef<THREE.InstancedMesh>(null);
   const crates = useRef<THREE.InstancedMesh>(null);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!plants.current || !crates.current) return;
     const matrix = new THREE.Matrix4();
     const position = new THREE.Vector3();

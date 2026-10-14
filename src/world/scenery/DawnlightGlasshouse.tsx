@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useWorld } from '../../state';
 import { Sign } from '../primitives';
@@ -87,7 +87,7 @@ function ConservatoryFrame() {
     }
     return result;
   }, [levels]);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const mesh = frame.current;
     if (!mesh) return;
     const matrix = new THREE.Matrix4();
@@ -137,7 +137,7 @@ function HangingLanterns({ eave, ridge }: { eave: number; ridge: number }) {
   const cords = useRef<THREE.InstancedMesh>(null);
   const globes = useRef<THREE.InstancedMesh>(null);
   const sites = quality === 'high' ? [-1.8, 0, 1.8] : [0];
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!cords.current || !globes.current) return;
     const matrix = new THREE.Matrix4();
     const position = new THREE.Vector3();
@@ -250,7 +250,7 @@ function PlantBeds() {
   const foliage = useRef<THREE.InstancedMesh>(null);
   const blossoms = useRef<THREE.InstancedMesh>(null);
   const leavesPerBed = quality === 'high' ? 4 : 2;
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!beds.current || !foliage.current || (quality === 'high' && !blossoms.current)) return;
     const matrix = new THREE.Matrix4();
     const position = new THREE.Vector3();
@@ -369,7 +369,7 @@ function ForecourtGarden() {
     });
     return quality === 'high' ? clear : clear.filter((_, index) => index % 2 === 0);
   }, [quality]);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!soils.current || !hedges.current || !blooms.current) return;
     const matrix = new THREE.Matrix4();
     const position = new THREE.Vector3();

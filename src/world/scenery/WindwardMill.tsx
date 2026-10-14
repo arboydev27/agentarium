@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useWorld } from '../../state';
@@ -160,7 +160,7 @@ function GrainPatches() {
       };
     });
   }, [quality]);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!stalks.current || !heads.current) return;
     const matrix = new THREE.Matrix4();
     const position = new THREE.Vector3();

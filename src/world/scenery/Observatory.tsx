@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useLayoutEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useWorld } from '../../state';
 import { OBSERVATORY } from '../layout';
@@ -19,7 +19,7 @@ function CedarFringe() {
   const sites = useMemo(() => CEDAR_SITES.slice(0, quality === 'high' ? 6 : 4), [quality]);
   const trunks = useRef<THREE.InstancedMesh>(null);
   const boughs = useRef<THREE.InstancedMesh>(null);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!trunks.current || !boughs.current) return;
     const matrix = new THREE.Matrix4();
     const position = new THREE.Vector3();

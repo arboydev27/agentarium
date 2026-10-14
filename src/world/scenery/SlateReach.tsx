@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useLayoutEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useWorld } from '../../state';
 import { renderedTerrainHeight } from '../terrain';
@@ -12,7 +12,7 @@ const FINS = [
 
 function SlateFins() {
   const fins = useRef<THREE.InstancedMesh>(null);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!fins.current) return;
     const matrix = new THREE.Matrix4();
     const position = new THREE.Vector3();
@@ -79,7 +79,7 @@ function Scree() {
       }),
     [],
   );
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!stones.current) return;
     const matrix = new THREE.Matrix4();
     const position = new THREE.Vector3();
