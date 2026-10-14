@@ -50,6 +50,12 @@ Run `npm run build` to check TypeScript and asset compilation. A large-chunk war
 
 For poor frame rate, use low quality, disable cinematic orbit, and check browser WebGL support. For missing characters, verify that `/models/robot.glb` is served successfully and inspect the browser console. Subpath hosting needs asset URL review. Network-blocked Google Fonts can change typography without affecting the local model asset.
 
+## A landmark shows a simple frame or a scenery error
+
+The simple form is a lightweight loading silhouette. Walkable paths, arrival floors, residents, and task tracking remain available while optional décor loads. If loading fails, use **Retry** in the **Scenery loading** card or at the landmark. The card remains available after moving the camera away.
+
+If the import retry fails again, use the offered **Reload world** action. Some browsers cache a failed module request and cannot refetch it in the same page. Reload is explicit and reinitializes the page; reconnect the bridge afterward if using live mode. It does not fix a missing file on the host. For a deployed build, verify that every hashed chunk referenced by the page is still served from `dist/assets/`, and check for stale HTML pointing at removed assets. A repeated render error requires a code fix. Scenery failures do not indicate agent failure or change provider activity.
+
 ## Useful evidence for a bug report
 
 Include Node version, browser, operating system, provider version when relevant, current mode, reproduction steps, and the relevant error/status code. Use redacted synthetic event examples. Exclude tokens, prompts, transcripts, and sensitive tool data.

@@ -47,7 +47,7 @@ The default database and hook script location are resolved from bridge modules. 
 
 ## Build and hosting boundaries
 
-Vite writes the static application to `dist/`. [.openai/hosting.json](../.openai/hosting.json) identifies the existing Sites project and its `dist` output directory. Its project ID is a deployment identity, not a local path. Moving or renaming the checkout does not require replacing it.
+Vite writes the static application to `dist/` and a chunk manifest to `dist/.vite/manifest.json`. Nine authored scenery files should appear as independent dynamic entries, with no static path from `src/World.tsx` to those entries. Verify this after changing scenery imports; putting a ground surface back in its decorative module would defeat splitting. Publish the complete output and keep hashed chunks available for already-open pages across deployments. [.openai/hosting.json](../.openai/hosting.json) identifies the existing Sites project and its `dist` output directory. Its project ID is a deployment identity, not a local path. Moving or renaming the checkout does not require replacing it.
 
 Building is separate from publishing. This document does not deploy changes. Static hosting does not run the bridge or make a local provider connection available to visitors. For live local usage, serve the app locally with an allowed origin.
 
