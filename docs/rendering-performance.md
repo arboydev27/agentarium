@@ -1,6 +1,6 @@
 # Rendering performance
 
-Append `?renderStats=1` to the local app URL, for example `http://127.0.0.1:5173/?renderStats=1`. A small overlay reports average interval FPS, the 95th-percentile frame interval, renderer draw calls and triangles, and allocated geometry/texture counts. Remove the query parameter and reload to disable it. Nothing is transmitted or persisted.
+Append `?renderStats=1` to the local app URL, for example `http://127.0.0.1:5173/?renderStats=1`. A small overlay reports average interval FPS, the 95th-percentile frame interval, renderer draw calls and triangles, allocated geometry/texture counts, and the current number of full-detail terrain tiles. Remove the query parameter and reload to disable it. Nothing is transmitted or persisted.
 
 ## What the numbers mean
 
@@ -56,6 +56,12 @@ October 3; 1280 × 720 development browser, eight paused simulated residents, da
 ## Wider travel-area spot check
 
 October 3; 1280 × 720 development browser, simulated residents. After camera travel expanded to X/Z ±210 and the outer scenery gained nearby spatial groups, an eastern scout view around X ≈ 175, Z ≈ 0 read **37 draws, 179,702 triangles, 760 geometries, and 42 textures** in daylight/high quality, with p95 frame intervals around 9.2 ms on a 120 Hz display. A separate evening/low-quality reading there was **25 draws, 152,326 triangles, 710 geometries, and 41 textures**. The camera framing, resident state, lighting, and quality differed; these are scene-resource spot checks, not a controlled comparison or device budget. Browser console warnings were absent in those views. The finite ground now uses 254 segments and 129,032 triangles, up from 93,312 for the previous 216-segment mesh.
+
+## Terrain detail by camera area
+
+October 13; production preview, 1280 × 720 in-app browser, eight paused simulated residents. A settled daylight/high-quality Horizon view after visiting the remote landmarks read **969 draws, 305,212 triangles, 849 geometries, 47 textures, and 29 full-detail terrain tiles**, with p95 intervals around 8.5 ms on a 120 Hz display. An earlier settled Northstar view read **64 draws, 73,328 triangles, and 25 full-detail tiles**. A separate evening/low-quality Southwind check rendered the lake and route without browser warnings. These are individual local observations; quality, framing, and warmed scenic resources differ between them.
+
+Ground now renders in two merged covers. Full coarse coverage contains 16,256 triangles, while the original full-detail ground contains 129,032. With 29 interior tiles in full detail, ground uses 29,248 triangles. This is a geometry-count reduction, not a measured GPU-time or cross-device frame-rate guarantee. The diagnostic tile count makes selection and retirement visible during camera travel; CPU reference arrays stay cached while replaced GPU buffers are disposed.
 
 ## Repeatable review procedure
 
