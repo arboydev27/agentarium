@@ -14,15 +14,9 @@ import {
   type ScenicRegionId,
 } from './scenicVisibility';
 import { DetailLayer } from './DetailLayer';
+import { TerrainTiles } from './TerrainTiles';
 import { useSurfaceTextures } from './surfaces';
-import {
-  LANDSCAPE_SEGMENTS,
-  LANDSCAPE_SIZE,
-  meadowTrailPoint,
-  renderedTerrainHeight,
-  terrainHeight,
-  walkwayHeight,
-} from './terrain';
+import { meadowTrailPoint, renderedTerrainHeight, terrainHeight, walkwayHeight } from './terrain';
 import { MeadowScenery } from './scenery/Meadow';
 import { OrchardCommons, OrchardGround } from './scenery/Orchard';
 import { clearOfOrchard, clearOfOrchardView } from './scenery/orchardPlacement';
@@ -347,63 +341,9 @@ function ScenicMounts() {
 }
 
 function Landscape() {
-  const geometry = useMemo(() => {
-    // Put the mesh boundary well beyond the fog so no rectangular edge enters view.
-    const ground = new THREE.PlaneGeometry(
-      LANDSCAPE_SIZE,
-      LANDSCAPE_SIZE,
-      LANDSCAPE_SEGMENTS,
-      LANDSCAPE_SEGMENTS,
-    );
-    ground.rotateX(-Math.PI / 2);
-    const positions = ground.getAttribute('position');
-    const colors = new Float32Array(positions.count * 3);
-    const meadow = new THREE.Color('#82a171');
-    const field = new THREE.Color('#acb78d');
-    const ridge = new THREE.Color('#90a397');
-    const woodland = new THREE.Color('#557a56');
-    const highland = new THREE.Color('#85999c');
-    const amber = new THREE.Color('#bf9b61');
-    const biomeColor = new THREE.Color();
-    const color = new THREE.Color();
-    for (let i = 0; i < positions.count; i++) {
-      const x = positions.getX(i);
-      const z = positions.getZ(i);
-      const y = terrainHeight(x, z);
-      positions.setY(i, y);
-      const fieldPatch =
-        (Math.sin(x * 0.082 + Math.sin(z * 0.04)) * Math.cos(z * 0.11 - x * 0.025) + 1) * 0.5;
-      color
-        .copy(meadow)
-        .lerp(field, fieldPatch * 0.42)
-        .lerp(ridge, THREE.MathUtils.clamp((y - 2.5) / 12, 0, 0.85));
-      const biome = biomeInfluence(x, z);
-      const weight = biome.woodland + biome.highland + biome.amber;
-      if (weight > 0) {
-        biomeColor.setRGB(
-          (woodland.r * biome.woodland + highland.r * biome.highland + amber.r * biome.amber) /
-            weight,
-          (woodland.g * biome.woodland + highland.g * biome.highland + amber.g * biome.amber) /
-            weight,
-          (woodland.b * biome.woodland + highland.b * biome.highland + amber.b * biome.amber) /
-            weight,
-        );
-        color.lerp(biomeColor, Math.min(0.87, weight * 0.82));
-      }
-      colors[i * 3] = color.r;
-      colors[i * 3 + 1] = color.g;
-      colors[i * 3 + 2] = color.b;
-    }
-    ground.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    ground.computeVertexNormals();
-    return ground;
-  }, []);
-  useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <group name="distant-landscape">
-      <mesh geometry={geometry} receiveShadow>
-        <meshStandardMaterial vertexColors roughness={1} side={THREE.DoubleSide} />
-      </mesh>
+      <TerrainTiles />
       <LandscapePath />
       <TrailTurnouts />
       <LookoutBranch />

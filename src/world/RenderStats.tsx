@@ -21,7 +21,7 @@ export function RenderStats() {
       node.current = null;
     };
   }, [gl]);
-  useFrame((_, delta) => {
+  useFrame(({ scene }, delta) => {
     // Discard tab-resume gaps; intervals include browser scheduling, not just GPU work.
     if (delta <= 0 || delta > 0.25 || document.hidden) return;
     samples.current.push(delta * 1000);
@@ -30,7 +30,9 @@ export function RenderStats() {
     if (elapsed.current < 1 || !node.current) return;
     elapsed.current = 0;
     const { fps, p95 } = frameSummary(samples.current);
-    node.current.textContent = `${fps.toFixed(0)} fps · p95 ${p95.toFixed(1)} ms · ${gl.info.render.calls} draws · ${gl.info.render.triangles.toLocaleString()} triangles · ${gl.info.memory.geometries} geometries · ${gl.info.memory.textures} textures`;
+    const terrain = scene.getObjectByName('spatial-terrain');
+    const tiles = terrain ? ` · ${terrain.userData.fineCount} fine terrain tiles` : '';
+    node.current.textContent = `${fps.toFixed(0)} fps · p95 ${p95.toFixed(1)} ms · ${gl.info.render.calls} draws · ${gl.info.render.triangles.toLocaleString()} triangles · ${gl.info.memory.geometries} geometries · ${gl.info.memory.textures} textures${tiles}`;
   });
   return null;
 }

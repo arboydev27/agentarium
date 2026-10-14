@@ -19,6 +19,7 @@ import { Box, Cylinder, Pot } from './world/primitives';
 import { Environment } from './world/Environment';
 import { CAMERA_VIEWS } from './world/layout';
 import { CAMERA_PAN_BOUNDS, clampPanDelta, isPanKey, keyboardPanDelta } from './world/cameraPan';
+import { WORLD_FOG_NEAR, WORLD_FOG_FAR } from './world/terrainTileVisibility';
 import { renderedTerrainHeight } from './world/terrain';
 import {
   mapIsActive,
@@ -581,6 +582,7 @@ function Camera({ positions }: { positions: Positions }) {
     world.addEventListener('keydown', pan);
     return () => world.removeEventListener('keydown', pan);
   }, [camera, gl]);
+  // Scripted camera travel runs before terrain visibility samples this frame.
   useFrame(({ clock }, d) => {
     const point =
       follow && followVisible && useWorld.getState().followAgent === follow
@@ -644,7 +646,7 @@ function Camera({ positions }: { positions: Positions }) {
         lastMapPublish.current = clock.elapsedTime * 1000;
       }
     }
-  });
+  }, -0.5);
   return (
     <OrbitControls
       ref={controls}
@@ -672,7 +674,7 @@ function Lighting() {
   const night = useWorld((s) => s.night);
   return (
     <>
-      <fog attach="fog" args={[night ? '#263a43' : '#d8dfd0', 85, 165]} />
+      <fog attach="fog" args={[night ? '#263a43' : '#d8dfd0', WORLD_FOG_NEAR, WORLD_FOG_FAR]} />
       <ambientLight intensity={night ? 0.55 : 0.85} color={night ? '#a2b6ed' : '#fff8e7'} />
       <hemisphereLight args={[night ? '#849ccf' : '#e8f0e0', '#849970', night ? 0.7 : 1.25]} />
       <directionalLight
