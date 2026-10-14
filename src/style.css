@@ -58,6 +58,60 @@ a {
   position: absolute;
   inset: 0;
 }
+.scenery-status {
+  position: absolute;
+  left: 24px;
+  bottom: 155px;
+  z-index: 45;
+  width: min(300px, calc(100vw - 48px));
+  max-height: min(240px, 35vh);
+  overflow: auto;
+  padding: 14px;
+  border: 1px solid #c9d4ba;
+  border-radius: 14px;
+  background: #f8f9eff5;
+  color: #34513b;
+  font-size: 12px;
+  box-shadow: 0 8px 28px #20352718;
+}
+.scenery-status ul {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+.scenery-status li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 6px;
+}
+.scenery-status button {
+  min-height: 32px;
+  padding: 5px 10px;
+  border: 1px solid #aabd99;
+  border-radius: 7px;
+  color: inherit;
+  background: #e6eddc;
+}
+.scenery-recovery {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #aabd9970;
+}
+.scenery-recovery p {
+  margin: 0 0 8px;
+  line-height: 1.5;
+}
+.night .scenery-status {
+  background: #233c35f5;
+  border-color: #4b6654;
+  color: #edf2e5;
+}
+.night .scenery-status button {
+  background: #355045;
+  border-color: #6d8466;
+}
 .world-canvas:focus-visible {
   outline: 3px solid #8db676;
   outline-offset: -5px;

@@ -1,5 +1,6 @@
 import { WorldHUD } from './WorldHUD';
 import { LandmarkMap } from './LandmarkMap';
+import { SceneryStatus } from './SceneryStatus';
 import { Recap } from './Recap';
 import { TaskBrief, attentionMessage } from './TaskBrief';
 import { attentionFor } from './shared/work.mjs';
@@ -365,6 +366,7 @@ export default function App() {
           </Suspense>
         </SceneBoundary>
       </div>
+      <SceneryStatus />
       <header className="topbar">
         <a href="/" className="brand" aria-label="Agent Grove home">
           <span className="brand-mark">
