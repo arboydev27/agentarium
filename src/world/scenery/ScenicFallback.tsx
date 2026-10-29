@@ -7,14 +7,15 @@ import { SCENIC_FALLBACK_PLANS, type FallbackShape, type FallbackTone } from './
 // A bounded, shared asset set: subtree disposal is disabled so changing or
 // remounting a fallback never disposes geometry/material used by its neighbors.
 const geometry: Record<FallbackShape, THREE.BufferGeometry> = {
+  dome: new THREE.SphereGeometry(1, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2),
   box: new THREE.BoxGeometry(1, 1, 1),
   cylinder: new THREE.CylinderGeometry(1, 1, 1, 6),
   cone: new THREE.ConeGeometry(1, 1, 6),
 };
 const tones: Record<FallbackTone, string> = {
-  wood: '#82674c',
-  green: '#586d58',
-  stone: '#85999c',
+  wood: '#c8b7a2',
+  green: '#526478',
+  stone: '#a36b56',
   amber: '#bf9b61',
   brass: '#b8895b',
   clay: '#b56f50',
@@ -30,7 +31,7 @@ const ignoreRaycast: THREE.Object3D['raycast'] = () => {};
 
 export type ScenicFallbackProps = {
   id: ScenicRegionId;
-  state: 'loading' | 'failed';
+  state: 'loading' | 'failed' | 'distant';
   onRetry?: () => void;
 };
 

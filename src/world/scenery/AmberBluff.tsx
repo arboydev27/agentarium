@@ -1,3 +1,4 @@
+import { WorldSurfaceMaterial } from '../WorldSurfaceMaterial';
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useWorld } from '../../state';
@@ -9,8 +10,23 @@ import { AMBER_BLUFF } from './amberPlacement';
 const FACING = Math.atan2(15, 24);
 const C = Math.cos(FACING);
 const S = Math.sin(FACING);
-const X = [-8.9, -6.2, -3.5, -0.6, 2.2, 5.5, 8.7] as const;
-const CREST = [2.2, 4.15, 5.6, 7.15, 6.65, 4.55, 2.45] as const;
+const ANCHOR_X = [-8.9, -6.2, -3.5, -0.6, 2.2, 5.5, 8.7];
+const ANCHOR_H = [0.15, 4.15, 5.6, 7.15, 6.65, 4.55, 0.2];
+const X = Array.from({ length: 49 }, (_, i) => -8.9 + (i * 17.6) / 48);
+const CREST = X.map((x) => {
+  const next = ANCHOR_X.findIndex((v) => v > x);
+  const segment = next < 0 ? 5 : Math.max(0, next - 1);
+  const t = THREE.MathUtils.clamp(
+    (x - ANCHOR_X[segment]) / (ANCHOR_X[segment + 1] - ANCHOR_X[segment]),
+    0,
+    1,
+  );
+  return (
+    THREE.MathUtils.lerp(ANCHOR_H[segment], ANCHOR_H[segment + 1], t) +
+    Math.sin(x * 2.3) * 0.28 -
+    Math.pow(Math.max(0, Math.sin(x * 5.1)), 6) * 0.42
+  );
+});
 
 function localToWorld(x: number, z: number): [number, number] {
   return [AMBER_BLUFF.x + C * x + S * z, AMBER_BLUFF.z - S * x + C * z];
@@ -21,7 +37,7 @@ function StrataFace() {
     const positions: number[] = [];
     const colors: number[] = [];
     const indices: number[] = [];
-    const bands = ['#8f765e', '#b48b5f', '#d1ad77', '#a98860', '#d9b983'].map(
+    const bands = ['#a87554', '#b7815d', '#b48a67', '#ab805f', '#c39771'].map(
       (shade) => new THREE.Color(shade),
     );
     const top = new THREE.Color('#bc9d70');
@@ -34,49 +50,88 @@ function StrataFace() {
       }
       indices.push(first, first + 1, first + 2, first, first + 2, first + 3);
     };
-    const frontZ = (x: number, level: number) => 3.45 + Math.sin(x * 0.63) * 0.25 - level * 1.55;
+    const frontZ = (x: number, level: number) =>
+      3.45 +
+      Math.sin(x * 0.63) * 0.25 -
+      level * 1.55 +
+      Math.sin(x * 2.7 + level * 1.3) * 0.24 +
+      Math.sin(level * 44 + x * 0.5) * 0.27 -
+      Math.pow(Math.max(0, Math.sin(x * 1.2 + level * 18)), 3) * 0.4;
     for (let segment = 0; segment < X.length - 1; segment++) {
       const ax = X[segment];
       const bx = X[segment + 1];
       const ah = CREST[segment];
       const bh = CREST[segment + 1];
-      for (let band = 0; band < 5; band++) {
-        const low = band / 5;
-        const high = (band + 1) / 5;
-        const color = bands[(band + (segment % 2)) % bands.length];
+      for (let band = 0; band < 12; band++) {
+        const bedding = (level: number, x: number) =>
+          level / 12 + Math.sin(level * 1.8 + x * 0.35) * Math.sin((level / 12) * Math.PI) * 0.035;
+        const al = bedding(band, ax),
+          bl = bedding(band, bx),
+          ahigh = bedding(band + 1, ax),
+          bhigh = bedding(band + 1, bx);
+        const color = bands[band % bands.length]
+          .clone()
+          .multiplyScalar(0.97 + Math.sin(ax * 0.6 + band) * 0.035);
         addQuad(
-          [ax, -0.55 + (ah + 0.55) * low, frontZ(ax, low)],
-          [bx, -0.55 + (bh + 0.55) * low, frontZ(bx, low)],
-          [bx, -0.55 + (bh + 0.55) * high, frontZ(bx, high)],
-          [ax, -0.55 + (ah + 0.55) * high, frontZ(ax, high)],
+          [ax, -0.55 + (ah + 0.55) * al, frontZ(ax, al)],
+          [bx, -0.55 + (bh + 0.55) * bl, frontZ(bx, bl)],
+          [bx, -0.55 + (bh + 0.55) * bhigh, frontZ(bx, bhigh)],
+          [ax, -0.55 + (ah + 0.55) * ahigh, frontZ(ax, ahigh)],
           color,
         );
       }
-      // A broad shelf and tapering back make the landmark volumetric from
-      // moving cameras without requiring a dense terrain mesh.
-      addQuad(
-        [ax, ah, frontZ(ax, 1)],
-        [bx, bh, frontZ(bx, 1)],
-        [bx, bh - 0.25, -3.35],
-        [ax, ah - 0.25, -3.35],
-        top,
-      );
-      addQuad(
-        [ax, ah - 0.25, -3.35],
-        [bx, bh - 0.25, -3.35],
-        [bx * 1.1, -0.55, -8.7],
-        [ax * 1.1, -0.55, -8.7],
-        back,
-      );
+      // Irregular cap shelves carry erosion through the full volume.
+      const capPoint = (x: number, h: number, t: number) => [
+        x + Math.sin(t * Math.PI) * Math.sin(x * 1.7 + t * 6) * 0.22,
+        h -
+          0.25 * t +
+          Math.sin(x * 2) * 0.35 * t +
+          Math.sin(t * Math.PI) * Math.sin(x * 1.7 + t * 8) * 0.32,
+        THREE.MathUtils.lerp(frontZ(x, 1), -3.35 + Math.sin(x * 0.8) * 0.5, t),
+      ];
+      for (let row = 0; row < 5; row++) {
+        const t = row / 5,
+          u = (row + 1) / 5;
+        addQuad(
+          capPoint(ax, ah, t),
+          capPoint(bx, bh, t),
+          capPoint(bx, bh, u),
+          capPoint(ax, ah, u),
+          top.clone().multiplyScalar(0.95 + Math.sin(row * 2 + ax) * 0.04),
+        );
+      }
+      const rearPoint = (x: number, h: number, t: number) => {
+        const steps = t === 1 ? 1 : (Math.floor(t * 4) + Math.min(1, ((t * 4) % 1) * 4)) / 4;
+        const ridge = (h - 0.25 + Math.sin(x * 2) * 0.35 + 0.55) * (1 - steps) - 0.55;
+        return [
+          x * (1 + t * 0.1) + Math.sin(t * Math.PI) * Math.sin(x * 1.3 + t * 9) * 0.35,
+          ridge + Math.sin(t * Math.PI) * (Math.sin(x * 2.7 + t * 8) * 0.2),
+          -3.35 -
+            5.35 * t +
+            Math.sin(x * 0.8) * 0.5 * (1 - t) +
+            Math.sin(t * Math.PI) * Math.sin(x * 0.9 + t * 12) * 0.45,
+        ];
+      };
+      for (let row = 0; row < 16; row++) {
+        const t = row / 16,
+          u = (row + 1) / 16;
+        addQuad(
+          rearPoint(ax, ah, t),
+          rearPoint(bx, bh, t),
+          rearPoint(bx, bh, u),
+          rearPoint(ax, ah, u),
+          back.clone().multiplyScalar(0.94 + Math.sin(row * 1.3 + ax * 0.6) * 0.06),
+        );
+      }
     }
-    // Close the two exposed ends so an oblique camera sees solid stone.
+    // Low broken ends taper into talus rather than exposing a cut stone slab.
     for (const index of [0, X.length - 1]) {
-      const x = X[index];
-      const h = CREST[index];
+      const x = X[index],
+        h = CREST[index];
       addQuad(
         [x, -0.55, frontZ(x, 0)],
         [x, h, frontZ(x, 1)],
-        [x, h - 0.25, -3.35],
+        [x, h - 0.25 + Math.sin(x * 2) * 0.35, -3.35 + Math.sin(x * 0.8) * 0.5],
         [x * 1.1, -0.55, -8.7],
         back,
       );
@@ -91,7 +146,13 @@ function StrataFace() {
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <mesh name="amber-bluff-stratified-face" geometry={geometry} castShadow receiveShadow>
-      <meshStandardMaterial vertexColors roughness={1} flatShading side={THREE.DoubleSide} />
+      <WorldSurfaceMaterial
+        family="ironstone"
+        vertexColors
+        roughness={1}
+        flatShading
+        side={THREE.DoubleSide}
+      />
     </mesh>
   );
 }
@@ -147,11 +208,11 @@ function BluffPines({ baseY }: { baseY: number }) {
     <group key={quality} name="amber-bluff-sparse-pines">
       <instancedMesh ref={trunks} args={[undefined, undefined, sites.length]} castShadow>
         <cylinderGeometry args={[0.08, 0.18, 1, 5]} />
-        <meshStandardMaterial color="#665b47" roughness={1} flatShading />
+        <WorldSurfaceMaterial family="ironstone" color="#665b47" roughness={1} flatShading />
       </instancedMesh>
       <instancedMesh ref={crowns} args={[undefined, undefined, sites.length]} castShadow>
         <coneGeometry args={[1, 1, 7]} />
-        <meshStandardMaterial roughness={1} flatShading />
+        <WorldSurfaceMaterial family="ironstone" roughness={1} flatShading />
       </instancedMesh>
     </group>
   );
@@ -162,11 +223,11 @@ function LookoutStone() {
     <group name="amber-bluff-scenic-stone" position={[0.45, 7.15, 0.9]}>
       <mesh position={[0, 0.9, 0]} rotation={[0.05, 0, -0.1]} castShadow>
         <dodecahedronGeometry args={[0.98, 0]} />
-        <meshStandardMaterial color="#d8c497" roughness={1} flatShading />
+        <WorldSurfaceMaterial family="ironstone" color="#d8c497" roughness={1} flatShading />
       </mesh>
       <mesh position={[0.12, 1.32, 0.83]} rotation={[0, 0, -0.1]}>
         <boxGeometry args={[0.6, 0.1, 0.05]} />
-        <meshStandardMaterial color="#a27b50" roughness={1} />
+        <WorldSurfaceMaterial family="ironstone" color="#a27b50" roughness={1} />
       </mesh>
     </group>
   );
@@ -256,17 +317,49 @@ function BluffDetails({ baseY }: { baseY: number }) {
     <group key={quality} name="amber-bluff-biome-detail">
       <instancedMesh ref={rocks} args={[undefined, undefined, rockSites.length]} receiveShadow>
         <dodecahedronGeometry args={[1, 0]} />
-        <meshStandardMaterial roughness={1} flatShading />
+        <WorldSurfaceMaterial family="ironstone" roughness={1} flatShading />
       </instancedMesh>
       <instancedMesh ref={plants} args={[undefined, undefined, plantSites.length]}>
         <coneGeometry args={[0.32, 1, 5]} />
-        <meshStandardMaterial color="#71815c" roughness={1} flatShading />
+        <WorldSurfaceMaterial family="ironstone" color="#71815c" roughness={1} flatShading />
       </instancedMesh>
       <instancedMesh ref={blooms} args={[undefined, undefined, plantSites.length]}>
         <icosahedronGeometry args={[1, 0]} />
-        <meshStandardMaterial roughness={1} flatShading />
+        <WorldSurfaceMaterial family="ironstone" roughness={1} flatShading />
       </instancedMesh>
     </group>
+  );
+}
+
+function ErodedTalus({ baseY }: { baseY: number }) {
+  const mesh = useRef<THREE.InstancedMesh>(null);
+  useLayoutEffect(() => {
+    if (!mesh.current) return;
+    const matrix = new THREE.Matrix4(),
+      rotation = new THREE.Quaternion();
+    for (let i = 0; i < 44; i++) {
+      const x = -9.8 + (i % 16) * 1.26 + Math.sin(i * 7) * 0.4,
+        z = 3.2 + Math.floor(i / 16) * 1.35 + Math.sin(i * 3) * 0.6;
+      const [wx, wz] = localToWorld(x, z),
+        size = 0.22 + (Math.sin(i * 9) + 1) * 0.22;
+      rotation.setFromEuler(new THREE.Euler(i * 0.7, i * 2.4, i * 0.4));
+      matrix.compose(
+        new THREE.Vector3(x, renderedTerrainHeight(wx, wz) - baseY + size * 0.35, z),
+        rotation,
+        new THREE.Vector3(size * 1.4, size * 0.7, size),
+      );
+      mesh.current.setMatrixAt(i, matrix);
+      mesh.current.setColorAt(i, new THREE.Color(i % 3 ? '#a47b5b' : '#c29a72'));
+    }
+    mesh.current.instanceMatrix.needsUpdate = true;
+    if (mesh.current.instanceColor) mesh.current.instanceColor.needsUpdate = true;
+    mesh.current.computeBoundingSphere();
+  }, [baseY]);
+  return (
+    <instancedMesh ref={mesh} args={[undefined, undefined, 44]} castShadow receiveShadow>
+      <dodecahedronGeometry args={[1, 0]} />
+      <WorldSurfaceMaterial family="ironstone" flatShading />
+    </instancedMesh>
   );
 }
 
@@ -279,9 +372,8 @@ export function AmberBluff() {
       rotation={[0, FACING, 0]}
     >
       <StrataFace />
-      <BluffPines baseY={baseY} />
+      <ErodedTalus baseY={baseY} />
       <LookoutStone />
-      <BluffDetails baseY={baseY} />
     </group>
   );
 }

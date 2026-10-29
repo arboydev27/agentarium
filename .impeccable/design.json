@@ -1,0 +1,668 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-28T02:00:27.650565+00:00",
+  "title": "Design System: Agentarium",
+  "extensions": {
+    "colorMeta": {
+      "regolith": {
+        "role": "primary",
+        "displayName": "Regolith",
+        "tonalRamp": [
+          "oklch(15% 0.1167 43.74)",
+          "oklch(26% 0.1167 43.74)",
+          "oklch(38% 0.1167 43.74)",
+          "oklch(49% 0.1167 43.74)",
+          "oklch(61% 0.1167 43.74)",
+          "oklch(72% 0.1167 43.74)",
+          "oklch(84% 0.1167 43.74)",
+          "oklch(95% 0.1167 43.74)"
+        ]
+      },
+      "sand": {
+        "role": "primary",
+        "displayName": "Sand",
+        "tonalRamp": [
+          "oklch(15% 0.0903 59.16)",
+          "oklch(26% 0.0903 59.16)",
+          "oklch(38% 0.0903 59.16)",
+          "oklch(49% 0.0903 59.16)",
+          "oklch(61% 0.0903 59.16)",
+          "oklch(72% 0.0903 59.16)",
+          "oklch(84% 0.0903 59.16)",
+          "oklch(95% 0.0903 59.16)"
+        ]
+      },
+      "ridge": {
+        "role": "primary",
+        "displayName": "Ridge",
+        "tonalRamp": [
+          "oklch(15% 0.0722 29.41)",
+          "oklch(26% 0.0722 29.41)",
+          "oklch(38% 0.0722 29.41)",
+          "oklch(49% 0.0722 29.41)",
+          "oklch(61% 0.0722 29.41)",
+          "oklch(72% 0.0722 29.41)",
+          "oklch(84% 0.0722 29.41)",
+          "oklch(95% 0.0722 29.41)"
+        ]
+      },
+      "basalt": {
+        "role": "primary",
+        "displayName": "Basalt",
+        "tonalRamp": [
+          "oklch(15% 0.0735 28.50)",
+          "oklch(26% 0.0735 28.50)",
+          "oklch(38% 0.0735 28.50)",
+          "oklch(49% 0.0735 28.50)",
+          "oklch(61% 0.0735 28.50)",
+          "oklch(72% 0.0735 28.50)",
+          "oklch(84% 0.0735 28.50)",
+          "oklch(95% 0.0735 28.50)"
+        ]
+      },
+      "ironstone": {
+        "role": "primary",
+        "displayName": "Ironstone",
+        "tonalRamp": [
+          "oklch(15% 0.0716 34.70)",
+          "oklch(26% 0.0716 34.70)",
+          "oklch(38% 0.0716 34.70)",
+          "oklch(49% 0.0716 34.70)",
+          "oklch(61% 0.0716 34.70)",
+          "oklch(72% 0.0716 34.70)",
+          "oklch(84% 0.0716 34.70)",
+          "oklch(95% 0.0716 34.70)"
+        ]
+      },
+      "ochre": {
+        "role": "primary",
+        "displayName": "Ochre",
+        "tonalRamp": [
+          "oklch(15% 0.1015 63.38)",
+          "oklch(26% 0.1015 63.38)",
+          "oklch(38% 0.1015 63.38)",
+          "oklch(49% 0.1015 63.38)",
+          "oklch(61% 0.1015 63.38)",
+          "oklch(72% 0.1015 63.38)",
+          "oklch(84% 0.1015 63.38)",
+          "oklch(95% 0.1015 63.38)"
+        ]
+      },
+      "dust-horizon": {
+        "role": "primary",
+        "displayName": "Dust Horizon",
+        "tonalRamp": [
+          "oklch(15% 0.0781 48.49)",
+          "oklch(26% 0.0781 48.49)",
+          "oklch(38% 0.0781 48.49)",
+          "oklch(49% 0.0781 48.49)",
+          "oklch(61% 0.0781 48.49)",
+          "oklch(72% 0.0781 48.49)",
+          "oklch(84% 0.0781 48.49)",
+          "oklch(95% 0.0781 48.49)"
+        ]
+      },
+      "habitat-shell": {
+        "role": "neutral",
+        "displayName": "Habitat Shell",
+        "tonalRamp": [
+          "oklch(15% 0.0356 77.06)",
+          "oklch(26% 0.0356 77.06)",
+          "oklch(38% 0.0356 77.06)",
+          "oklch(49% 0.0356 77.06)",
+          "oklch(61% 0.0356 77.06)",
+          "oklch(72% 0.0356 77.06)",
+          "oklch(84% 0.0356 77.06)",
+          "oklch(95% 0.0356 77.06)"
+        ]
+      },
+      "machinery-frame": {
+        "role": "neutral",
+        "displayName": "Machinery Frame",
+        "tonalRamp": [
+          "oklch(15% 0.0181 268.18)",
+          "oklch(26% 0.0181 268.18)",
+          "oklch(38% 0.0181 268.18)",
+          "oklch(49% 0.0181 268.18)",
+          "oklch(61% 0.0181 268.18)",
+          "oklch(72% 0.0181 268.18)",
+          "oklch(84% 0.0181 268.18)",
+          "oklch(95% 0.0181 268.18)"
+        ]
+      },
+      "machinery-panel": {
+        "role": "neutral",
+        "displayName": "Machinery Panel",
+        "tonalRamp": [
+          "oklch(15% 0.0282 252.07)",
+          "oklch(26% 0.0282 252.07)",
+          "oklch(38% 0.0282 252.07)",
+          "oklch(49% 0.0282 252.07)",
+          "oklch(61% 0.0282 252.07)",
+          "oklch(72% 0.0282 252.07)",
+          "oklch(84% 0.0282 252.07)",
+          "oklch(95% 0.0282 252.07)"
+        ]
+      },
+      "signal-cyan": {
+        "role": "secondary",
+        "displayName": "Signal Cyan",
+        "tonalRamp": [
+          "oklch(15% 0.0836 191.92)",
+          "oklch(26% 0.0836 191.92)",
+          "oklch(38% 0.0836 191.92)",
+          "oklch(49% 0.0836 191.92)",
+          "oklch(61% 0.0836 191.92)",
+          "oklch(72% 0.0836 191.92)",
+          "oklch(84% 0.0836 191.92)",
+          "oklch(95% 0.0836 191.92)"
+        ]
+      },
+      "orbital-space": {
+        "role": "neutral",
+        "displayName": "Orbital Space",
+        "tonalRamp": [
+          "oklch(15% 0.0247 276.45)",
+          "oklch(26% 0.0247 276.45)",
+          "oklch(38% 0.0247 276.45)",
+          "oklch(49% 0.0247 276.45)",
+          "oklch(61% 0.0247 276.45)",
+          "oklch(72% 0.0247 276.45)",
+          "oklch(84% 0.0247 276.45)",
+          "oklch(95% 0.0247 276.45)"
+        ]
+      },
+      "navigation-paper": {
+        "role": "neutral",
+        "displayName": "Navigation Paper",
+        "tonalRamp": [
+          "oklch(15% 0.0231 75.86)",
+          "oklch(26% 0.0231 75.86)",
+          "oklch(38% 0.0231 75.86)",
+          "oklch(49% 0.0231 75.86)",
+          "oklch(61% 0.0231 75.86)",
+          "oklch(72% 0.0231 75.86)",
+          "oklch(84% 0.0231 75.86)",
+          "oklch(95% 0.0231 75.86)"
+        ]
+      },
+      "navigation-ink": {
+        "role": "neutral",
+        "displayName": "Navigation Ink",
+        "tonalRamp": [
+          "oklch(15% 0.0265 55.49)",
+          "oklch(26% 0.0265 55.49)",
+          "oklch(38% 0.0265 55.49)",
+          "oklch(49% 0.0265 55.49)",
+          "oklch(61% 0.0265 55.49)",
+          "oklch(72% 0.0265 55.49)",
+          "oklch(84% 0.0265 55.49)",
+          "oklch(95% 0.0265 55.49)"
+        ]
+      },
+      "scale-paper": {
+        "role": "neutral",
+        "displayName": "Scale Paper",
+        "tonalRamp": [
+          "oklch(15% 0.0250 75.27)",
+          "oklch(26% 0.0250 75.27)",
+          "oklch(38% 0.0250 75.27)",
+          "oklch(49% 0.0250 75.27)",
+          "oklch(61% 0.0250 75.27)",
+          "oklch(72% 0.0250 75.27)",
+          "oklch(84% 0.0250 75.27)",
+          "oklch(95% 0.0250 75.27)"
+        ]
+      },
+      "scale-active": {
+        "role": "neutral",
+        "displayName": "Scale Active",
+        "tonalRamp": [
+          "oklch(15% 0.0674 43.99)",
+          "oklch(26% 0.0674 43.99)",
+          "oklch(38% 0.0674 43.99)",
+          "oklch(49% 0.0674 43.99)",
+          "oklch(61% 0.0674 43.99)",
+          "oklch(72% 0.0674 43.99)",
+          "oklch(84% 0.0674 43.99)",
+          "oklch(95% 0.0674 43.99)"
+        ]
+      },
+      "scale-active-ink": {
+        "role": "neutral",
+        "displayName": "Scale Active Ink",
+        "tonalRamp": [
+          "oklch(15% 0.0192 72.58)",
+          "oklch(26% 0.0192 72.58)",
+          "oklch(38% 0.0192 72.58)",
+          "oklch(49% 0.0192 72.58)",
+          "oklch(61% 0.0192 72.58)",
+          "oklch(72% 0.0192 72.58)",
+          "oklch(84% 0.0192 72.58)",
+          "oklch(95% 0.0192 72.58)"
+        ]
+      },
+      "body-ink": {
+        "role": "neutral",
+        "displayName": "Body Ink",
+        "tonalRamp": [
+          "oklch(15% 0.0141 10.97)",
+          "oklch(26% 0.0141 10.97)",
+          "oklch(38% 0.0141 10.97)",
+          "oklch(49% 0.0141 10.97)",
+          "oklch(61% 0.0141 10.97)",
+          "oklch(72% 0.0141 10.97)",
+          "oklch(84% 0.0141 10.97)",
+          "oklch(95% 0.0141 10.97)"
+        ]
+      },
+      "panel-paper": {
+        "role": "neutral",
+        "displayName": "Panel Paper",
+        "tonalRamp": [
+          "oklch(15% 0.0106 112.36)",
+          "oklch(26% 0.0106 112.36)",
+          "oklch(38% 0.0106 112.36)",
+          "oklch(49% 0.0106 112.36)",
+          "oklch(61% 0.0106 112.36)",
+          "oklch(72% 0.0106 112.36)",
+          "oklch(84% 0.0106 112.36)",
+          "oklch(95% 0.0106 112.36)"
+        ]
+      },
+      "field-paper": {
+        "role": "neutral",
+        "displayName": "Field Paper",
+        "tonalRamp": [
+          "oklch(15% 0.0054 95.10)",
+          "oklch(26% 0.0054 95.10)",
+          "oklch(38% 0.0054 95.10)",
+          "oklch(49% 0.0054 95.10)",
+          "oklch(61% 0.0054 95.10)",
+          "oklch(72% 0.0054 95.10)",
+          "oklch(84% 0.0054 95.10)",
+          "oklch(95% 0.0054 95.10)"
+        ]
+      },
+      "field-ink": {
+        "role": "neutral",
+        "displayName": "Field Ink",
+        "tonalRamp": [
+          "oklch(15% 0.0547 136.78)",
+          "oklch(26% 0.0547 136.78)",
+          "oklch(38% 0.0547 136.78)",
+          "oklch(49% 0.0547 136.78)",
+          "oklch(61% 0.0547 136.78)",
+          "oklch(72% 0.0547 136.78)",
+          "oklch(84% 0.0547 136.78)",
+          "oklch(95% 0.0547 136.78)"
+        ]
+      },
+      "field-border": {
+        "role": "neutral",
+        "displayName": "Field Border",
+        "tonalRamp": [
+          "oklch(15% 0.0265 123.45)",
+          "oklch(26% 0.0265 123.45)",
+          "oklch(38% 0.0265 123.45)",
+          "oklch(49% 0.0265 123.45)",
+          "oklch(61% 0.0265 123.45)",
+          "oklch(72% 0.0265 123.45)",
+          "oklch(84% 0.0265 123.45)",
+          "oklch(95% 0.0265 123.45)"
+        ]
+      },
+      "action-green": {
+        "role": "secondary",
+        "displayName": "Action Green",
+        "tonalRamp": [
+          "oklch(15% 0.0620 153.93)",
+          "oklch(26% 0.0620 153.93)",
+          "oklch(38% 0.0620 153.93)",
+          "oklch(49% 0.0620 153.93)",
+          "oklch(61% 0.0620 153.93)",
+          "oklch(72% 0.0620 153.93)",
+          "oklch(84% 0.0620 153.93)",
+          "oklch(95% 0.0620 153.93)"
+        ]
+      },
+      "action-ink": {
+        "role": "neutral",
+        "displayName": "Action Ink",
+        "tonalRamp": [
+          "oklch(15% 0.0217 120.96)",
+          "oklch(26% 0.0217 120.96)",
+          "oklch(38% 0.0217 120.96)",
+          "oklch(49% 0.0217 120.96)",
+          "oklch(61% 0.0217 120.96)",
+          "oklch(72% 0.0217 120.96)",
+          "oklch(84% 0.0217 120.96)",
+          "oklch(95% 0.0217 120.96)"
+        ]
+      },
+      "secondary-paper": {
+        "role": "neutral",
+        "displayName": "Secondary Paper",
+        "tonalRamp": [
+          "oklch(15% 0.0206 121.84)",
+          "oklch(26% 0.0206 121.84)",
+          "oklch(38% 0.0206 121.84)",
+          "oklch(49% 0.0206 121.84)",
+          "oklch(61% 0.0206 121.84)",
+          "oklch(72% 0.0206 121.84)",
+          "oklch(84% 0.0206 121.84)",
+          "oklch(95% 0.0206 121.84)"
+        ]
+      },
+      "secondary-ink": {
+        "role": "neutral",
+        "displayName": "Secondary Ink",
+        "tonalRamp": [
+          "oklch(15% 0.0569 128.00)",
+          "oklch(26% 0.0569 128.00)",
+          "oklch(38% 0.0569 128.00)",
+          "oklch(49% 0.0569 128.00)",
+          "oklch(61% 0.0569 128.00)",
+          "oklch(72% 0.0569 128.00)",
+          "oklch(84% 0.0569 128.00)",
+          "oklch(95% 0.0569 128.00)"
+        ]
+      },
+      "focus-cyan": {
+        "role": "neutral",
+        "displayName": "Focus Cyan",
+        "tonalRamp": [
+          "oklch(15% 0.0711 212.61)",
+          "oklch(26% 0.0711 212.61)",
+          "oklch(38% 0.0711 212.61)",
+          "oklch(49% 0.0711 212.61)",
+          "oklch(61% 0.0711 212.61)",
+          "oklch(72% 0.0711 212.61)",
+          "oklch(84% 0.0711 212.61)",
+          "oklch(95% 0.0711 212.61)"
+        ]
+      },
+      "status-working-paper": {
+        "role": "neutral",
+        "displayName": "Status Working Paper",
+        "tonalRamp": [
+          "oklch(15% 0.0254 126.56)",
+          "oklch(26% 0.0254 126.56)",
+          "oklch(38% 0.0254 126.56)",
+          "oklch(49% 0.0254 126.56)",
+          "oklch(61% 0.0254 126.56)",
+          "oklch(72% 0.0254 126.56)",
+          "oklch(84% 0.0254 126.56)",
+          "oklch(95% 0.0254 126.56)"
+        ]
+      },
+      "status-working-ink": {
+        "role": "neutral",
+        "displayName": "Status Working Ink",
+        "tonalRamp": [
+          "oklch(15% 0.0782 132.56)",
+          "oklch(26% 0.0782 132.56)",
+          "oklch(38% 0.0782 132.56)",
+          "oklch(49% 0.0782 132.56)",
+          "oklch(61% 0.0782 132.56)",
+          "oklch(72% 0.0782 132.56)",
+          "oklch(84% 0.0782 132.56)",
+          "oklch(95% 0.0782 132.56)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "brand": {
+        "displayName": "Brand",
+        "purpose": "Application wordmark."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Compact location identity."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Root interface baseline."
+      },
+      "control": {
+        "displayName": "Control",
+        "purpose": "Task actions and fields."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Compact navigation and support text."
+      },
+      "dialog-heading": {
+        "displayName": "Dialog Heading",
+        "purpose": "Modal titles."
+      }
+    },
+    "shadows": [
+      {
+        "name": "resident-panel",
+        "value": "0 12px 50px #46573d12",
+        "purpose": "Soft separation above the world."
+      },
+      {
+        "name": "dialog",
+        "value": "0 25px 100px #213b3340",
+        "purpose": "Focused modal task."
+      },
+      {
+        "name": "scale-selector",
+        "value": "0 5px 18px #33211d22",
+        "purpose": "Centered world-scale navigation."
+      }
+    ],
+    "motion": [
+      {
+        "name": "camera-hover",
+        "value": "background 0.15s",
+        "purpose": "Camera destination feedback."
+      },
+      {
+        "name": "resident-hover",
+        "value": "background 0.16s",
+        "purpose": "Resident row feedback."
+      },
+      {
+        "name": "scale-arrival",
+        "value": "650ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Opacity 0\u21921, blur 5px\u21920, scale 1.035\u21921; disabled for reduced motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "compact-phone",
+        "value": "480px"
+      },
+      {
+        "name": "collapsed-overlays",
+        "value": "600px"
+      },
+      {
+        "name": "scale-selector-bottom",
+        "value": "1100px"
+      },
+      {
+        "name": "compact-interface",
+        "value": "800px"
+      },
+      {
+        "name": "narrow-desktop",
+        "value": "1100px"
+      },
+      {
+        "name": "wide-desktop",
+        "value": "1600px"
+      }
+    ],
+    "habitatReference": {
+      "scope": "Expedition Base is the approved authored habitat reference; its material and detail standard now extends across every active asset family through the shared world kit and textured procedural scenery.",
+      "sources": [
+        "assets/blender/build_habitat.py",
+        "src/world/scenery/ReferenceHabitat.tsx",
+        "src/World.tsx",
+        "docs/blender-habitat.md"
+      ],
+      "texturedMaterials": [
+        "ceramic-paint",
+        "dusty-alloy",
+        "cast-foundation",
+        "ironstone",
+        "regolith"
+      ],
+      "plainMaterials": [
+        "oxidized safety enamel",
+        "blue reflective glazing",
+        "airlock navigation light",
+        "seal rubber"
+      ],
+      "textures": {
+        "size": "512 \u00d7 512",
+        "maps": ["color", "roughness", "tangent-space normal"],
+        "colorSpace": "sRGB color; non-color roughness and normal",
+        "groundRepeat": "3 world metres per tile, independent of camera zoom"
+      },
+      "grounding": "Terrain-following patch with blended edge, terrain-height supports, dust, and twin wheel tracks; preserve route clearance.",
+      "lighting": {
+        "environment": "Locally generated RoomEnvironment PMREM",
+        "environmentIntensity": 0.28,
+        "sun": "Shadow-casting directional light follows the orbit target",
+        "ambientIntensity": {
+          "day": 0.25,
+          "evening": 0.35
+        },
+        "keyIntensity": {
+          "day": 2.8,
+          "evening": 0.7
+        },
+        "shadowMap": {
+          "low": "512 \u00d7 512",
+          "other": "2048 \u00d7 2048"
+        }
+      },
+      "loading": "Existing lazy scenic module with a simplified silhouette during loading or asset failure."
+    },
+    "worldAssets": {
+      "scope": "Completed rollout across colony hardware, scientific facilities, space vehicles, resident equipment, terrain/geology, and orbital assets within the approved Mars colony identity.",
+      "sources": [
+        "assets/blender/build_world_kit.py",
+        "src/world/scenery/WorldKit.tsx",
+        "src/world/WorldSurfaceMaterial.tsx",
+        "src/world/TerrainApron.tsx",
+        "src/world/surfaceTextures.ts",
+        "docs/world-asset-upgrade.md"
+      ],
+      "manifest": "public/models/world-kit/manifest.json",
+      "hardwareModules": 15,
+      "authoring": "Separate named Blender pieces remain editable; export merges by material within each module after saving the source. Regeneration overwrites generated outputs, including the reference habitat and maps.",
+      "surfaceDetail": "World-space triplanar grain and roughness with grain-derived micro-normal detail on procedural surfaces; local-space ceramic detail on animated resident parts; dedicated PBR normal and roughness maps on GLB hardware and ground.",
+      "concrete": "Fine grain, 1.8-metre joints, and terrain-supported aprons with edge skirts.",
+      "geology": "Continuous irregular strata, eroded ridges, broken edges and talus at Amber Bluff; textured crater mineral relief.",
+      "ownership": "Named module clones share loader-owned geometry/materials and use dispose={null}; preserve existing lazy loading and simplified fallbacks.",
+      "review": "Ship verdict for the supplied captures, source and scoped findings; browser interactions and automated checks are separately builder-supplied. No frame-rate or live-provider certification."
+    }
+  },
+  "components": [
+    {
+      "name": "Primary Action",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Current compact task action; shared keyboard focus and disabled treatment.",
+      "html": "<button class=\"ds-button-primary\">Connect</button>",
+      "css": ".ds-button-primary{font-family:\"DM Sans\",sans-serif;cursor:pointer;background:#365d43;color:#f4f9e9;padding:11px 17px;border:0;border-radius:9px;font-size:13px;}.ds-button-primary:focus-visible{outline:3px solid #5b9eac;outline-offset:3px}.ds-button-primary:disabled{opacity:.4;cursor:not-allowed}"
+    },
+    {
+      "name": "Secondary Action",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Current compact task action; shared keyboard focus and disabled treatment.",
+      "html": "<button class=\"ds-button-secondary\">Cancel</button>",
+      "css": ".ds-button-secondary{font-family:\"DM Sans\",sans-serif;cursor:pointer;background:#ebf0e1;color:#80916c;padding:11px 17px;border:0;border-radius:9px;font-size:13px;}.ds-button-secondary:focus-visible{outline:3px solid #5b9eac;outline-offset:3px}.ds-button-secondary:disabled{opacity:.4;cursor:not-allowed}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Current connection text field.",
+      "html": "<label class=\"ds-field-label\">Connection<input class=\"ds-field\" placeholder=\"Enter connection value\" /></label>",
+      "css": ".ds-field-label{display:flex;flex-direction:column;gap:7px;font:12px \"DM Sans\",sans-serif;color:#748666}.ds-field{font:13px \"DM Sans\",sans-serif;padding:10px 12px;border:1px solid #dce3d0;border-radius:8px;background:#fffefa;color:#53694a}.ds-field:focus-visible{outline:3px solid #5b9eac;outline-offset:3px}"
+    },
+    {
+      "name": "Camera Navigation",
+      "kind": "nav",
+      "refersTo": "camera-navigation",
+      "description": "Opaque destination strip with authored hover and selected treatments.",
+      "html": "<nav class=\"ds-camera\" aria-label=\"Camera\"><button aria-pressed=\"true\">Overview</button><button>Habitat Commons</button></nav>",
+      "css": ".ds-camera{display:inline-flex;gap:3px;padding:5px;background:#fbf0e1;border:1px solid #ffffff9c;border-radius:12px;backdrop-filter:blur(12px)}.ds-camera button{font-family:\"DM Sans\",sans-serif;cursor:pointer;border:0;border-radius:8px;background:none;padding:8px 11px;font-size:11px;color:#514238;transition:background .15s}.ds-camera button:hover{background:#e7ecdc80}.ds-camera button[aria-pressed=\"true\"]{background:#e7ecdccf;color:#455d38;box-shadow:0 1px 4px #4354370a}.ds-camera button:focus-visible{outline:3px solid #5b9eac;outline-offset:3px}"
+    },
+    {
+      "name": "Scale Navigation",
+      "kind": "nav",
+      "refersTo": "scale-navigation",
+      "description": "Explicit surface, planet, and solar-system selector.",
+      "html": "<nav class=\"ds-scale\" aria-label=\"World scale\"><button aria-pressed=\"true\">Colony</button><button>Planet</button><button>Solar system</button></nav>",
+      "css": ".ds-scale{display:inline-flex;background:#f5e9d9;border-radius:12px;padding:4px;box-shadow:0 5px 18px #33211d22}.ds-scale button{font-family:\"DM Sans\",sans-serif;cursor:pointer;padding:9px 15px;border:0;background:none;color:#513e37;border-radius:9px;font-size:12px}.ds-scale button[aria-pressed=\"true\"]{background:#754936;color:#fff5e9}.ds-scale button:focus-visible{outline:3px solid #5b9eac;outline-offset:3px}"
+    },
+    {
+      "name": "Working Status",
+      "kind": "chip",
+      "refersTo": "status-working",
+      "description": "Representative factual task-state tag; static text is a preview only.",
+      "html": "<span class=\"ds-status\">Working</span>",
+      "css": ".ds-status{display:inline-block;font:12px \"DM Sans\",sans-serif;padding:4px 7px;border-radius:5px;background:#e5eddb;color:#6b8756;white-space:nowrap}"
+    },
+    {
+      "name": "Resident Panel",
+      "kind": "card",
+      "refersTo": "resident-panel",
+      "description": "Floating container for resident and task context.",
+      "html": "<section class=\"ds-panel\"><div class=\"ds-panel-heading\">Residents</div><button class=\"ds-row\">Example resident</button></section>",
+      "css": ".ds-panel{width:292px;max-width:100%;overflow:hidden;font:14px \"DM Sans\",sans-serif;color:#443a3b;background:#fafbf3ec;border:1px solid #ffffffc9;border-radius:18px;box-shadow:0 12px 50px #46573d12;backdrop-filter:blur(16px)}.ds-panel-heading{padding:16px 16px 12px;border-bottom:1px solid #687b4c12}.ds-row{font-family:\"DM Sans\",sans-serif;cursor:pointer;width:calc(100% - 18px);margin:9px;border:1px solid transparent;border-radius:10px;text-align:left;padding:10px;color:inherit;font-size:14px;background:none;transition:background .16s}.ds-row:hover{background:#edf0e4}.ds-row:focus-visible{outline:3px solid #5b9eac;outline-offset:3px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "A Living Mars Colony",
+    "overview": "A warm, mineral world carries the experience: rust terrain, a dusty horizon, pale habitats, dark machinery, and restrained cyan equipment lights. Alien residents make the settlement feel inhabited while compact controls keep task context close. This is a stylized fictional planet, not a scientific Mars simulator.\n\nThe world stays visually dominant from surface to orbit. Floating paper-like controls provide readable anchors above the scenery; existing sage task surfaces remain part of the implemented interface. Decorative life and factual task state have separate meanings. Expedition Base's approved Blender reference now establishes the material and authored-detail standard across the active world: colony hardware, scientific facilities, space vehicles, resident equipment, terrain, and orbital assets. This rollout extends the existing Mars colony identity while preserving the interface's tokens and layout.",
+    "keyCharacteristics": [
+      "Warm mineral landscape with pale engineered structures.",
+      "Worn materials at a fixed world scale, grounded foundations, and authored equipment detail.",
+      "Small cyan accents identify equipment and navigation beacons.",
+      "World-first composition with compact floating controls.",
+      "Task labels and attention remain grounded in real session state."
+    ],
+    "rules": [
+      {
+        "name": "The Signal Accent Rule",
+        "body": "Keep cyan concentrated in equipment lights and small navigation cues; the mineral world supplies the dominant color.",
+        "section": "colors"
+      },
+      {
+        "name": "The Physical Scale Rule",
+        "body": "Keep material grain at a stable world scale; camera zoom must not resize it. Use local coordinates for moving resident parts.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Ground Contact Rule",
+        "body": "Support pads and equipment on rendered terrain and preserve route clearance and arrival sightlines when changing geometry or placement.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep terrain, habitat silhouettes, and residents readable behind the controls.",
+      "Do preserve opaque paper behind camera navigation and its dark brown labels.",
+      "Do use text and state semantics alongside status color.",
+      "Do preserve route clearance and arriving-resident sightlines when extending structures.",
+      "Do maintain fixed material scale and terrain contact across authored and procedural assets.",
+      "Do reuse the shared hardware modules and keep editable Blender parts separate from export optimization.",
+      "Do honor reduced motion for orbital entry and ambient spacecraft."
+    ],
+    "donts": [
+      "Don't let decorative journeys, equipment, or flight cycles imply provider activity.",
+      "Don't replace unknown task state with invented progress or completion.",
+      "Don't spread emissive cyan across large terrain or interface surfaces.",
+      "Don't turn the fictional planet into a claim of scientific Mars accuracy."
+    ]
+  }
+}

@@ -1,7 +1,14 @@
 node_modules/
 dist/
+.DS_Store
 .sites-runtime/
 .env*
 !.env.example
 *.tsbuildinfo
 bridge/data/
+
+# Blender automatic source backups
+*.blend[0-9]
+
+# Local visual-review captures and diagnostics
+.impeccable/review/

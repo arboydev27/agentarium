@@ -10,6 +10,7 @@ import { DESTINATIONS } from './navigation';
 import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
 import { WINDWARD_MILL } from './scenery/windwardPlacement';
 import { NORTHSTAR_OUTPOST } from './scenery/northstarPlacement';
+import { REFERENCE_HABITAT } from './scenery/referenceHabitatPlacement';
 import { WOODLAND_HOLLOW } from './scenery/woodlandPlacement';
 it('keeps counts and task filters aligned, including hidden and unseated work', () => {
   const agents = initialAgents().map((a, i) => ({
@@ -45,7 +46,9 @@ it('identifies named places and ordinary open terrain independently of the camer
   expect(districtAt(13.5, -38)).toBe('lookout');
   expect(districtAt(36, -70)).toBe('orchard');
   expect(districtAt(44, -70)).toBe('orchard');
-  expect(districtAt(45, -70)).toBe('open-landscape');
+  expect(districtAt(REFERENCE_HABITAT.x, REFERENCE_HABITAT.z)).toBe('orchard');
+  expect(districtAt(45, -70)).toBe('orchard');
+  expect(districtAt(53, -70)).toBe('open-landscape');
   expect(districtAt(WOODLAND_HOLLOW.x, WOODLAND_HOLLOW.z)).toBe('hollow');
   expect(districtAt(WOODLAND_HOLLOW.x + WOODLAND_HOLLOW.focusRadius - 1, WOODLAND_HOLLOW.z)).toBe(
     'hollow',
@@ -102,7 +105,7 @@ it('names unnamed broad terrain from the shared biome classifier without overrid
   expect(districtAt(-87, 88)).toBe('amber-foothills');
   expect(districtAt(AMBER_BLUFF.x, AMBER_BLUFF.z)).toBe('amber');
   expect(districtAt(0, 0)).toBe('overview');
-  expect(WORLD_LOCATION_LABELS['western-woods']).toBe('Western Woods');
-  expect(WORLD_LOCATION_LABELS['northern-highlands']).toBe('Northern Highlands');
+  expect(WORLD_LOCATION_LABELS['western-woods']).toBe('Basalt Flats');
+  expect(WORLD_LOCATION_LABELS['northern-highlands']).toBe('Iron Highlands');
   expect(WORLD_LOCATION_LABELS['amber-foothills']).toBe('Amber Foothills');
 });

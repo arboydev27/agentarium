@@ -1,0 +1,22 @@
+{
+  "asset": "expedition-habitat.glb",
+  "source": "assets/blender/expedition-habitat.blend",
+  "generator": "assets/blender/build_habitat.py",
+  "units": "metres",
+  "up": "Y in glTF, Z in Blender",
+  "front": "+Z in glTF",
+  "authoringObjects": 131,
+  "runtimeMeshes": 9,
+  "materials": [
+    "airlock navigation light",
+    "blue reflective glazing",
+    "cast-foundation",
+    "ceramic-paint",
+    "dusty-alloy",
+    "ironstone",
+    "oxidized safety enamel",
+    "regolith",
+    "seal rubber"
+  ],
+  "textures": "Original deterministic periodic procedural images, seed 2710; no external asset dependencies."
+}

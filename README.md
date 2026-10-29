@@ -1,18 +1,20 @@
 # Agentarium
 
-The Agentarium repository contains **Agent Grove**, a runnable 3D world for AI agent activity. Built with React, TypeScript, React Three Fiber, Three.js, Zustand, and a local Node.js bridge.
+**Agentarium** is a runnable Mars-inspired alien colony for AI agent activity. Built with React, TypeScript, React Three Fiber, Three.js, Zustand, and a local Node.js bridge.
 
 ## Documentation
 
 See the [detailed documentation](docs/README.md) for setup, architecture, agent lifecycle, bridge protocol, provider integrations, 3D world internals, development, troubleshooting, and the proposed roadmap.
 
+Visit **Expedition Base** to inspect the approved Blender reference, then explore the shared authored hardware and materials across the colony and orbit. See the [completed asset rollout](docs/world-asset-upgrade.md) and [reference workflow](docs/blender-habitat.md).
+
 ## What works
 
-- A 29.25 × 22.2 inhabited district with an expanded café, studio, garden, and courtyard inside a 1,200 × 1,200 scenic landscape of meadow, groves, an amber oak, a trail, distant groves, Amber Bluff, and rolling outer landforms.
-- Gentle tree sway, drifting leaves, courtyard water ripples, and evening lamp glows, with reduced-motion and low-quality alternatives.
-- Eight expressive CC0 robot residents with distinct procedural accessories, trim palettes, walking pace, and skeletal work/rest animations. Working residents open their laptops; idle residents close them.
-- Idle residents visit destinations in the inhabited district and along northern, southern, and eastern trails, including Southwind Mere and Windward Mill; live work sends them back to their desks.
-- Orbit and zoom controls, camera presets including a perspective Horizon and outside landmarks, a compact landmark map with 2× detail zoom, slow camera orbit, ambient audio, reduced motion, and rendering-quality controls.
+- A 29.25 × 22.2 colony inside a continuous 1,200 × 1,200 desert landscape, with habitats, research facilities, mineral formations, craters, and distant mountains.
+- Eight expressive residents with alien equipment, stable identities, different walking preferences, and skeletal work/rest animations.
+- Authored journeys to colony facilities and exploration sites, including a spaceport with a decorative rocket cycle and rover.
+- Connected Colony, Planet, and Solar system views; zoom back in or select a resident to return to the surface.
+- Surface camera presets, a perspective Horizon, map scouting, resident following, watch mode, reduced motion, and rendering-quality controls.
 - A clearly labeled simulator with tasks, delegation, waiting, completion, failure, pause, speed, reset, an activity feed, and an inspector.
 - Opt-in local session discovery for Codex, Claude Code CLI, and Gemini CLI; up to eight sessions occupy stable seats, with pinned sessions first.
 - Guided local connection setup, fresh-event diagnostics, and a session filter for live residents.
@@ -20,7 +22,7 @@ See the [detailed documentation](docs/README.md) for setup, architecture, agent 
 - Claude Code and Gemini CLI telemetry hooks, a Codex App Server stdio proxy, and a generic event endpoint.
 - Optional WebMCP controls using the same application state as the visible UI.
 
-This is the first playable implementation, not a finished film-quality animation production. It uses one reusable character rig with color variants. Residents now use authored keyboard/attention clips and reversible desk routes plus cross-zone journeys to landmarks beyond the original district. A full city, custom human characters, generated navmeshes, crowd steering, and desktop packaging remain future milestones. Fine details and nearby landmark décor mount around the camera. Nine authored landmark modules load asynchronously with destination prefetch and lightweight loading silhouettes. Terrain, paths, arrival pads, and the far skyline remain continuous. Most of the broad terrain remains decorative. This is a finite scene, not an infinite streamed world. See [World layout and rendering](docs/world-layout.md).
+This is the first playable implementation, not a finished film-quality animation production. It uses one reusable character rig with color variants. Residents now use authored keyboard/attention clips and reversible desk routes plus cross-zone journeys to landmarks beyond the original district. A full city, custom human characters, generated navmeshes, crowd steering, and desktop packaging remain future milestones. Fine details and nearby landmark décor mount around the camera. Nine authored landmark modules load asynchronously with destination prefetch and persistent distant/loading silhouettes. Terrain, paths, arrival pads, and the far skyline remain continuous. Most of the broad terrain remains decorative. This is a finite scene, not an infinite streamed world. See [World layout and rendering](docs/world-layout.md).
 
 **The initial world is simulated. No live provider is connected automatically, no provider settings are modified, and no AI task is launched by the simulator.** The adapters have automated protocol/fixture coverage. They still need end-to-end validation against the specific installed provider versions and sessions you choose to connect.
 

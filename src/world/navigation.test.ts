@@ -892,7 +892,7 @@ describe('resident journeys', () => {
       const next = motion.position;
       expect(Math.hypot(...next.map((v, axis) => v - previous[axis]))).toBeLessThan(0.06);
       previous = next;
-      if (motion.activity === 'Resting at garden terrace') {
+      if (motion.activity === 'Resting at resource lab') {
         visited = true;
         break;
       }
@@ -939,7 +939,7 @@ describe('resident journeys', () => {
     advance(motion, agent(0, 'working'), 70);
     expect(motion.activity).toBe('At desk');
   });
-  it('walks to the distant meadow lookout and returns along the trail for work', () => {
+  it('walks to the distant survey lookout and returns along the trail for work', () => {
     const traffic = new NavigationTraffic(),
       motion = new ResidentJourney(0, 'demo-2', traffic);
     for (const destination of DESTINATIONS)
@@ -952,7 +952,7 @@ describe('resident journeys', () => {
       const next = motion.position;
       expect(Math.hypot(...next.map((value, axis) => value - previous[axis]))).toBeLessThan(0.06);
       previous = next;
-      if (motion.activity === 'Resting at meadow lookout') {
+      if (motion.activity === 'Resting at survey lookout') {
         arrived = true;
         break;
       }
@@ -1001,7 +1001,7 @@ describe('resident journeys', () => {
       const next = motion.position;
       expect(Math.hypot(...next.map((value, axis) => value - previous[axis]))).toBeLessThan(0.06);
       previous = next;
-      if (motion.activity === 'Resting at orchard commons') {
+      if (motion.activity === 'Resting at expedition base') {
         arrived = true;
         break;
       }
@@ -1033,7 +1033,7 @@ describe('resident journeys', () => {
       const next = motion.position;
       expect(Math.hypot(...next.map((value, axis) => value - previous[axis]))).toBeLessThan(0.06);
       previous = next;
-      if (motion.activity === 'Resting at cedar observatory') {
+      if (motion.activity === 'Resting at deep sky array') {
         arrived = true;
         break;
       }
@@ -1351,8 +1351,8 @@ it('lets eight residents share destinations without body overlaps or starvation'
     motions.forEach((m, i) => {
       m.update(agent(i), 1 / 30, options);
       if (m.activity.startsWith('Resting at')) visited.add(i);
-      if (m.activity === 'Resting at meadow lookout') lookoutVisited = true;
-      if (!sceneReleased && m.activity === 'Walking to meadow lookout') {
+      if (m.activity === 'Resting at survey lookout') lookoutVisited = true;
+      if (!sceneReleased && m.activity === 'Walking to survey lookout') {
         traffic.release('scene');
         sceneReleased = true;
       }
@@ -1416,7 +1416,7 @@ it('shows the southern outing in the demo and yields immediately to reported wor
   let arrived = false;
   for (let frame = 0; frame < 120 * 60; frame++) {
     motion.update(agent(6), 1 / 60, options);
-    if (motion.activity === 'Resting at Southwind Mere shore') {
+    if (motion.activity === 'Resting at Southwind Crater rim') {
       arrived = true;
       break;
     }
@@ -1510,11 +1510,11 @@ it('shows the lookout promptly in ordinary demo pacing without forced destinatio
       const time = frame / 30;
       motions.forEach((motion, index) => {
         motion.update(agents[index], 1 / 30, { ...options, now: time * 1000 });
-        if (motion.activity !== last[index] && motion.activity === 'Walking to meadow lookout') {
+        if (motion.activity !== last[index] && motion.activity === 'Walking to survey lookout') {
           starts++;
           if (firstStart < 0) firstStart = time;
         }
-        if (motion.activity !== last[index] && motion.activity === 'Resting at meadow lookout') {
+        if (motion.activity !== last[index] && motion.activity === 'Resting at survey lookout') {
           arrivals++;
           if (firstArrival < 0) firstArrival = time;
         }

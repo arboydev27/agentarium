@@ -96,6 +96,14 @@ function geometryFromVertices(vertices: readonly number[], indices: readonly num
     });
     geometry.setAttribute(name, new THREE.BufferAttribute(values, 3));
   }
+  // Use world coordinates for continuous three-metre tiles across detail levels.
+  const position = geometry.getAttribute('position');
+  const uv = new Float32Array(vertices.length * 2);
+  for (let i = 0; i < vertices.length; i++) {
+    uv[i * 2] = position.getX(i) / 3;
+    uv[i * 2 + 1] = position.getZ(i) / 3;
+  }
+  geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
   geometry.setIndex([...indices]);
   if (vertices.length) {
     geometry.computeBoundingBox();

@@ -1,3 +1,4 @@
+import { WorldSurfaceMaterial } from '../WorldSurfaceMaterial';
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useWorld } from '../../state';
@@ -63,7 +64,12 @@ function TrailRibbon() {
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <mesh name="southwind-walking-trail" geometry={geometry} receiveShadow>
-      <meshStandardMaterial vertexColors roughness={1} side={THREE.DoubleSide} />
+      <WorldSurfaceMaterial
+        family="cast-foundation"
+        vertexColors
+        roughness={1}
+        side={THREE.DoubleSide}
+      />
     </mesh>
   );
 }
@@ -109,12 +115,12 @@ function TrailVerge() {
     const rotation = new THREE.Quaternion();
     const scale = new THREE.Vector3();
     if (grasses.current) {
-      const shades = ['#779164', '#8a9f73', '#a6aa77'].map((color) => new THREE.Color(color));
+      const shades = ['#925c48', '#ba815e', '#d0a079'].map((color) => new THREE.Color(color));
       sites.grass.forEach(({ x, z, height }, index) => {
         matrix.compose(
-          position.set(x, renderedTerrainHeight(x, z) + height * 0.48, z),
+          position.set(x, renderedTerrainHeight(x, z) + height * 0.15, z),
           rotation,
-          scale.set(0.24, height, 0.24),
+          scale.set(0.3, height * 0.3, 0.24),
         );
         grasses.current!.setMatrixAt(index, matrix);
         grasses.current!.setColorAt(index, shades[index % shades.length]);
@@ -157,16 +163,16 @@ function TrailVerge() {
   return (
     <group key={quality} name="southwind-trail-verge">
       <instancedMesh ref={grasses} args={[undefined, undefined, sites.grass.length]}>
-        <coneGeometry args={[0.75, 1, 5]} />
-        <meshStandardMaterial roughness={1} flatShading />
+        <dodecahedronGeometry args={[1, 0]} />
+        <WorldSurfaceMaterial family="cast-foundation" roughness={1} flatShading />
       </instancedMesh>
       <instancedMesh ref={markers} args={[undefined, undefined, sites.marker.length]} castShadow>
         <cylinderGeometry args={[0.035, 0.12, 1, 5]} />
-        <meshStandardMaterial roughness={1} flatShading />
+        <WorldSurfaceMaterial family="cast-foundation" roughness={1} flatShading />
       </instancedMesh>
       <instancedMesh ref={markerCaps} args={[undefined, undefined, sites.marker.length]} castShadow>
         <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#e3d6ad" roughness={1} />
+        <WorldSurfaceMaterial family="cast-foundation" color="#e3d6ad" roughness={1} />
       </instancedMesh>
     </group>
   );

@@ -1,3 +1,4 @@
+import { WorldSurfaceMaterial } from '../WorldSurfaceMaterial';
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { walkwayHeight } from '../terrain';
@@ -54,7 +55,12 @@ function EastTrail() {
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <mesh name="dawnlight-east-trail" geometry={geometry} receiveShadow>
-      <meshStandardMaterial vertexColors roughness={1} side={THREE.DoubleSide} />
+      <WorldSurfaceMaterial
+        family="cast-foundation"
+        vertexColors
+        roughness={1}
+        side={THREE.DoubleSide}
+      />
     </mesh>
   );
 }
@@ -82,7 +88,12 @@ function Forecourt() {
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <mesh name="dawnlight-arrival-forecourt" geometry={geometry} receiveShadow>
-      <meshStandardMaterial color="#c6b995" roughness={1} side={THREE.DoubleSide} />
+      <WorldSurfaceMaterial
+        family="cast-foundation"
+        color="#c6b995"
+        roughness={1}
+        side={THREE.DoubleSide}
+      />
     </mesh>
   );
 }
@@ -115,7 +126,12 @@ function ConservatoryFloor() {
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <mesh name="dawnlight-conservatory-floor" geometry={geometry} receiveShadow>
-      <meshStandardMaterial color="#c8c2a2" roughness={1} side={THREE.DoubleSide} />
+      <WorldSurfaceMaterial
+        family="cast-foundation"
+        color="#c8c2a2"
+        roughness={1}
+        side={THREE.DoubleSide}
+      />
     </mesh>
   );
 }

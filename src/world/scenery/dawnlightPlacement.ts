@@ -2,7 +2,7 @@
 // walkwayHeight separately so this placement module has no terrain dependency.
 export const DAWNLIGHT_GLASSHOUSE = {
   id: 'dawnlight:glasshouse',
-  label: 'Dawnlight glasshouse',
+  label: 'Dawnlight Biolab',
   x: 48,
   z: 31,
   centerX: 43,
@@ -10,6 +10,12 @@ export const DAWNLIGHT_GLASSHOUSE = {
   clearingRadius: 8.5,
   focusRadius: 12,
 } as const;
+
+// Buildings sit north of the approach; the destination remains on its original route.
+export const BIOLAB_HABITATS = [
+  { x: 43, z: 19, title: 'DAWNLIGHT BIOLAB' },
+  { x: 36, z: 15, title: 'CULTURE VAULT' },
+] as const;
 
 type GroundPoint = readonly [number, number];
 const CONTROLS: readonly GroundPoint[] = [

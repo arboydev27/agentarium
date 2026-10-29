@@ -4,7 +4,7 @@ import { EAST_TRAIL_XZ } from './dawnlightPlacement';
 // Keep these plan coordinates independent of terrain and layout modules.
 export const WINDWARD_MILL = {
   id: 'windward:mill',
-  label: 'Windward Mill',
+  label: 'Helios Power Field',
   centerX: 72,
   centerZ: -19,
   x: 76,

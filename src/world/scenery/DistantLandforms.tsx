@@ -1,3 +1,4 @@
+import { WorldSurfaceMaterial } from '../WorldSurfaceMaterial';
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useWorld } from '../../state';
@@ -12,16 +13,16 @@ import {
 } from './distantLandformPlacement';
 
 const baseColor: Record<LandformBiome, string> = {
-  woodland: '#6b886d',
-  highland: '#829a99',
-  amber: '#aa8e62',
-  meadow: '#95aa82',
+  woodland: '#8b4b40',
+  highland: '#995d4b',
+  amber: '#b5754e',
+  meadow: '#b36b4d',
 };
 const crestColor: Record<LandformBiome, string> = {
-  woodland: '#809b7a',
-  highland: '#abb7b0',
-  amber: '#c2a874',
-  meadow: '#acbc91',
+  woodland: '#bb795e',
+  highland: '#ca9980',
+  amber: '#e2ac78',
+  meadow: '#d3956e',
 };
 const RINGS = [0.24, 0.48, 0.7, 0.88, LANDFORM_SKIRT_RADIUS] as const;
 
@@ -90,7 +91,8 @@ export function DistantLandforms() {
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <mesh name="distant-rolling-landforms" geometry={geometry} receiveShadow>
-      <meshStandardMaterial
+      <WorldSurfaceMaterial
+        family="ironstone"
         vertexColors
         color={night ? '#a4b7c2' : '#ffffff'}
         roughness={1}

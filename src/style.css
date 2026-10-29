@@ -1,8 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;450;500;550;600;650;700&family=Manrope:wght@500;600;650;700;750;800&display=swap');
 :root {
   font-family: 'DM Sans', sans-serif;
-  color: #243d33;
-  background: #d8dfd0;
+  color: #443a3b;
+  background: #d9a184;
   font-synthesis: none;
   font-weight: 400;
   font-size: 16px;
@@ -41,7 +41,7 @@ button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 select:focus-visible {
-  outline: 3px solid #9cbd72;
+  outline: 3px solid #5b9eac;
   outline-offset: 3px;
 }
 a {
@@ -69,8 +69,8 @@ a {
   padding: 14px;
   border: 1px solid #c9d4ba;
   border-radius: 14px;
-  background: #f8f9eff5;
-  color: #34513b;
+  background: #fbf0e1f5;
+  color: #59483e;
   font-size: 12px;
   box-shadow: 0 8px 28px #20352718;
 }
@@ -113,7 +113,7 @@ a {
   border-color: #6d8466;
 }
 .world-canvas:focus-visible {
-  outline: 3px solid #8db676;
+  outline: 3px solid #5b9eac;
   outline-offset: -5px;
 }
 .world-canvas:focus-visible::after {
@@ -124,7 +124,7 @@ a {
   z-index: 5;
   padding: 6px 9px;
   border-radius: 8px;
-  background: #f8f9eff0;
+  background: #fbf0e1f0;
   color: #405e41;
   font-size: 11px;
   pointer-events: none;
@@ -139,7 +139,7 @@ a {
   align-items: center;
   padding: 0 32px;
   gap: 25px;
-  background: linear-gradient(#f5f6edee, #f5f6ed99);
+  background: linear-gradient(#f7eddfee, #f7eddf99);
   border-bottom: 1px solid #435a3710;
   z-index: 40;
 }
@@ -156,7 +156,7 @@ a {
   font-weight: 500;
 }
 .brand-mark {
-  background: #244b39;
+  background: #674637;
   color: #e0f1c8;
   border-radius: 12px;
   width: 38px;
@@ -183,7 +183,7 @@ a {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #f5f6efbb;
+  background: #f7eddfbb;
   border: 1px solid #657c4329;
   border-radius: 30px;
   padding: 8px 12px;
@@ -618,7 +618,7 @@ h1 span {
   max-width: calc(100% - 24px);
   overflow-x: auto;
   scrollbar-width: thin;
-  scrollbar-color: #9aaf95 #f8f9ef;
+  scrollbar-color: #9aaf95 #fbf0e1;
   position: absolute;
   bottom: 113px;
   left: calc(50% - 80px);
@@ -626,7 +626,7 @@ h1 span {
   display: flex;
   gap: 3px;
   z-index: 30;
-  background: #f8f9efc9;
+  background: #fbf0e1;
   padding: 5px;
   border: 1px solid #ffffff9c;
   border-radius: 12px;
@@ -644,7 +644,7 @@ h1 span {
   gap: 6px;
   border-radius: 8px;
   padding: 8px 11px;
-  color: #879276;
+  color: #514238;
   font-size: 11px;
   transition: background 0.15s;
 }
@@ -671,19 +671,22 @@ h1 span {
   display: flex;
   gap: 9px;
   font-size: 10px;
-  color: #869279;
-  flex: 1;
+  color: #514238;
+  background: #fbf0e1;
+  padding: 9px 12px;
+  border-radius: 8px;
+  flex: 0 1 auto;
   white-space: nowrap;
 }
 .orbit-hint b {
   font-weight: 400;
   margin: 0 7px;
-  color: #a6af9a;
+  color: #514238;
 }
 .mouse-icon {
   width: 10px;
   height: 15px;
-  border: 1px solid #869279;
+  border: 1px solid currentColor;
   border-radius: 5px;
   position: relative;
 }
@@ -691,7 +694,7 @@ h1 span {
   content: '';
   width: 1px;
   height: 4px;
-  background: #869279;
+  background: currentColor;
   position: absolute;
   top: 2px;
   left: 4px;
@@ -755,8 +758,11 @@ h1 span {
   justify-content: flex-end;
   gap: 7px;
   font-size: 11px;
-  color: #7c8a6b;
-  flex: 1;
+  color: #514238;
+  background: #fbf0e1;
+  padding: 9px 12px;
+  border-radius: 8px;
+  flex: 0 1 auto;
   white-space: nowrap;
 }
 .cinematic-button.active {
@@ -810,7 +816,7 @@ h1 span {
   justify-content: center;
   gap: 17px;
   color: #5b7950;
-  background: #d8dfd0;
+  background: #d9a184;
 }
 .scene-loading svg {
   animation: grow 2s ease-in-out infinite;
@@ -1118,9 +1124,7 @@ h1 span {
 .night .world-stats,
 .night .world-stats strong,
 .night .workspace-name,
-.night .eyebrow,
-.night .orbit-hint,
-.night .cinematic-button {
+.night .eyebrow {
   color: #a5b6a1;
 }
 .night .world-stats strong {
@@ -1996,7 +2000,7 @@ h1 span {
   padding: 8px 12px;
   border: 1px solid #ffffff9c;
   border-radius: 12px;
-  background: #f8f9efdf;
+  background: #fbf0e1df;
   color: #526d50;
   font-size: 11px;
   backdrop-filter: blur(12px);
@@ -2015,7 +2019,7 @@ h1 span {
   overflow-y: auto;
   border: 1px solid #ffffffc7;
   border-radius: 15px;
-  background: #f8f9eff8;
+  background: #fbf0e1f8;
   color: #294838;
   box-shadow: 0 14px 44px #253c3030;
   backdrop-filter: blur(16px);
@@ -2622,5 +2626,81 @@ h1 span {
     bottom: 160px;
     width: min(300px, calc(100vw - 24px));
     max-height: min(32dvh, 285px);
+  }
+}
+
+.universe-controls {
+  position: absolute;
+  z-index: 40;
+  top: 96px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+.universe-controls > div {
+  display: flex;
+  background: #f5e9d9;
+  border-radius: 12px;
+  padding: 4px;
+  box-shadow: 0 5px 18px #33211d22;
+}
+.universe-controls button {
+  padding: 9px 15px;
+  white-space: nowrap;
+  color: #513e37;
+  border-radius: 9px;
+  font-size: 12px;
+}
+.universe-controls button[aria-pressed='true'] {
+  background: #754936;
+  color: #fff5e9;
+}
+.universe-controls p {
+  width: 270px;
+  color: #f5e9d9;
+  font-size: 12px;
+  line-height: 1.5;
+  text-shadow: 0 2px 5px #10121e;
+}
+@media (max-width: 1100px) {
+  .universe-controls {
+    top: auto;
+    bottom: 150px;
+  }
+  .universe-controls p {
+    display: none;
+  }
+}
+
+/* The world extends beneath its floating controls at every scale. */
+.app .world-canvas {
+  inset: 0;
+}
+.surface-hidden .world-label {
+  display: none !important;
+}
+
+.orbital-scene {
+  position: absolute;
+  inset: 0;
+}
+.scale-arrival {
+  animation: scale-arrival 650ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes scale-arrival {
+  from {
+    opacity: 0;
+    filter: blur(5px);
+    transform: scale(1.035);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scale-arrival {
+    animation: none;
   }
 }

@@ -155,7 +155,7 @@ export function createCharacterClips(source: THREE.Object3D, clips: THREE.Animat
     }),
   );
   // Destination poses keep feet/seat alignment, with hands away from an absent keyboard.
-  for (const name of ['BenchRest', 'CafeBreak', 'GardenLook']) {
+  for (const name of ['BenchRest', 'CafeBreak', 'GardenLook', 'SurveySky', 'SampleScan']) {
     const base = name === 'BenchRest' ? pose : restPose;
     const values = new Map(bones.map((o) => [o, { p: [] as number[], q: [] as number[] }]));
     const destinationTimes = Array.from({ length: 25 }, (_, i) => i / 4);
@@ -178,6 +178,16 @@ export function createCharacterClips(source: THREE.Object3D, clips: THREE.Animat
         head.rotateZ(glance * 0.035);
         poser.getObjectByName('LowerArmL')!.rotateX(gesture * 0.075);
         poser.getObjectByName('LowerArmR')!.rotateX(-gesture * 0.075);
+      } else if (name === 'SurveySky') {
+        head.rotateX(-0.22 - gesture * 0.18);
+        head.rotateY(glance * 0.3);
+        poser.getObjectByName('UpperArmL')!.rotateZ(-gesture * 0.15);
+        poser.getObjectByName('LowerArmR')!.rotateX(-0.35 - gesture * 0.4);
+      } else if (name === 'SampleScan') {
+        head.rotateX(0.15 + gesture * 0.26);
+        torso.rotateX(gesture * 0.06);
+        poser.getObjectByName('UpperArmL')!.rotateZ(-0.1 - gesture * 0.18);
+        poser.getObjectByName('LowerArmL')!.rotateX(-0.3 - gesture * 0.35);
       } else if (name === 'CafeBreak') {
         head.rotateY(glance * 0.14);
         head.rotateX(0.045 + gesture * 0.055);

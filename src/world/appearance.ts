@@ -15,7 +15,7 @@ export function dressResident(model: THREE.Object3D, style: ReturnType<typeof re
     transparent: true,
   });
   const dark = new THREE.MeshStandardMaterial({
-    color: '#304a43',
+    color: '#303747',
     roughness: 0.55,
     transparent: true,
   });
@@ -41,17 +41,19 @@ export function dressResident(model: THREE.Object3D, style: ReturnType<typeof re
   };
   const torus = (radius: number, tube: number) => new THREE.TorusGeometry(radius, tube, 6, 20);
   switch (style.accessory) {
-    case 'headphones':
+    case 'sensor-pods':
       add(torus(1.4, 0.12), [0, 3.85, 0], dark).scale.y = 0.85;
       for (const x of [-1.38, 1.38])
         add(new THREE.SphereGeometry(0.3, 10, 8), [x, 3.75, 0.1]).scale.set(0.5, 1, 1);
       break;
-    case 'cap':
-      add(
-        new THREE.SphereGeometry(1.15, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2),
-        [0, 4.38, 0],
-      ).scale.y = 0.45;
-      add(new THREE.BoxGeometry(1.9, 0.09, 1.25), [0, 4.39, 0.85]);
+    case 'cranial-crest':
+      for (let i = 0; i < 4; i++) {
+        add(new THREE.ConeGeometry(0.32, 0.8 + i * 0.14, 4), [0, 4.65, -0.7 + i * 0.5], cream, [
+          0.25,
+          Math.PI / 4,
+          0,
+        ]);
+      }
       break;
     case 'antenna':
       for (const x of [-0.65, 0.65]) {
@@ -59,13 +61,18 @@ export function dressResident(model: THREE.Object3D, style: ReturnType<typeof re
         add(new THREE.SphereGeometry(0.17, 10, 8), [x, 5.13, 0]);
       }
       break;
-    case 'glasses':
+    case 'compound-optics':
       for (const x of [-0.61, 0.61]) add(torus(0.48, 0.065), [x, 3.7, 1.48], dark);
       add(new THREE.BoxGeometry(0.26, 0.07, 0.07), [0, 3.7, 1.49], dark);
       break;
-    case 'beret':
-      add(new THREE.SphereGeometry(1.25, 14, 8), [0.12, 4.48, 0]).scale.set(1, 0.25, 0.88);
-      add(new THREE.CylinderGeometry(0.06, 0.07, 0.18, 8), [0.12, 4.83, 0], dark);
+    case 'swept-horns':
+      for (const side of [-1, 1]) {
+        add(new THREE.ConeGeometry(0.25, 1.35, 6), [side * 0.85, 4.7, -0.2], cream, [
+          -0.45,
+          0,
+          side * -0.55,
+        ]);
+      }
       break;
     case 'ear-fins':
       for (const x of [-1.35, 1.35])
@@ -75,16 +82,15 @@ export function dressResident(model: THREE.Object3D, style: ReturnType<typeof re
           x > 0 ? -0.35 : 0.35,
         ]);
       break;
-    case 'flower':
+    case 'crystal-crown':
       for (let i = 0; i < 5; i++) {
         const a = (i * Math.PI * 2) / 5;
-        add(new THREE.SphereGeometry(0.19, 8, 6), [
-          -1.07 + Math.cos(a) * 0.23,
-          4.25 + Math.sin(a) * 0.23,
-          1.05,
-        ]).scale.z = 0.35;
+        add(
+          new THREE.OctahedronGeometry(0.24, 0),
+          [Math.cos(a) * 0.9, 4.7, Math.sin(a) * 0.7],
+          material,
+        ).scale.y = 2;
       }
-      add(new THREE.SphereGeometry(0.14, 8, 6), [-1.07, 4.25, 1.13], cream);
       break;
     case 'visor':
       add(new THREE.BoxGeometry(2.35, 0.16, 0.36), [0, 4.08, 1.4]);

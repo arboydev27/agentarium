@@ -1,3 +1,4 @@
+import { WorldSurfaceMaterial } from '../WorldSurfaceMaterial';
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { walkwayHeight } from '../terrain';
@@ -52,7 +53,12 @@ function WindwardTrail() {
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <mesh name="windward-branch-trail" geometry={geometry} receiveShadow>
-      <meshStandardMaterial vertexColors roughness={1} side={THREE.DoubleSide} />
+      <WorldSurfaceMaterial
+        family="cast-foundation"
+        vertexColors
+        roughness={1}
+        side={THREE.DoubleSide}
+      />
     </mesh>
   );
 }
@@ -78,7 +84,12 @@ function ArrivalCircle() {
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <mesh name="windward-arrival-circle" geometry={geometry} receiveShadow>
-      <meshStandardMaterial color="#bcb59a" roughness={1} side={THREE.DoubleSide} />
+      <WorldSurfaceMaterial
+        family="cast-foundation"
+        color="#bcb59a"
+        roughness={1}
+        side={THREE.DoubleSide}
+      />
     </mesh>
   );
 }

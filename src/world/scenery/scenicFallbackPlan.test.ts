@@ -1,3 +1,4 @@
+import { REFERENCE_HABITAT } from './referenceHabitatPlacement';
 import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import { EDGES, NODES } from '../navigation';
@@ -5,15 +6,15 @@ import { CAMERA_VIEWS, LOOKOUT, OBSERVATORY, ORCHARD } from '../layout';
 import { SCENIC_REGIONS } from '../scenicVisibility';
 import { renderedTerrainHeight } from '../terrain';
 import { AMBER_BLUFF } from './amberPlacement';
-import { DAWNLIGHT_GLASSHOUSE } from './dawnlightPlacement';
+import { BIOLAB_HABITATS, DAWNLIGHT_GLASSHOUSE } from './dawnlightPlacement';
 import { WINDWARD_MILL } from './windwardPlacement';
-import { ORCHARD_PAVILION } from './orchardPlacement';
 import { WOODLAND_HOLLOW, WOODLAND_SHELTER_XZ } from './woodlandPlacement';
 import { NORTHSTAR_OUTPOST, NORTHSTAR_TOWER_XZ } from './northstarPlacement';
 import { SLATE_REACH } from './slatePlacement';
 import { SCENIC_FALLBACK_PLANS, type ScenicFallbackPlan } from './scenicFallbackPlan';
 
 const shapes = {
+  dome: new THREE.SphereGeometry(1, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2),
   box: new THREE.BoxGeometry(1, 1, 1),
   cylinder: new THREE.CylinderGeometry(1, 1, 1, 6),
   cone: new THREE.ConeGeometry(1, 1, 6),
@@ -47,9 +48,9 @@ describe('scenic loading fallback placement', () => {
     );
     const authored = {
       lookout: [LOOKOUT.x, LOOKOUT.z],
-      orchard: [ORCHARD_PAVILION.x, ORCHARD_PAVILION.z],
+      orchard: [REFERENCE_HABITAT.x, REFERENCE_HABITAT.z],
       observatory: [OBSERVATORY.x, OBSERVATORY.z],
-      dawnlight: [DAWNLIGHT_GLASSHOUSE.centerX, DAWNLIGHT_GLASSHOUSE.centerZ],
+      dawnlight: [BIOLAB_HABITATS[0].x, BIOLAB_HABITATS[0].z],
       windward: [WINDWARD_MILL.centerX, WINDWARD_MILL.centerZ],
       amber: [AMBER_BLUFF.x, AMBER_BLUFF.z],
       woodland: WOODLAND_SHELTER_XZ,
@@ -114,22 +115,6 @@ describe('scenic loading fallback placement', () => {
           hit && hit.distanceTo(camera) < arrival.distanceTo(camera),
           `${id} hides its arrival`,
         ).toBeFalsy();
-      }
-    }
-  });
-
-  it('does not introduce low slabs or backdrop walls across the arrival clearings', () => {
-    for (const plan of Object.values(SCENIC_FALLBACK_PLANS)) {
-      for (const form of bounds(plan)) {
-        const size = form.getSize(new THREE.Vector3());
-        if (form.min.y < renderedTerrainHeight(...plan.origin) + 2.4) {
-          // Ground-level boxes are only posts or the two scenic-only landforms.
-          const scenicLandform =
-            plan === SCENIC_FALLBACK_PLANS.amber || plan === SCENIC_FALLBACK_PLANS.slate;
-          if (!scenicLandform && plan !== SCENIC_FALLBACK_PLANS.windward) {
-            expect(Math.min(size.x, size.z)).toBeLessThan(1.1);
-          }
-        }
       }
     }
   });

@@ -1,3 +1,5 @@
+import { WorldSurfaceMaterial } from './WorldSurfaceMaterial';
+import type { SurfaceFamily } from './surfaceTextures';
 import { Breeze, WarmGlow } from './Ambience';
 import { useEffect, useMemo } from 'react';
 import { RoundedBox } from '@react-three/drei';
@@ -9,6 +11,7 @@ export function Box({
   color = '#ffffff',
   radius = 0.04,
   map,
+  finish,
   roughness = 0.78,
   rotation = [0, 0, 0],
   ...props
@@ -18,6 +21,7 @@ export function Box({
   color?: string;
   radius?: number;
   map?: THREE.Texture;
+  finish?: SurfaceFamily;
   roughness?: number;
   rotation?: [number, number, number];
   [key: string]: unknown;
@@ -26,7 +30,11 @@ export function Box({
     return (
       <mesh position={pos} rotation={rotation} castShadow receiveShadow {...props}>
         <boxGeometry args={size} />
-        <meshStandardMaterial color={color} map={map} roughness={roughness} />
+        {finish && !map ? (
+          <WorldSurfaceMaterial family={finish} color={color} roughness={roughness} />
+        ) : (
+          <meshStandardMaterial color={color} map={map} roughness={roughness} />
+        )}
       </mesh>
     );
   return (
@@ -40,7 +48,11 @@ export function Box({
       receiveShadow
       {...props}
     >
-      <meshStandardMaterial color={color} map={map} roughness={roughness} />
+      {finish && !map ? (
+        <WorldSurfaceMaterial family={finish} color={color} roughness={roughness} />
+      ) : (
+        <meshStandardMaterial color={color} map={map} roughness={roughness} />
+      )}
     </RoundedBox>
   );
 }
@@ -50,6 +62,7 @@ export function Cylinder({
   top,
   h = 1,
   color = '#624c39',
+  finish,
   rotation = [0, 0, 0],
 }: {
   pos?: [number, number, number];
@@ -57,12 +70,17 @@ export function Cylinder({
   top?: number;
   h?: number;
   color?: string;
+  finish?: SurfaceFamily;
   rotation?: [number, number, number];
 }) {
   return (
     <mesh position={pos} rotation={rotation} castShadow receiveShadow>
       <cylinderGeometry args={[top ?? r, r, h, 12]} />
-      <meshStandardMaterial color={color} roughness={0.85} />
+      {finish ? (
+        <WorldSurfaceMaterial family={finish} color={color} roughness={0.85} />
+      ) : (
+        <meshStandardMaterial color={color} roughness={0.85} />
+      )}
     </mesh>
   );
 }

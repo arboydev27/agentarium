@@ -1,3 +1,4 @@
+import { WorldSurfaceMaterial } from '../WorldSurfaceMaterial';
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { Box, Cylinder } from '../primitives';
@@ -43,7 +44,12 @@ function TurnoutSurface({ trailIndex, side }: { trailIndex: number; side: number
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <mesh geometry={geometry} name={`trail-turnout-surface-${trailIndex}`} receiveShadow>
-      <meshStandardMaterial color="#c8bd99" roughness={1} side={THREE.DoubleSide} />
+      <WorldSurfaceMaterial
+        family="cast-foundation"
+        color="#c8bd99"
+        roughness={1}
+        side={THREE.DoubleSide}
+      />
     </mesh>
   );
 }
@@ -55,10 +61,29 @@ function TurnoutFurniture({ trailIndex, side }: { trailIndex: number; side: numb
     const z = centerZ + 1.12;
     return (
       <group name="western-trail-bench" position={[x, walkwayHeight(x, z, 0.1), z]}>
-        <Box pos={[0, 0.48, 0]} size={[1.9, 0.13, 0.55]} color="#a8805d" radius={0} />
-        <Box pos={[0, 0.88, -0.23]} size={[1.9, 0.65, 0.12]} color="#6f7e65" radius={0} />
+        <Box
+          finish="ceramic-paint"
+          pos={[0, 0.48, 0]}
+          size={[1.9, 0.13, 0.55]}
+          color="#d7c5ad"
+          radius={0}
+        />
+        <Box
+          finish="ceramic-paint"
+          pos={[0, 0.88, -0.23]}
+          size={[1.9, 0.65, 0.12]}
+          color="#677281"
+          radius={0}
+        />
         {[-0.73, 0.73].map((px) => (
-          <Box key={px} pos={[px, 0.25, 0]} size={[0.13, 0.48, 0.45]} color="#765f4b" radius={0} />
+          <Box
+            finish="ceramic-paint"
+            key={px}
+            pos={[px, 0.25, 0]}
+            size={[0.13, 0.48, 0.45]}
+            color="#53515d"
+            radius={0}
+          />
         ))}
       </group>
     );
@@ -67,12 +92,13 @@ function TurnoutFurniture({ trailIndex, side }: { trailIndex: number; side: numb
   const z = centerZ - 1.15;
   return (
     <group name="eastern-trail-wayfinder" position={[x, walkwayHeight(x, z, 0.1), z]}>
-      <Cylinder pos={[0, 0.91, 0]} r={0.08} h={1.82} color="#6b6551" />
+      <Cylinder finish="dusty-alloy" pos={[0, 0.91, 0]} r={0.08} h={1.82} color="#616875" />
       <Box
+        finish="ceramic-paint"
         pos={[0, 1.7, 0]}
         size={[0.78, 0.56, 0.12]}
         rotation={[0, 0, -0.16]}
-        color="#b1a97e"
+        color="#8dcacb"
         radius={0}
       />
     </group>

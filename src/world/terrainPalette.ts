@@ -1,12 +1,12 @@
 import * as THREE from 'three';
 import { biomeInfluence } from './biomes';
 
-const meadow = new THREE.Color('#82a171');
-const field = new THREE.Color('#acb78d');
-const ridge = new THREE.Color('#90a397');
-const woodland = new THREE.Color('#557a56');
-const highland = new THREE.Color('#85999c');
-const amber = new THREE.Color('#bf9b61');
+const regolith = new THREE.Color('#b96743');
+const sand = new THREE.Color('#dda477');
+const ridge = new THREE.Color('#814d45');
+const basalt = new THREE.Color('#77433c');
+const ironstone = new THREE.Color('#935f52');
+const ochre = new THREE.Color('#e0a46c');
 const biomeColor = new THREE.Color();
 
 // Sample in world coordinates so independently built tiles share the same
@@ -21,16 +21,16 @@ export function landscapeVertexColor(
   const fieldPatch =
     (Math.sin(x * 0.082 + Math.sin(z * 0.04)) * Math.cos(z * 0.11 - x * 0.025) + 1) * 0.5;
   out
-    .copy(meadow)
-    .lerp(field, fieldPatch * 0.42)
+    .copy(regolith)
+    .lerp(sand, fieldPatch * 0.42)
     .lerp(ridge, THREE.MathUtils.clamp((y - 2.5) / 12, 0, 0.85));
   const biome = biomeInfluence(x, z);
   const weight = biome.woodland + biome.highland + biome.amber;
   if (weight > 0) {
     biomeColor.setRGB(
-      (woodland.r * biome.woodland + highland.r * biome.highland + amber.r * biome.amber) / weight,
-      (woodland.g * biome.woodland + highland.g * biome.highland + amber.g * biome.amber) / weight,
-      (woodland.b * biome.woodland + highland.b * biome.highland + amber.b * biome.amber) / weight,
+      (basalt.r * biome.woodland + ironstone.r * biome.highland + ochre.r * biome.amber) / weight,
+      (basalt.g * biome.woodland + ironstone.g * biome.highland + ochre.g * biome.amber) / weight,
+      (basalt.b * biome.woodland + ironstone.b * biome.highland + ochre.b * biome.amber) / weight,
     );
     out.lerp(biomeColor, Math.min(0.87, weight * 0.82));
   }

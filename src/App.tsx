@@ -1,3 +1,4 @@
+import { UniverseControls } from './UniverseControls';
 import { WorldHUD } from './WorldHUD';
 import { LandmarkMap } from './LandmarkMap';
 import { SceneryStatus } from './SceneryStatus';
@@ -8,6 +9,10 @@ import { Component, lazy, Suspense, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import {
   Sprout,
+  Orbit,
+  Rocket,
+  FlaskConical,
+  Satellite,
   ArrowUpRight,
   Plus,
   Play,
@@ -358,7 +363,7 @@ export default function App() {
             fallback={
               <div className="scene-loading">
                 <Sprout size={36} />
-                <span>Growing your little world…</span>
+                <span>Preparing the colony…</span>
               </div>
             }
           >
@@ -366,18 +371,19 @@ export default function App() {
           </Suspense>
         </SceneBoundary>
       </div>
+      <UniverseControls />
       <SceneryStatus />
       <header className="topbar">
-        <a href="/" className="brand" aria-label="Agent Grove home">
+        <a href="/" className="brand" aria-label="Agentarium home">
           <span className="brand-mark">
-            <Sprout size={22} />
+            <Orbit size={22} />
           </span>
           <span>
-            agent<span className="brand-light">grove</span>
+            agent<span className="brand-light">arium</span>
           </span>
         </a>
         <div className="header-divider" />
-        <span className="workspace-name">Your little world</span>
+        <span className="workspace-name">Your AI colony</span>
         <div className="topbar-right">
           <button
             className={
@@ -614,7 +620,7 @@ export default function App() {
                       {sessionView === 'attention' && (
                         <small>
                           Unresolved reported attention across every session, including hidden
-                          sessions and those outside the grove.
+                          sessions and those outside the colony.
                         </small>
                       )}
                     </div>
@@ -974,19 +980,19 @@ export default function App() {
             {view === 'overview' ? (
               <Focus size={15} />
             ) : view === 'café' ? (
-              <Coffee size={15} />
+              <Users size={15} />
             ) : view === 'garden' ? (
-              <Leaf size={15} />
+              <FlaskConical size={15} />
             ) : view === 'studio' ? (
               <Laptop size={15} />
             ) : view === 'courtyard' ? (
-              <Sprout size={15} />
+              <Satellite size={15} />
             ) : view === 'lookout' ? (
               <MapPin size={15} />
             ) : view === 'orchard' ? (
-              <Trees size={15} />
+              <MapPin size={15} />
             ) : view === 'northstar' ? (
-              <Tent size={15} />
+              <Rocket size={15} />
             ) : view === 'observatory' ? (
               <Telescope size={15} />
             ) : view === 'hollow' ? (
@@ -994,7 +1000,7 @@ export default function App() {
             ) : view === 'mere' ? (
               <Waves size={15} />
             ) : view === 'dawnlight' ? (
-              <Flower2 size={15} />
+              <FlaskConical size={15} />
             ) : view === 'windward' ? (
               <Wind size={15} />
             ) : view === 'amber' ? (
@@ -1002,19 +1008,7 @@ export default function App() {
             ) : (
               <Eye size={15} />
             )}
-            <span>
-              {view === 'overview'
-                ? 'Overview'
-                : view === 'courtyard'
-                  ? 'Court'
-                  : view === 'observatory'
-                    ? 'Cedar'
-                    : view === 'windward'
-                      ? 'Windward'
-                      : view === 'amber'
-                        ? 'Amber'
-                        : view[0].toUpperCase() + view.slice(1)}
-            </span>
+            <span>{WORLD_VIEW_LABELS[view]}</span>
           </button>
         ))}
       </div>
@@ -1040,9 +1034,7 @@ export default function App() {
                   <Play size={17} fill="currentColor" />
                 )}
               </button>
-              <span className="toolbar-title">
-                {playing ? 'Life in the grove' : 'Taking a breath'}
-              </span>
+              <span className="toolbar-title">{playing ? 'Colony life' : 'Colony paused'}</span>
               <button
                 className="speed-button"
                 aria-label="Change simulation speed"
@@ -1057,7 +1049,7 @@ export default function App() {
                 title="Reset simulation"
                 onClick={() => {
                   useWorld.getState().reset();
-                  setToast('A fresh start for the grove.');
+                  setToast('A fresh start for the colony.');
                 }}
               >
                 <RotateCcw size={16} />
@@ -1094,7 +1086,7 @@ export default function App() {
             <strong>
               {followAgent
                 ? `Following ${agents.find((a) => a.id === followAgent)?.name || 'resident'}`
-                : 'Exploring the grove'}
+                : 'Exploring the colony'}
             </strong>
             <span>
               {mode === 'demo'
@@ -1131,17 +1123,17 @@ export default function App() {
           <div className="settings-credit">
             RobotExpressive by Tomás Laulhé · CC0
             <br />
-            Built with Three.js · Agent Grove v0.1
+            Built with Three.js · Agentarium v0.1
           </div>
         </Modal>
       )}
       {modal === 'connections' && (
-        <Modal title="Bring the grove to life" close={() => setModal(null)}>
+        <Modal title="Bring the colony to life" close={() => setModal(null)}>
           <Connections notify={setToast} />
         </Modal>
       )}
       {modal === 'help' && (
-        <Modal title="Welcome to the grove" close={() => setModal(null)}>
+        <Modal title="Welcome to the colony" close={() => setModal(null)}>
           <p className="modal-intro">
             Every resident represents an agent. Their laptops open when work starts, and they take a
             break when it’s done.

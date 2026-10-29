@@ -64,19 +64,19 @@ describe('expanded world layout', () => {
     expect(CAMERA_VIEWS.lookout.look[2]).toBeLessThan(-WORLD.depth / 2);
     expect(CAMERA_VIEWS.lookout.span.every((value) => value > 0)).toBe(true);
   });
-  it('bookmarks Orchard Commons in the finite outer terrain', () => {
+  it('frames the reference habitat inside the finite expedition district', () => {
     expect(WORLD_VIEWS).toContain('orchard');
     expect(ORCHARD).toMatchObject({ x: 36, z: -70 });
     expect(ORCHARD.clearingRadius).toBeGreaterThan(3);
     expect(ORCHARD.focusRadius).toBeGreaterThan(ORCHARD.clearingRadius);
-    expect(CAMERA_VIEWS.orchard.look[0]).toBe(ORCHARD.x);
-    expect(CAMERA_VIEWS.orchard.look[2]).toBe(ORCHARD.z);
+    expect(Math.abs(CAMERA_VIEWS.orchard.look[0] - 43.8)).toBeLessThan(2);
+    expect(Math.abs(CAMERA_VIEWS.orchard.look[2] + 77)).toBeLessThan(2);
     expect(CAMERA_VIEWS.orchard.span.every((value) => value > 0)).toBe(true);
   });
-  it('bookmarks Southwind Mere with the shore and lake in frame', () => {
+  it('bookmarks Southwind Crater with the shore and lake in frame', () => {
     const camera = CAMERA_VIEWS.mere;
     expect(WORLD_VIEWS).toContain('mere');
-    expect(WORLD_VIEW_LABELS.mere).toBe('Southwind Mere');
+    expect(WORLD_VIEW_LABELS.mere).toBe('Southwind Crater');
     expect(SOUTHWIND_SHORE).toMatchObject({ x: -42, z: 43 });
     expect(
       Math.hypot(camera.look[0] - SOUTHWIND_SHORE.x, camera.look[2] - SOUTHWIND_SHORE.z),
@@ -85,10 +85,10 @@ describe('expanded world layout', () => {
     expect(camera.pos[0]).toBeGreaterThan(SOUTHWIND_SHORE.x);
     expect(camera.span.every((value) => value > 0)).toBe(true);
   });
-  it('frames Dawnlight Glasshouse and its resident arrival from the eastern view', () => {
+  it('frames Dawnlight Biolab and its resident arrival from the eastern view', () => {
     const preset = CAMERA_VIEWS.dawnlight;
     expect(WORLD_VIEWS).toContain('dawnlight');
-    expect(WORLD_VIEW_LABELS.dawnlight).toBe('Dawnlight Glasshouse');
+    expect(WORLD_VIEW_LABELS.dawnlight).toBe('Dawnlight Biolab');
     expect(preset.look[0]).toBeCloseTo(DAWNLIGHT_GLASSHOUSE.centerX + 1);
     expect(preset.look[2]).toBeCloseTo(DAWNLIGHT_GLASSHOUSE.centerZ + 1);
     expect(preset.span.every((value) => value > 0)).toBe(true);
@@ -107,10 +107,10 @@ describe('expanded world layout', () => {
     expect(Math.abs(arrival.x)).toBeLessThan(1);
     expect(Math.abs(arrival.y)).toBeLessThan(1);
   });
-  it('frames Windward Mill and its arrival within the finite camera area', () => {
+  it('frames Helios Power Field and its arrival within the finite camera area', () => {
     const preset = CAMERA_VIEWS.windward;
     expect(WORLD_VIEWS).toContain('windward');
-    expect(WORLD_VIEW_LABELS.windward).toBe('Windward Mill');
+    expect(WORLD_VIEW_LABELS.windward).toBe('Helios Power Field');
     expect(preset.look[0]).toBe(WINDWARD_MILL.centerX);
     expect(preset.look[2]).toBe(WINDWARD_MILL.centerZ);
     expect(

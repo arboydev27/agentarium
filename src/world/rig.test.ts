@@ -64,7 +64,14 @@ describe('bundled character asset contract', () => {
     );
     const clips = createCharacterClips(gltf.scene, gltf.animations);
     const mixer = new AnimationMixer(gltf.scene);
-    for (const name of ['Rest', 'BenchRest', 'CafeBreak', 'GardenLook']) {
+    for (const name of [
+      'Rest',
+      'BenchRest',
+      'CafeBreak',
+      'GardenLook',
+      'SurveySky',
+      'SampleScan',
+    ]) {
       const clip = clips.find((candidate) => candidate.name === name)!;
       for (const track of clip.tracks) {
         const size = track.getValueSize();

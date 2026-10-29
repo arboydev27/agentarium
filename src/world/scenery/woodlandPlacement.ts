@@ -1,7 +1,7 @@
 // Shared, terrain-independent placement for the observatory-to-woodland spur.
 export const WOODLAND_HOLLOW = {
   id: 'woodland:hollow',
-  label: 'Lantern Hollow',
+  label: 'Basalt Field Station',
   x: -83,
   z: -20,
   clearingRadius: 5,

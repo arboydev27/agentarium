@@ -1,3 +1,4 @@
+import { WorldSurfaceMaterial } from '../WorldSurfaceMaterial';
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { ORCHARD } from '../layout';
@@ -55,7 +56,12 @@ function OrchardPath() {
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <mesh name="orchard-branch-path" geometry={geometry} receiveShadow>
-      <meshStandardMaterial vertexColors roughness={1} side={THREE.DoubleSide} />
+      <WorldSurfaceMaterial
+        family="cast-foundation"
+        vertexColors
+        roughness={1}
+        side={THREE.DoubleSide}
+      />
     </mesh>
   );
 }
@@ -67,7 +73,12 @@ function ArrivalCircle() {
       <Cylinder pos={[0, 0.04, 0]} r={2.85} h={0.16} color="#c8b18b" />
       <mesh position={[0, 0.125, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[2.45, 2.77, 28]} />
-        <meshStandardMaterial color="#e0cd9d" roughness={1} side={THREE.DoubleSide} />
+        <WorldSurfaceMaterial
+          family="cast-foundation"
+          color="#e0cd9d"
+          roughness={1}
+          side={THREE.DoubleSide}
+        />
       </mesh>
     </group>
   );

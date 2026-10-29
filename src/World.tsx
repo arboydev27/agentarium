@@ -1,3 +1,9 @@
+import { useSurfaceTextures } from './world/surfaceTextures';
+import { applySurfaceDetails } from './world/WorldSurfaceMaterial';
+import { WorldKit } from './world/scenery/WorldKit';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { useUniverse } from './world/universe';
+import { OrbitalWorld } from './world/OrbitalWorld';
 import { districtAt } from './world/hud';
 import { ResidentJourney } from './world/journey';
 import { NavigationTraffic } from './world/navigation';
@@ -61,7 +67,7 @@ function Laptop({ status }: { status?: Status }) {
   });
   return (
     <group position={[0, 1.02, -0.08]}>
-      <Box size={[0.73, 0.035, 0.5]} color="#475854" radius={0.02} />
+      <Box finish="dusty-alloy" size={[0.73, 0.035, 0.5]} color="#475854" radius={0.02} />
       <Box pos={[0, 0.022, -0.02]} size={[0.57, 0.009, 0.25]} color="#2d3d37" radius={0.01} />
       {[0, 1, 2, 3].map((i) => (
         <Box
@@ -73,7 +79,13 @@ function Laptop({ status }: { status?: Status }) {
         />
       ))}
       <group ref={lid} position={[0, 0.01, 0.24]} rotation={[-0.16, 0, 0]}>
-        <Box pos={[0, 0.23, 0]} size={[0.73, 0.46, 0.035]} color="#526862" radius={0.025} />
+        <Box
+          finish="ceramic-paint"
+          pos={[0, 0.23, 0]}
+          size={[0.73, 0.46, 0.035]}
+          color="#526862"
+          radius={0.025}
+        />
         <mesh position={[0, 0.23, -0.022]} rotation={[0, Math.PI, 0]}>
           <planeGeometry args={[0.64, 0.37]} />
           <meshStandardMaterial
@@ -98,25 +110,8 @@ function Laptop({ status }: { status?: Status }) {
 function Desk({ seat, status }: { seat: number; status?: Status }) {
   return (
     <group position={SEATS[seat % 8]}>
-      <Box pos={[0, 0.96, 0.2]} size={[1.6, 0.13, 1]} color="#c99b68" radius={0.09} />
-      {[-0.63, 0.63].map((x) => (
-        <group key={x}>
-          <Cylinder pos={[x, 0.48, 0.52]} r={0.045} h={0.9} color="#475447" />
-          <Cylinder pos={[x, 0.48, -0.13]} r={0.045} h={0.9} color="#475447" />
-        </group>
-      ))}
+      <WorldKit module="workstation" />
       <Laptop status={status} />
-      <Cylinder pos={[0.56, 1.095, 0.11]} r={0.1} h={0.19} color="#f2e7ca" />
-      <Cylinder pos={[0.56, 1.2, 0.11]} r={0.085} h={0.008} color="#694931" />
-      <Pot pos={[-0.61, 1.04, 0.5]} scale={0.42} />
-      <Box pos={[0, 0.5, -0.69]} size={[0.73, 0.12, 0.66]} color="#738671" radius={0.1} />
-      <Box pos={[0, 0.83, -0.98]} size={[0.73, 0.55, 0.1]} color="#738671" radius={0.09} />
-      {[-0.27, 0.27].map((x) => (
-        <group key={x}>
-          <Cylinder pos={[x, 0.24, -0.89]} r={0.035} h={0.5} />
-          <Cylinder pos={[x, 0.24, -0.45]} r={0.035} h={0.5} />
-        </group>
-      ))}
     </group>
   );
 }
@@ -137,6 +132,7 @@ function Resident({
   traffic: NavigationTraffic;
 }) {
   const { scene } = useGLTF('/models/robot.glb');
+  const surfaceMaps = useSurfaceTextures('ceramic-paint');
   const style = useMemo(() => residentStyle(agent.id), [agent.id]);
   const dressed = useMemo(() => {
     const copy = clone(scene);
@@ -150,7 +146,9 @@ function Resident({
           if (mat.name === 'Main') mat.color.set(agent.color);
           if (mat.name === 'Grey') mat.color.set(style.trim);
           if (mat.name === 'Black') mat.color.set('#253c36');
-          mat.roughness = 0.62;
+          mat.roughness = mat.name === 'Black' ? 0.35 : 0.62;
+          mat.metalness = mat.name === 'Grey' ? 0.42 : 0.1;
+          if (mat.name !== 'Black') applySurfaceDetails(mat, surfaceMaps, 1.6, true);
           mat.transparent = true;
           return mat;
         });
@@ -158,8 +156,15 @@ function Resident({
       }
     });
     const wardrobe = dressResident(copy, style);
+    copy.traverse((object) => {
+      if (!(object instanceof THREE.Mesh)) return;
+      for (const material of Array.isArray(object.material) ? object.material : [object.material]) {
+        if (material instanceof THREE.MeshStandardMaterial && material.userData.wardrobe)
+          applySurfaceDetails(material, surfaceMaps, 1.6, true);
+      }
+    });
     return { copy, wardrobe };
-  }, [scene, agent.color, style]);
+  }, [scene, agent.color, style, surfaceMaps]);
   const model = dressed.copy;
   const materials = useMemo(() => {
     const all: THREE.Material[] = [];
@@ -661,6 +666,13 @@ function Camera({ positions }: { positions: Positions }) {
       maxDistance={190}
       autoRotate={cinematic && !reduced && !follow}
       autoRotateSpeed={0.35}
+      onEnd={() => {
+        if (
+          (view !== 'horizon' && (camera as THREE.OrthographicCamera).zoom <= 5.05) ||
+          (view === 'horizon' && controls.current && controls.current.getDistance() >= 189.5)
+        )
+          useUniverse.getState().setScale('planet');
+      }}
       onStart={() => {
         moving.current = false;
         keyboardPanning.current = false;
@@ -672,12 +684,44 @@ function Camera({ positions }: { positions: Positions }) {
 function Lighting() {
   const quality = useWorld((s) => s.quality);
   const night = useWorld((s) => s.night);
+  const sun = useRef<THREE.DirectionalLight>(null);
+  const { gl, scene } = useThree();
+  useEffect(() => {
+    const generator = new THREE.PMREMGenerator(gl);
+    const room = new RoomEnvironment();
+    const target = generator.fromScene(room, 0.04);
+    const previous = scene.environment;
+    const previousIntensity = scene.environmentIntensity;
+    scene.environment = target.texture;
+    scene.environmentIntensity = 0.28;
+    room.dispose();
+    generator.dispose();
+    return () => {
+      scene.environment = previous;
+      scene.environmentIntensity = previousIntensity;
+      target.dispose();
+    };
+  }, [gl, scene]);
+  useFrame((state) => {
+    const controls = state.controls as OrbitControlsImpl | null;
+    if (!sun.current || !controls) return;
+    // Follow exploration so remote facilities receive the same contact shadows as home.
+    sun.current.target.position.copy(controls.target);
+    sun.current.target.updateMatrixWorld();
+    sun.current.position.set(
+      controls.target.x - 10,
+      controls.target.y + 20,
+      controls.target.z + 12,
+    );
+  });
   return (
     <>
-      <fog attach="fog" args={[night ? '#263a43' : '#d8dfd0', WORLD_FOG_NEAR, WORLD_FOG_FAR]} />
-      <ambientLight intensity={night ? 0.55 : 0.85} color={night ? '#a2b6ed' : '#fff8e7'} />
-      <hemisphereLight args={[night ? '#849ccf' : '#e8f0e0', '#849970', night ? 0.7 : 1.25]} />
+      <color attach="background" args={[night ? '#211e31' : '#d9a184']} />
+      <fog attach="fog" args={[night ? '#211e31' : '#d9a184', WORLD_FOG_NEAR, WORLD_FOG_FAR]} />
+      <ambientLight intensity={night ? 0.35 : 0.25} color={night ? '#a2b6ed' : '#fff8e7'} />
+      <hemisphereLight args={[night ? '#849ccf' : '#ffe1bc', '#7b403b', night ? 0.55 : 0.65]} />
       <directionalLight
+        ref={sun}
         position={[-10, 20, 12]}
         intensity={night ? 0.7 : 2.8}
         color={night ? '#b2bff0' : '#ffe6b0'}
@@ -691,31 +735,47 @@ function Lighting() {
         shadow-normalBias={0.015}
         shadow-radius={2}
       />
-      <directionalLight position={[10, 8, -8]} intensity={night ? 0.55 : 1} color="#b2d5d0" />
+      <directionalLight position={[10, 8, -8]} intensity={night ? 0.4 : 0.35} color="#b2d5d0" />
     </>
   );
 }
 export default function World() {
+  const scale = useUniverse((s) => s.scale);
   const quality = useWorld((s) => s.quality);
   const mode = useWorld((s) => s.mode);
   const positions = useMemo<Positions>(() => new Map(), []);
   return (
-    <Canvas
-      orthographic
-      shadows
-      dpr={quality === 'low' ? 1 : [1, 1.6]}
-      camera={{ position: [27, 26, 35], zoom: 30, near: 0.1, far: 360 }}
-      gl={{ antialias: true, powerPreference: 'high-performance' }}
-      onPointerMissed={() => useWorld.getState().select(null)}
-    >
-      <Lighting />
-      <Environment />
-      <Suspense fallback={null}>
-        <Residents key={mode} positions={positions} />
-      </Suspense>
-      <Camera positions={positions} />
-      {new URLSearchParams(window.location.search).get('renderStats') === '1' && <RenderStats />}
-    </Canvas>
+    <>
+      <div
+        className={scale === 'colony' ? 'surface-scene' : 'surface-scene surface-hidden'}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          visibility: scale === 'colony' ? 'visible' : 'hidden',
+        }}
+      >
+        <Canvas
+          frameloop={scale === 'colony' ? 'always' : 'never'}
+          orthographic
+          shadows
+          dpr={quality === 'low' ? 1 : [1, 1.6]}
+          camera={{ position: [27, 26, 35], zoom: 30, near: 0.1, far: 360 }}
+          gl={{ antialias: true, powerPreference: 'high-performance' }}
+          onPointerMissed={() => useWorld.getState().select(null)}
+        >
+          <Lighting />
+          <Environment />
+          <Suspense fallback={null}>
+            <Residents key={mode} positions={positions} />
+          </Suspense>
+          <Camera positions={positions} />
+          {new URLSearchParams(window.location.search).get('renderStats') === '1' && (
+            <RenderStats />
+          )}
+        </Canvas>
+      </div>
+      {scale !== 'colony' && <OrbitalWorld />}
+    </>
   );
 }
 useGLTF.preload('/models/robot.glb');

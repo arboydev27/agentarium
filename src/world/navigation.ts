@@ -18,54 +18,60 @@ export type Destination = {
   node: string;
   facing: number;
   seated?: boolean;
-  clip: 'Rest' | 'BenchRest' | 'CafeBreak' | 'GardenLook';
+  clip: 'Rest' | 'BenchRest' | 'CafeBreak' | 'GardenLook' | 'SurveySky' | 'SampleScan';
 };
 export const DESTINATIONS: Destination[] = [
-  { id: 'coffee', label: 'café counter', node: 'coffee', facing: -Math.PI / 2, clip: 'CafeBreak' },
-  { id: 'window', label: 'café window', node: 'window', facing: Math.PI, clip: 'GardenLook' },
+  {
+    id: 'coffee',
+    label: 'habitat service station',
+    node: 'coffee',
+    facing: -Math.PI / 2,
+    clip: 'CafeBreak',
+  },
+  { id: 'window', label: 'habitat viewport', node: 'window', facing: Math.PI, clip: 'GardenLook' },
   {
     id: 'garden-west',
-    label: 'garden terrace',
+    label: 'resource lab',
     node: 'garden-west',
     facing: 0.4,
-    clip: 'GardenLook',
+    clip: 'SampleScan',
   },
-  { id: 'garden-east', label: 'garden terrace', node: 'garden-east', facing: -0.4, clip: 'Rest' },
+  { id: 'garden-east', label: 'resource lab', node: 'garden-east', facing: -0.4, clip: 'Rest' },
   {
     id: 'bench',
-    label: 'courtyard bench',
+    label: 'comms rest station',
     node: 'bench',
     facing: Math.PI / 2,
     seated: true,
     clip: 'BenchRest',
   },
-  { id: 'basin', label: 'courtyard basin', node: 'basin', facing: Math.PI / 2, clip: 'GardenLook' },
+  { id: 'basin', label: 'signal console', node: 'basin', facing: Math.PI / 2, clip: 'GardenLook' },
   {
     id: SOUTHWIND_SHORE.id,
     label: SOUTHWIND_SHORE.label,
     node: SOUTHWIND_SHORE.id,
     facing: -Math.PI / 2,
-    clip: 'GardenLook',
+    clip: 'SampleScan',
   },
   // Profile seven starts with this landmark, making the new district visible in the demo.
   {
     id: 'meadow:lookout',
-    label: 'meadow lookout',
+    label: 'survey lookout',
     node: 'meadow:lookout',
     facing: 0.7,
-    clip: 'GardenLook',
+    clip: 'SurveySky',
   },
-  { id: 'studio-break', label: 'studio terrace', node: 'studio-break', facing: 0, clip: 'Rest' },
+  { id: 'studio-break', label: 'research terrace', node: 'studio-break', facing: 0, clip: 'Rest' },
   {
     id: 'promenade',
-    label: 'tree-lined path',
+    label: 'survey route',
     node: 'promenade-rest',
     facing: 0,
     clip: 'GardenLook',
   },
   {
     id: 'orchard:commons',
-    label: 'orchard commons',
+    label: 'expedition base',
     node: 'orchard:commons',
     facing: 0.7,
     clip: 'GardenLook',
@@ -75,14 +81,14 @@ export const DESTINATIONS: Destination[] = [
     label: NORTHSTAR_OUTPOST.label,
     node: NORTHSTAR_OUTPOST.id,
     facing: 0.5,
-    clip: 'GardenLook',
+    clip: 'SurveySky',
   },
   {
     id: 'observatory:cedar',
-    label: 'cedar observatory',
+    label: 'deep sky array',
     node: 'observatory:cedar',
     facing: -0.7,
-    clip: 'GardenLook',
+    clip: 'SurveySky',
   },
   {
     id: WOODLAND_HOLLOW.id,
@@ -96,7 +102,7 @@ export const DESTINATIONS: Destination[] = [
     label: DAWNLIGHT_GLASSHOUSE.label,
     node: DAWNLIGHT_GLASSHOUSE.id,
     facing: -Math.PI / 2,
-    clip: 'GardenLook',
+    clip: 'SampleScan',
   },
   {
     id: WINDWARD_MILL.id,

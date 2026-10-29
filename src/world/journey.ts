@@ -65,7 +65,7 @@ export class ResidentJourney extends ResidentMotion {
       if (options.leaving) {
         this.opacity = Math.max(0, this.opacity - dt * 3);
         this.moving = false;
-        this.activity = 'Leaving the grove';
+        this.activity = 'Leaving the colony';
         this.exited = this.opacity === 0;
         if (this.exited) this.traffic.release(this.identity);
         return;

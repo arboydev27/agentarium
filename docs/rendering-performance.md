@@ -1,5 +1,9 @@
 # Rendering performance
 
+> The frame-time and scene-counter measurements below describe historical Earth-world builds. They are not performance measurements of the Mars colony. Re-profile the current production build before treating them as a budget. Current rendering architecture is documented in [World layout](world-layout.md).
+
+The completed Mars asset rollout ships a shared fifteen-module hardware GLB of 8,728,944 bytes (about 8.3 MiB), plus a separate reference habitat of about 6.8 MiB. The 10 MiB hardware test cap and per-module mesh limits are export guardrails, not benchmarks of network loading, GPU memory, or frame time. Material texture sampling and authored detail add rendering work; shared cached geometry/materials and per-material export merging limit duplication. No controlled performance benchmark was run for this rollout. See [World asset upgrade](world-asset-upgrade.md) for implementation and review scope.
+
 Append `?renderStats=1` to the local app URL, for example `http://127.0.0.1:5173/?renderStats=1`. A small overlay reports average interval FPS, the 95th-percentile frame interval, renderer draw calls and triangles, allocated geometry/texture counts, and the current number of full-detail terrain tiles. Remove the query parameter and reload to disable it. Nothing is transmitted or persisted.
 
 ## What the numbers mean

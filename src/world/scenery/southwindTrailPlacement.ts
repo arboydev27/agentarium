@@ -2,7 +2,7 @@
 // Keep this module independent of terrain: scenery and navigation apply their own walkable y.
 export const SOUTHWIND_SHORE = {
   id: 'southwind:east-shore',
-  label: 'Southwind Mere shore',
+  label: 'Southwind Crater rim',
   x: -42,
   z: 43,
   clearingRadius: 2.8,

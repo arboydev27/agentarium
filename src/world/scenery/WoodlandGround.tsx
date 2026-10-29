@@ -1,3 +1,4 @@
+import { WorldSurfaceMaterial } from '../WorldSurfaceMaterial';
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { renderedTerrainHeight } from '../terrain';
@@ -52,7 +53,12 @@ function WoodlandTrail() {
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <mesh name="woodland-hollow-trail" geometry={geometry} receiveShadow>
-      <meshStandardMaterial vertexColors roughness={1} side={THREE.DoubleSide} />
+      <WorldSurfaceMaterial
+        family="cast-foundation"
+        vertexColors
+        roughness={1}
+        side={THREE.DoubleSide}
+      />
     </mesh>
   );
 }
@@ -85,7 +91,12 @@ function HollowClearing() {
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <mesh name="woodland-hollow-arrival" geometry={geometry} receiveShadow>
-      <meshStandardMaterial vertexColors roughness={1} side={THREE.DoubleSide} />
+      <WorldSurfaceMaterial
+        family="cast-foundation"
+        vertexColors
+        roughness={1}
+        side={THREE.DoubleSide}
+      />
     </mesh>
   );
 }

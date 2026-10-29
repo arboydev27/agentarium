@@ -1,8 +1,9 @@
+import { TerrainApron } from '../TerrainApron';
+import { WorldSurfaceMaterial } from '../WorldSurfaceMaterial';
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { OBSERVATORY } from '../layout';
-import { meadowTrailPoint, terrainHeight, walkwayHeight } from '../terrain';
-import { Cylinder } from '../primitives';
+import { meadowTrailPoint, walkwayHeight } from '../terrain';
 import { OBSERVATORY_BRANCH } from './observatoryPlacement';
 
 function ObservatoryPath() {
@@ -54,22 +55,18 @@ function ObservatoryPath() {
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <mesh name="cedar-observatory-path" geometry={geometry} receiveShadow>
-      <meshStandardMaterial vertexColors roughness={1} side={THREE.DoubleSide} />
+      <WorldSurfaceMaterial
+        family="cast-foundation"
+        vertexColors
+        roughness={1}
+        side={THREE.DoubleSide}
+      />
     </mesh>
   );
 }
 
 function ObservatoryPad() {
-  const ground = terrainHeight(OBSERVATORY.x, OBSERVATORY.z);
-  return (
-    <group name="cedar-observatory-pad" position={[OBSERVATORY.x, ground, OBSERVATORY.z]}>
-      <Cylinder pos={[0, 0.025, 0]} r={3.25} h={0.16} color="#aeb3a1" />
-      <mesh position={[0, 0.11, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <ringGeometry args={[2.85, 3.16, 32]} />
-        <meshStandardMaterial color="#ddd7bd" roughness={1} side={THREE.DoubleSide} />
-      </mesh>
-    </group>
-  );
+  return <TerrainApron x={OBSERVATORY.x} z={OBSERVATORY.z} radius={3.25} />;
 }
 
 export function ObservatoryGround() {

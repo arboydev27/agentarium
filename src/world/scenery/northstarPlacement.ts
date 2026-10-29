@@ -1,7 +1,7 @@
 // Terrain-independent plan for the orchard approach to the northern outpost.
 export const NORTHSTAR_OUTPOST = {
   id: 'northstar:outpost',
-  label: 'Northstar Outpost',
+  label: 'Northstar Spaceport',
   x: 43,
   z: -112,
   centerX: 43,

@@ -1,3 +1,4 @@
+import { WorldSurfaceMaterial } from '../WorldSurfaceMaterial';
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { renderedTerrainHeight } from '../terrain';
@@ -52,7 +53,12 @@ function NorthstarTrail() {
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <mesh name="northstar-highland-trail" geometry={geometry} receiveShadow>
-      <meshStandardMaterial vertexColors roughness={1} side={THREE.DoubleSide} />
+      <WorldSurfaceMaterial
+        family="cast-foundation"
+        vertexColors
+        roughness={1}
+        side={THREE.DoubleSide}
+      />
     </mesh>
   );
 }
@@ -85,7 +91,12 @@ function OutpostArrival() {
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <mesh name="northstar-arrival-pad" geometry={geometry} receiveShadow>
-      <meshStandardMaterial vertexColors roughness={1} side={THREE.DoubleSide} />
+      <WorldSurfaceMaterial
+        family="cast-foundation"
+        vertexColors
+        roughness={1}
+        side={THREE.DoubleSide}
+      />
     </mesh>
   );
 }

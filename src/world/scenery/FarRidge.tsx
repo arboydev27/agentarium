@@ -1,3 +1,4 @@
+import { WorldSurfaceMaterial } from '../WorldSurfaceMaterial';
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useWorld } from '../../state';
@@ -39,7 +40,7 @@ function RidgeFace() {
     const positions: number[] = [];
     const colors: number[] = [];
     const indices: number[] = [];
-    const palette = ['#879b75', '#657f72', '#83998e'].map((value) => new THREE.Color(value));
+    const palette = ['#ba7959', '#79443c', '#a36550'].map((value) => new THREE.Color(value));
     ROWS.forEach((z, row) => {
       for (let i = 0; i <= SEGMENTS; i++) {
         const x = -SPAN / 2 + (i / SEGMENTS) * SPAN;
@@ -63,7 +64,13 @@ function RidgeFace() {
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <mesh name="northern-scenic-ridge" geometry={geometry} receiveShadow>
-      <meshStandardMaterial vertexColors roughness={1} flatShading side={THREE.DoubleSide} />
+      <WorldSurfaceMaterial
+        family="ironstone"
+        vertexColors
+        roughness={1}
+        flatShading
+        side={THREE.DoubleSide}
+      />
     </mesh>
   );
 }
@@ -73,13 +80,26 @@ function WeatheredArch() {
   const z = -99;
   return (
     <group name="distant-weathered-arch" position={[x, ridgeHeight(x, z), z]}>
-      <Box pos={[-1.65, 2.35, 0]} size={[0.88, 4.7, 0.83]} color="#8a9489" radius={0} />
-      <Box pos={[1.65, 1.98, 0]} size={[0.82, 3.96, 0.78]} color="#9ca49b" radius={0} />
       <Box
+        finish="ironstone"
+        pos={[-1.65, 2.35, 0]}
+        size={[0.88, 4.7, 0.83]}
+        color="#995b48"
+        radius={0}
+      />
+      <Box
+        finish="ironstone"
+        pos={[1.65, 1.98, 0]}
+        size={[0.82, 3.96, 0.78]}
+        color="#af7158"
+        radius={0}
+      />
+      <Box
+        finish="ironstone"
         pos={[-0.07, 4.75, 0]}
         size={[4.3, 0.6, 0.9]}
         rotation={[0, 0, -0.08]}
-        color="#b1b5a6"
+        color="#cd9571"
         radius={0}
       />
     </group>
@@ -104,7 +124,7 @@ function RidgeStones() {
     const rotation = new THREE.Quaternion();
     const position = new THREE.Vector3();
     const scale = new THREE.Vector3();
-    const shades = ['#aeb5a5', '#8e9e92', '#b9b4a2'].map((value) => new THREE.Color(value));
+    const shades = ['#bf8567', '#8d5345', '#d19e79'].map((value) => new THREE.Color(value));
     sites.forEach(({ x, z, size, index }, slot) => {
       matrix.compose(
         position.set(x, ridgeHeight(x, z) + size * 0.28, z),
@@ -125,7 +145,7 @@ function RidgeStones() {
   return (
     <instancedMesh ref={stones} args={[undefined, undefined, sites.length]}>
       <dodecahedronGeometry args={[1, 0]} />
-      <meshStandardMaterial roughness={1} flatShading />
+      <WorldSurfaceMaterial family="ironstone" roughness={1} flatShading />
     </instancedMesh>
   );
 }

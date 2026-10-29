@@ -1,0 +1,23 @@
+{
+  "source": "assets/blender/world-kit.blend",
+  "generator": "assets/blender/build_world_kit.py",
+  "modules": [
+    "pressure-habitat",
+    "solar-rack",
+    "sensor-mast",
+    "service-wall",
+    "resource-tank",
+    "survey-rover",
+    "survey-rocket",
+    "launch-gantry",
+    "control-cabin",
+    "communications-dish",
+    "workstation",
+    "telescope",
+    "orbital-relay",
+    "survey-console",
+    "sample-cabinet"
+  ],
+  "units": "metres",
+  "front": "+Z in glTF"
+}

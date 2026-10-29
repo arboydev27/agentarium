@@ -1,11 +1,11 @@
 export const ACCESSORIES = [
-  'headphones',
-  'cap',
+  'sensor-pods',
+  'cranial-crest',
   'antenna',
-  'glasses',
-  'beret',
+  'compound-optics',
+  'swept-horns',
   'ear-fins',
-  'flower',
+  'crystal-crown',
   'visor',
 ] as const;
 export function residentStyle(identity: string) {

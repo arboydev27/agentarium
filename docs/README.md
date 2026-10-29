@@ -1,8 +1,11 @@
 # Agentarium documentation
 
-Agentarium is the repository; **Agent Grove** is the product name shown in the application. It visualizes agent activity as residents in a 3D world. The browser starts with simulated activity. Real activity requires the separate local bridge and a configured telemetry adapter.
+**Agentarium** visualizes agent activity as residents in a Mars-inspired 3D colony. The browser starts with simulated activity. Real activity requires the separate local bridge and a configured telemetry adapter.
 
 Implementation guides describe the current code; planning documents are explicitly marked as proposed. The product plans were added September 29, 2026. Source files linked throughout are the authority when behavior changes.
+
+- [World asset upgrade](world-asset-upgrade.md): completed family coverage, shared Blender kit, material pipeline, review evidence, and limits.
+- [Blender reference habitat](blender-habitat.md): editable reference source, PBR materials, export workflow, and reference-area validation.
 
 ## Reading guide
 
@@ -39,6 +42,8 @@ The Agentarium plan tracks an implementation in progress; its usage guide distin
 
 The implementation includes an eight-seat 3D environment, a simulator, a live event bridge, SQLite snapshots, provider adapters, and optional browser automation tools. It observes external agents; it does not launch real AI work, manage provider credentials, or schedule tasks. A working resident indicates the latest reported status, not independent proof that a model is currently computing.
 
-The project currently uses a shared robot rig with color variants and procedural scenery. The expanded district includes local walking routes and camera-aware decorative detail. A wider landscape surrounds it, with authored routes to northern landmarks, Southwind Mere, Dawnlight Glasshouse, and Windward Mill. Camera travel also reaches scenic-only Amber Bluff in the southwest; it has no resident route. Residents have eight accessory styles and authored cross-zone navigation. Optional meadow groundcover uses spatial chunks, while nearby landmark décor mounts by region; terrain, routes, lake, and ridge remain loaded. Nine authored landmark modules now load asynchronously with silhouettes and isolated recovery. Custom human characters, generated navmeshes, unbounded terrain streaming, and film-quality animation remain future work. Provider adapters have fixture tests; compatibility with a particular installed provider must be verified in that environment.
+The project uses a shared animated rig with alien equipment, identity-based palettes, and authored travel between colony facilities. Continuous desert terrain, craters, and distant mountains surround the settlement. Terrain combines fine nearby tiles and coarse coverage; inactive landmarks retain silhouettes. Colony, Planet, and Solar system views share task context. Northstar Spaceport includes a decorative rocket cycle and rover. Generated navmeshes, unbounded terrain, bespoke character bodies, and film-quality animation remain future work. Provider adapters have fixture tests; compatibility with a particular installed provider must be verified in that environment.
+
+See [Mars reinvention](mars-reinvention.md) for implementation evidence and limitations.
 
 - [Managing live sessions](session-management.md): pins, hiding, restoration, saved choices, and attention.

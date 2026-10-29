@@ -1,3 +1,4 @@
+import { REFERENCE_HABITAT } from './scenery/referenceHabitatPlacement';
 import type { Agent } from '../state';
 import { attentionFor } from '../shared/work.mjs';
 import { landscapeBiomeAt } from './biomes';
@@ -46,7 +47,11 @@ export function districtAt(x: number, z: number): WorldLocation {
       return name;
   }
   if (Math.hypot(x - LOOKOUT.x, z - LOOKOUT.z) <= LOOKOUT.focusRadius) return 'lookout';
-  if (Math.hypot(x - ORCHARD.x, z - ORCHARD.z) <= ORCHARD.focusRadius) return 'orchard';
+  if (
+    Math.hypot(x - ORCHARD.x, z - ORCHARD.z) <= ORCHARD.focusRadius ||
+    Math.hypot(x - REFERENCE_HABITAT.x, z - REFERENCE_HABITAT.z) <= 8
+  )
+    return 'orchard';
   if (
     Math.hypot(x - NORTHSTAR_OUTPOST.centerX, z - NORTHSTAR_OUTPOST.centerZ) <=
     NORTHSTAR_OUTPOST.focusRadius

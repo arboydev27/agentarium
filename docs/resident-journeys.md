@@ -4,35 +4,33 @@ Residents now have distinct looks and can visit destinations beyond their assign
 
 ## Identity and appearance
 
-`personality.ts` derives a stable profile from resident identity, not seat index. The eight demo residents intentionally cover all eight styles: headphones, cap, antennae, glasses, beret, ear fins, flower, and visor. Live identities deterministically select a style; different sessions can share one. Accent/trim palettes, pace (1.08–1.32 world units/second), rest time (10–18 seconds), destination preference, and visit duration (7–13 seconds) vary with the profile.
+`personality.ts` derives a stable profile from resident identity, not seat index. The eight demo residents intentionally cover all eight styles: sensor pods, cranial crest, antennae, compound optics, swept horns, ear fins, crystal crown, and visor. Live identities deterministically select a style; different sessions can share one. Accent/trim palettes, pace (1.08–1.32 world units/second), rest time (10–18 seconds), destination preference, and visit duration (7–13 seconds) vary with the profile.
 
 Accessories are original procedural geometry attached to the bundled robot's animated head. The existing body rig and proportions are preserved for reliable keyboard contact and chair alignment. This milestone does not add eight new body meshes or human characters. Accessories remain visible at low quality and under reduced motion. Owned geometry/materials are disposed when residents leave; the shared GLB geometry is retained.
 
-The shared rig's standing rest, bench rest, café break, and garden look loops now include small head, torso, and arm gestures. Their feet and hips remain anchored to the original floor or seat pose, and the desk-hand alignment remains separate. These are cosmetic movements; they do not represent provider activity.
+The shared rig's standing rest, bench rest, service-station break, survey, and sample-inspection loops now include small head, torso, and arm gestures. Their feet and hips remain anchored to the original floor or seat pose, and the desk-hand alignment remains separate. These are cosmetic movements; they do not represent provider activity.
 
 ## Destinations and routes
 
-Fourteen destination slots are available:
+Eighteen destination slots are available. `DESTINATIONS` in `navigation.ts` is authoritative; two Resource Lab slots and two trail rests have separate reservations.
 
-| Destination          | Visual activity          |
-| -------------------- | ------------------------ |
-| Café counter         | Standing café-break pose |
-| Café window          | Looking around           |
-| Garden west terrace  | Looking around           |
-| Garden east terrace  | Relaxing                 |
-| Courtyard bench      | Seated rest              |
-| Courtyard basin      | Looking at the water     |
-| Studio terrace       | Relaxing                 |
-| Tree-lined path      | Looking around           |
-| Meadow Lookout       | Looking around           |
-| Orchard Commons      | Looking around           |
-| Cedar Observatory    | Looking around           |
-| Western Trail Rest   | Looking around           |
-| Eastern Trail Rest   | Relaxing                 |
-| Southwind Mere shore | Looking around           |
-| Dawnlight glasshouse | Looking around           |
+| Destination                         | Visual activity              |
+| ----------------------------------- | ---------------------------- |
+| Habitat service station / viewport  | Break / looking around       |
+| Resource Lab west / east            | Sample inspection / rest     |
+| Comms rest station / signal console | Seated rest / looking around |
+| Research terrace / survey route     | Rest / looking around        |
+| Survey Lookout                      | Sky survey                   |
+| Expedition Base                     | Looking around               |
+| Northstar Spaceport                 | Sky survey                   |
+| Deep Sky Array                      | Sky survey                   |
+| Basalt Field Station                | Looking around               |
+| Dawnlight Biolab                    | Sample inspection            |
+| Helios Power Field                  | Looking around               |
+| Southwind Crater rim                | Sample inspection            |
+| Western / Eastern Trail Rest        | Looking around / rest        |
 
-The navigation graph connects each desk's existing resting point to authored clear lanes, central paths, stairs, and destination branches. Shortest-path planning uses geometric edge distance. Routes include floor heights, studio stair elevations, terrain-aligned northern trail samples leading to Meadow Lookout, Orchard Commons, Cedar Observatory, and two side rests, plus a southern path from the courtyard to Southwind Mere's dry eastern shore and an eastern path from the promenade to Dawnlight Glasshouse. The western rest has a bench; the eastern rest has a wayfinder. Destinations are terminal branches so a resting resident does not occupy a through-route. The rests are ordinary destinations, not passing lanes or traffic-control points. This is pathfinding over authored waypoints, not a generated navmesh, physics engine, or arbitrary obstacle avoidance.
+The navigation graph connects each desk's existing resting point to authored clear lanes, central paths, stairs, and destination branches. Shortest-path planning uses geometric edge distance. Routes include floor heights, studio stair elevations, terrain-aligned northern trail samples leading to Survey Lookout, Expedition Base, Deep Sky Array, and two side rests, plus a southern path from the courtyard to Southwind Crater's dry eastern shore and an eastern path from the promenade to Dawnlight Biolab. The western rest has a bench; the eastern rest has a wayfinder. Destinations are terminal branches so a resting resident does not occupy a through-route. The rests are ordinary destinations, not passing lanes or traffic-control points. This is pathfinding over authored waypoints, not a generated navmesh, physics engine, or arbitrary obstacle avoidance.
 
 A resident first finishes its local desk transition and any eligible completion reaction. After its profile's rest interval, it attempts an outing. It tries preferred destinations in a rotating order, visits an available one, rests, and returns home. If no route is available, it waits near its desk and retries after roughly one second.
 
@@ -40,7 +38,7 @@ A resident first finishes its local desk transition and any eligible completion 
 
 Each destination has an exclusive lease. A traveling resident atomically reserves its route ahead, including named nodes, edges, and grid cells covering overlapping physical lanes even when their waypoint names differ. Nodes and lane cells are released after the resident clears them by 0.95 units, allowing a new trip into a cleared branch without waiting for the first resident to reach its destination. A routine post-visit return reclaims its path before reversing. When work interrupts an outbound trip, the resident instead claims only the traversed prefix and releases the unused distant tail and destination. The pending return claim still protects its current position and has priority over new outings. Leases are released on return, removal, reduced-motion placement, and unmount.
 
-This deliberately conservative scheme prevents head-on meetings and partial-lock deadlocks. It can make a resident wait longer than local steering would because the path ahead remains reserved. Orchard Commons is roughly 100 route units from the central path, so a complete return can take over 90 seconds at the slowest resident pace even without contention. A paused or stale traveler keeps its corridor so other residents do not walk through it. If an interrupted resident cannot reclaim its return prefix for eight seconds of active travel, it fades out offsite, releases all leases once invisible, and fades in at its home rest point. A routine post-visit return has a 25-second allowance. These timeouts pause with travel, but a fade already underway finishes during a pause so it can release its leases. The resident remains invisible at home until playback resumes. The fallback changes only the cosmetic journey. Two routes at different elevations may also block each other if their ground-plane footprints overlap. It does not reroute around arbitrary newly placed props or allow same-direction convoys. Before expanding capacity, consider passing lanes and a crowd-steering layer.
+This deliberately conservative scheme prevents head-on meetings and partial-lock deadlocks. It can make a resident wait longer than local steering would because the path ahead remains reserved. Expedition Base is roughly 100 route units from the central path, so a complete return can take over 90 seconds at the slowest resident pace even without contention. A paused or stale traveler keeps its corridor so other residents do not walk through it. If an interrupted resident cannot reclaim its return prefix for eight seconds of active travel, it fades out offsite, releases all leases once invisible, and fades in at its home rest point. A routine post-visit return has a 25-second allowance. These timeouts pause with travel, but a fade already underway finishes during a pause so it can release its leases. The resident remains invisible at home until playback resumes. The fallback changes only the cosmetic journey. Two routes at different elevations may also block each other if their ground-plane footprints overlap. It does not reroute around arbitrary newly placed props or allow same-direction convoys. Before expanding capacity, consider passing lanes and a crowd-steering layer.
 
 ## Work takes priority
 
@@ -54,9 +52,9 @@ When a session is removed near its desk, the existing walk-out/fade remains. Whe
 
 ## Seeing what a resident is doing
 
-Select a resident to see its cosmetic activity in its world label—for example, Walking to café counter, Resting at courtyard bench, or Returning to desk. All resident-label tooltips expose that activity. The inspector identifies the assigned zone as **Home**, which remains stable while the resident travels. Follow resident tracks actual moving position; camera presets, including WebMCP view changes, cancel follow. The raised follow angle reduces foreground obstruction but does not guarantee an unobstructed view from every direction.
+Select a resident to see its cosmetic activity in its world label—for example, Walking to habitat service station, Resting at comms rest station, or Returning to desk. All resident-label tooltips expose that activity. The inspector identifies the assigned zone as **Home**, which remains stable while the resident travels. Follow resident tracks actual moving position; camera presets, including WebMCP view changes, cancel follow. The raised follow angle reduces foreground obstruction but does not guarantee an unobstructed view from every direction.
 
-Demo automatic ticks leave idle residents alone for at least 60 seconds while outings are enabled so visits can be seen. One demo resident prefers Southwind Mere and another Meadow Lookout on their first outings, making both distant routes observable during ordinary simulation; other destinations remain in rotation. Manual task/status controls remain immediate, and live telemetry has no such delay. Simulation speed controls event scheduling; walking pace remains measured in real seconds. Outing preferences and positions are temporary, not saved journeys.
+Demo automatic ticks leave idle residents alone for at least 60 seconds while outings are enabled so visits can be seen. One demo resident prefers Southwind Crater and another Survey Lookout on their first outings, making both distant routes observable during ordinary simulation; other destinations remain in rotation. Manual task/status controls remain immediate, and live telemetry has no such delay. Simulation speed controls event scheduling; walking pace remains measured in real seconds. Outing preferences and positions are temporary, not saved journeys.
 
 ## Expanding safely
 

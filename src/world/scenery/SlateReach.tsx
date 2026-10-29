@@ -1,3 +1,4 @@
+import { WorldSurfaceMaterial } from '../WorldSurfaceMaterial';
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useWorld } from '../../state';
@@ -41,7 +42,7 @@ function SlateFins() {
   return (
     <instancedMesh ref={fins} args={[undefined, undefined, FINS.length]} castShadow>
       <cylinderGeometry args={[0.35, 1, 1, 5]} />
-      <meshStandardMaterial roughness={1} flatShading />
+      <WorldSurfaceMaterial family="ironstone" roughness={1} flatShading />
     </instancedMesh>
   );
 }
@@ -54,11 +55,11 @@ function WindsweptCedar() {
     <group name="slate-reach-cedar" position={[x, ground, z]} rotation={[0, 0, -0.2]}>
       <mesh position={[0, 1.65, 0]} castShadow>
         <cylinderGeometry args={[0.13, 0.32, 3.3, 6]} />
-        <meshStandardMaterial color="#685e50" roughness={1} flatShading />
+        <WorldSurfaceMaterial family="ironstone" color="#685e50" roughness={1} flatShading />
       </mesh>
       <mesh position={[0.4, 4.15, 0]} castShadow>
         <coneGeometry args={[1.35, 3.5, 7]} />
-        <meshStandardMaterial color="#4c6c64" roughness={1} flatShading />
+        <WorldSurfaceMaterial family="ironstone" color="#4c6c64" roughness={1} flatShading />
       </mesh>
     </group>
   );
@@ -106,7 +107,7 @@ function Scree() {
   return (
     <instancedMesh ref={stones} args={[undefined, undefined, sites.length]}>
       <dodecahedronGeometry args={[1, 0]} />
-      <meshStandardMaterial roughness={1} flatShading />
+      <WorldSurfaceMaterial family="ironstone" roughness={1} flatShading />
     </instancedMesh>
   );
 }
@@ -116,7 +117,6 @@ export function SlateReach() {
   return (
     <group name="slate-reach-scenic-only">
       <SlateFins />
-      <WindsweptCedar />
       {quality === 'high' && <Scree />}
     </group>
   );

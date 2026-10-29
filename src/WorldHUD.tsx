@@ -84,7 +84,7 @@ export function WorldHUD({
       </button>
       <div className="world-hud-details" id="world-hud-details">
         <div className="world-location">
-          <h1>The Grove</h1>
+          <h1>The Colony</h1>
           <span aria-hidden="true">/</span>
           <span className="world-location-name">{WORLD_LOCATION_LABELS[location]}</span>
         </div>

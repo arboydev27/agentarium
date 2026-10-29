@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { WorldSurfaceMaterial } from '../WorldSurfaceMaterial';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useWorld } from '../../state';
@@ -37,7 +38,7 @@ function MeadowChunk({
   const hummocks = useRef<THREE.InstancedMesh>(null);
   const blooms = useRef<THREE.InstancedMesh>(null);
   const stones = useRef<THREE.InstancedMesh>(null);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!hummocks.current && pieces.patches.length) return;
     if (!stones.current && pieces.rocks.length) return;
     if (!blooms.current && pieces.flowers.length) return;
@@ -45,12 +46,12 @@ function MeadowChunk({
     const position = new THREE.Vector3();
     const scale = new THREE.Vector3();
     const rotation = new THREE.Quaternion();
-    const greens = ['#779361', '#8fa472', '#6f8d65', '#a4ae79'].map((c) => new THREE.Color(c));
+    const greens = ['#b77956', '#c58b63', '#9a634c', '#dba577'].map((c) => new THREE.Color(c));
     const petals = ['#dfad81', '#e7cb91', '#d79b87', '#eadab0'].map((c) => new THREE.Color(c));
-    const stoneColors = ['#b0aa8d', '#d0c4a1', '#9ba18a'].map((c) => new THREE.Color(c));
-    const patchBiome = ['#426f53', '#8a9a90', '#b49b5c'].map((c) => new THREE.Color(c));
+    const stoneColors = ['#9a6654', '#d0a17d', '#795047'].map((c) => new THREE.Color(c));
+    const patchBiome = ['#75453c', '#956052', '#c18e60'].map((c) => new THREE.Color(c));
     const flowerBiome = ['#d7d7b2', '#d8d4c2', '#efb775'].map((c) => new THREE.Color(c));
-    const rockBiome = ['#899486', '#a2adaa', '#b3946d'].map((c) => new THREE.Color(c));
+    const rockBiome = ['#825246', '#ac7962', '#b3946d'].map((c) => new THREE.Color(c));
     const tint = new THREE.Color();
     const target = new THREE.Color();
     const colorAt = (base: THREE.Color, x: number, z: number, palette: THREE.Color[]) => {

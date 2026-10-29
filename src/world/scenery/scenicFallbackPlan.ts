@@ -1,14 +1,14 @@
+import { REFERENCE_HABITAT } from './referenceHabitatPlacement';
 import type { ScenicRegionId } from '../scenicVisibility';
-import { LOOKOUT, OBSERVATORY } from '../layout';
-import { ORCHARD_PAVILION } from './orchardPlacement';
+import { LOOKOUT, OBSERVATORY, ORCHARD } from '../layout';
 import { AMBER_BLUFF } from './amberPlacement';
-import { DAWNLIGHT_GLASSHOUSE } from './dawnlightPlacement';
+import { BIOLAB_HABITATS, DAWNLIGHT_GLASSHOUSE } from './dawnlightPlacement';
 import { WINDWARD_MILL } from './windwardPlacement';
 import { WOODLAND_SHELTER_XZ } from './woodlandPlacement';
 import { NORTHSTAR_TOWER_XZ } from './northstarPlacement';
 import { SLATE_REACH } from './slatePlacement';
 
-export type FallbackShape = 'box' | 'cylinder' | 'cone';
+export type FallbackShape = 'box' | 'cylinder' | 'cone' | 'dome';
 export type FallbackTone = 'wood' | 'green' | 'stone' | 'amber' | 'brass' | 'clay';
 type Triple = [number, number, number];
 export type FallbackPart = Readonly<{
@@ -36,56 +36,29 @@ function part(
   return { shape, tone, position, scale, rotation };
 }
 
-// Open frames retain the authored roof outline without adding a floor, walls,
-// furniture, signs, vegetation, or a new resident interaction target.
-function canopy(
-  halfWidth: number,
-  halfDepth: number,
-  eave: number,
-  rise: number,
-  tone: FallbackTone,
-): FallbackPart[] {
-  const slope = Math.atan2(rise, halfWidth);
-  const rafterLength = Math.hypot(halfWidth, rise);
-  return [
-    ...[-halfWidth, halfWidth].flatMap((x) =>
-      [-halfDepth, halfDepth].map((z) => part('box', 'wood', [x, eave / 2, z], [0.14, eave, 0.14])),
-    ),
-    ...[-halfDepth, halfDepth].flatMap((z) =>
-      [-1, 1].map((side) =>
-        part(
-          'box',
-          tone,
-          [(side * halfWidth) / 2, eave + rise / 2, z],
-          [rafterLength, 0.18, 0.18],
-          [0, 0, -side * slope],
-        ),
-      ),
-    ),
-    part('box', tone, [0, eave + rise, 0], [0.18, 0.18, halfDepth * 2]),
-    ...[-halfWidth, halfWidth].map((x) =>
-      part('box', tone, [x, eave, 0], [0.16, 0.16, halfDepth * 2]),
-    ),
-  ];
-}
-
 export const SCENIC_FALLBACK_PLANS: Readonly<Record<ScenicRegionId, ScenicFallbackPlan>> = {
   lookout: {
-    label: 'Meadow lookout',
+    label: 'Survey Lookout',
     origin: [LOOKOUT.x, LOOKOUT.z],
     heading: 0,
     retry: [-3.4, 4.1, -2.2],
-    parts: canopy(2.35, 2.2, 2.7, 0.9, 'green'),
+    parts: [
+      part('cylinder', 'wood', [-3.8, 2.6, -2.5], [0.11, 5.2, 0.11]),
+      part('box', 'green', [-3.8, 4.8, -2.5], [2.1, 0.14, 0.18]),
+    ],
   },
   orchard: {
-    label: 'Orchard commons',
-    origin: [ORCHARD_PAVILION.x, ORCHARD_PAVILION.z],
+    label: 'Expedition Base',
+    origin: [REFERENCE_HABITAT.x, REFERENCE_HABITAT.z],
     heading: 0,
     retry: [3.6, 5.4, 0],
-    parts: canopy(2.8, 2.1, 4.1, 0.9, 'clay'),
+    parts: [
+      part('box', 'wood', [0, 2.5, 0], [7.2, 3.75, 4.35]),
+      part('box', 'stone', [0, 1.9, 2.7], [2.1, 2.7, 1.6]),
+    ],
   },
   observatory: {
-    label: 'Cedar observatory',
+    label: 'Deep Sky Array',
     origin: [OBSERVATORY.x, OBSERVATORY.z],
     heading: 0,
     retry: [-3.4, 3.9, -1.6],
@@ -96,21 +69,19 @@ export const SCENIC_FALLBACK_PLANS: Readonly<Record<ScenicRegionId, ScenicFallba
   },
   dawnlight: {
     label: DAWNLIGHT_GLASSHOUSE.label,
-    origin: [DAWNLIGHT_GLASSHOUSE.centerX, DAWNLIGHT_GLASSHOUSE.centerZ],
-    heading: Math.atan2(12, 9),
+    origin: [BIOLAB_HABITATS[0].x, BIOLAB_HABITATS[0].z],
+    heading: 0,
     retry: [-5.5, 5.6, 0],
-    parts: canopy(4.8, 3.3, 3.35, 1.7, 'green'),
+    parts: [part('dome', 'wood', [0, 0.4, 0], [2.8, 2.8, 2.8])],
   },
   windward: {
     label: WINDWARD_MILL.label,
     origin: [WINDWARD_MILL.centerX, WINDWARD_MILL.centerZ],
-    heading: Math.atan2(-15, 20),
-    retry: [3.9, 8.4, 0],
+    heading: 0,
+    retry: [0, 4, 0],
     parts: [
-      part('cylinder', 'stone', [0, 2.9, 0], [1.65, 5.8, 1.65]),
-      part('cone', 'green', [0, 6.8, 0], [2, 1.8, 2]),
-      part('box', 'wood', [0, 6.15, 2.13], [0.22, 7.1, 0.18], [0, 0, Math.PI / 4]),
-      part('box', 'wood', [0, 6.15, 2.13], [7.1, 0.22, 0.18], [0, 0, Math.PI / 4]),
+      part('dome', 'wood', [0, 0.4, 0], [2.8, 2.8, 2.8]),
+      part('box', 'green', [-8, 1.65, -5], [4.2, 0.15, 2.2]),
     ],
   },
   amber: {
@@ -125,25 +96,21 @@ export const SCENIC_FALLBACK_PLANS: Readonly<Record<ScenicRegionId, ScenicFallba
     ],
   },
   woodland: {
-    label: 'Lantern Hollow',
+    label: 'Basalt Field Station',
     origin: WOODLAND_SHELTER_XZ,
     heading: Math.PI / 4,
     retry: [-3.2, 4.2, 0],
-    parts: canopy(1.88, 1.32, 2.8, 0.8, 'green'),
+    parts: [part('dome', 'wood', [0, 0.4, 0], [2.8, 2.8, 2.8])],
   },
   northstar: {
-    label: 'Northstar Outpost',
+    label: 'Northstar Spaceport',
     origin: NORTHSTAR_TOWER_XZ,
-    heading: Math.atan2(-18, -12),
+    heading: 0,
     retry: [3.4, 8.8, 0],
     parts: [
-      ...[-1.55, 1.55].flatMap((x) =>
-        [-1.55, 1.55].map((z) => part('box', 'wood', [x, 2.5, z], [0.19, 5, 0.19])),
-      ),
-      part('cone', 'green', [0, 6.88, 0], [2.45, 1.8, 2.45]),
-      part('cylinder', 'brass', [0, 5.8, 0], [0.28, 0.8, 0.28]),
-      part('box', 'brass', [0, 8.2, 0], [1.3, 0.12, 0.12]),
-      part('box', 'brass', [0, 8.2, 0], [0.12, 0.12, 1.3]),
+      part('cylinder', 'wood', [0, 4.1, 0], [0.74, 4.8, 0.74]),
+      part('cone', 'wood', [0, 7.1, 0], [0.74, 1.3, 0.74]),
+      part('box', 'green', [-2.6, 4.2, 0], [0.55, 8.4, 0.65]),
     ],
   },
   slate: {
