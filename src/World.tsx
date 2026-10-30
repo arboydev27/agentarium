@@ -33,6 +33,7 @@ import {
 import { SKY, SkyDome, SkyEnvironment, skyHorizonColor, useDayness } from './world/Sky';
 import { PostProcessing } from './world/PostProcessing';
 import { renderedTerrainHeight } from './world/terrain';
+import { STATUS_COLORS } from './world/statusColors';
 import {
   mapIsActive,
   publishMapSnapshot,
@@ -40,16 +41,6 @@ import {
   type ResidentPosition,
 } from './world/mapSnapshot';
 export { SEATS } from './world/motion';
-const statusColors = {
-  idle: '#98aaa0',
-  working: '#73ad69',
-  tool: '#75a6c4',
-  waiting: '#e9ae54',
-  completed: '#82b76a',
-  failed: '#d66c65',
-  disconnected: '#9f9ca7',
-  unknown: '#8a9784',
-};
 function Laptop({ status }: { status?: Status }) {
   const active = !!status && ['working', 'tool', 'waiting', 'failed'].includes(status);
   const screenColor =
@@ -377,7 +368,7 @@ function WorldLabel({
     button.title = agent.name;
     button.replaceChildren();
     const dot = document.createElement('i');
-    dot.style.background = statusColors[agent.status];
+    dot.style.background = STATUS_COLORS[agent.status];
     button.append(dot, document.createTextNode(agent.name));
     if (selected) {
       const activity = document.createElement('small');

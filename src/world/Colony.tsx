@@ -1,6 +1,7 @@
 import { WorldKit } from './scenery/WorldKit';
 import { Box, Cylinder, Sign } from './primitives';
 import { ZONES, type ZoneName } from './layout';
+import { Habitats } from './habitat/Habitats';
 
 const shell = '#e4d4bd';
 const frame = '#393d47';
@@ -16,6 +17,7 @@ function LightStrip({ position, width }: { position: [number, number, number]; w
   );
 }
 
+// Each deck is the floor of a pressurized module; the walls stand on its edge.
 function Deck({ zone }: { zone: ZoneName }) {
   const {
     center: [x, y, z],
@@ -31,42 +33,8 @@ function Deck({ zone }: { zone: ZoneName }) {
         radius={0.04}
       />
       {[-1, 1].map((side) => (
-        <LightStrip
-          key={side}
-          position={[x, y + 0.02, z + side * (d / 2 - 0.15)]}
-          width={w - 0.4}
-        />
+        <LightStrip key={side} position={[x, y + 0.02, z + side * (d / 2 - 0.3)]} width={w - 0.8} />
       ))}
-    </group>
-  );
-}
-
-// Rear service spines leave the existing seats, entrances and navigation aisles open.
-function Habitat({
-  x,
-  y,
-  z,
-  width,
-  title,
-}: {
-  x: number;
-  y: number;
-  z: number;
-  width: number;
-  title: string;
-}) {
-  return (
-    <group position={[x, y, z]} name={title}>
-      <group scale={[width / 10, 1, 1]}>
-        <WorldKit module="service-wall" />
-      </group>
-      <Sign
-        text={title}
-        pos={[0, 2.98, 0.39]}
-        size={[3.5, 0.33]}
-        color={shell}
-        background={frame}
-      />
     </group>
   );
 }
@@ -96,24 +64,14 @@ function ResourceBank() {
   );
 }
 
-function Communications() {
-  return (
-    <group name="colony-communications" position={[-1.5, 0.49, 8.1]}>
-      <WorldKit module="communications-dish" />
-    </group>
-  );
-}
-
 export function Colony() {
   return (
     <group name="mars-colony">
       {(Object.keys(ZONES) as ZoneName[]).map((zone) => (
         <Deck key={zone} zone={zone} />
       ))}
-      <Habitat x={-7} y={0.68} z={-8.9} width={11.5} title="HABITAT COMMONS" />
-      <Habitat x={7} y={1.1} z={-8.4} width={9} title="RESEARCH ARRAY" />
+      <Habitats />
       <ResourceBank />
-      <Communications />
       <Box
         finish="cast-foundation"
         pos={[-10.6, 1.04, 3.4]}

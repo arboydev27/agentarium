@@ -17,11 +17,27 @@ export type WorldKitModule =
   | 'telescope'
   | 'orbital-relay'
   | 'survey-console'
-  | 'sample-cabinet';
+  | 'sample-cabinet'
+  | 'hab-wall'
+  | 'hab-glass'
+  | 'hab-corner'
+  | 'hab-airlock'
+  | 'hab-gate'
+  | 'hab-airlock-flush'
+  | 'hab-roof'
+  | 'hab-radiator'
+  | 'hab-locker'
+  | 'hab-crate'
+  | 'hab-planter'
+  | 'hab-rack'
+  | 'hab-galley';
+
+/** Cache-busting query changes whenever the kit is regenerated. */
+export const WORLD_KIT_URL = '/models/world-kit/colony-hardware.glb?v=colony-6';
 
 /** Cache-owned geometry and materials are shared across independently placed clones. */
 export function WorldKit({ module }: { module: WorldKitModule }) {
-  const { scene } = useGLTF('/models/world-kit/colony-hardware.glb?v=colony-5');
+  const { scene } = useGLTF(WORLD_KIT_URL);
   const model = useMemo(() => {
     const source = scene.getObjectByName(module);
     if (!source) throw new Error(`World kit is missing ${module}`);

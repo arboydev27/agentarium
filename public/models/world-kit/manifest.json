@@ -16,7 +16,20 @@
     "telescope",
     "orbital-relay",
     "survey-console",
-    "sample-cabinet"
+    "sample-cabinet",
+    "hab-wall",
+    "hab-glass",
+    "hab-corner",
+    "hab-airlock",
+    "hab-gate",
+    "hab-airlock-flush",
+    "hab-roof",
+    "hab-radiator",
+    "hab-locker",
+    "hab-crate",
+    "hab-planter",
+    "hab-rack",
+    "hab-galley"
   ],
   "units": "metres",
   "front": "+Z in glTF"

@@ -12,7 +12,7 @@
 
 The kit contains the pressure hull, external ribs, airlock, access keypad, glazing, steps, handrails, radiator panels, service vents, coolant lines, oxygen tanks, equipment crates, fasteners, foundations, eroded rocks, and wind-deposited dust. The Blender file retains 131 separate authoring objects. Export copies are joined by material to reduce draw calls; joining does not flatten the source file.
 
-Built and tested using **Blender 4.5.8 LTS**, Apple Silicon. Regenerate from the repository root with an installed Blender executable:
+Built with **Blender 4.5.8 LTS** and regenerated with **Blender 5.2.2 LTS** (Homebrew cask `blender@lts`), Apple Silicon. Regenerate from the repository root with an installed Blender executable:
 
 ```sh
 blender --background --factory-startup --python assets/blender/build_habitat.py
@@ -20,7 +20,7 @@ blender --background --factory-startup --python assets/blender/build_habitat.py
 
 On macOS, the executable is commonly `/Applications/Blender.app/Contents/MacOS/Blender`. The development run used the official Blender disk image rather than installing an application globally.
 
-Running the generator overwrites its generated `.blend`, `.glb`, manifest, and texture files. Save manual Blender changes separately or incorporate them into the script before regeneration. The shared generator `assets/blender/build_world_kit.py` runs this reference generator first, so rebuilding the world kit also overwrites these reference outputs. `assets/blender/world-kit.blend` and `public/models/world-kit/colony-hardware.glb` are separate shared-kit artifacts; see the [module pipeline](world-asset-upgrade.md#shared-hardware-pipeline). The runtime GLB remains usable without Blender. Removing an asset from the scene does not require deleting its source; deleting the GLB requires removing or replacing the React reference.
+Running the generator overwrites its generated `.blend`, `.glb`, manifest, and texture files. Save manual Blender changes separately or incorporate them into the script before regeneration. The shared generator `assets/blender/build_world_kit.py` runs this reference generator first, so rebuilding the world kit also overwrites these reference outputs. `assets/blender/world-kit.blend` and `public/models/world-kit/colony-hardware.glb` are separate shared-kit artifacts; see the [module pipeline](world-asset-upgrade.md#shared-hardware-pipeline). The shared kit also carries the twelve `hab-*` habitat tiles and props that enclose the colony decks (Phase 3 of the [visual rebuild plan](visual-rebuild-plan.md)). The runtime GLB remains usable without Blender. Removing an asset from the scene does not require deleting its source; deleting the GLB requires removing or replacing the React reference.
 
 ## Material and terrain contract
 

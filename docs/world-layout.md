@@ -35,6 +35,8 @@ Slate Reach and Amber Bluff are scenic formations, not resident destinations. Au
 | Research Array  | 7, 1.1, −5             | 9.6 × 7.6     | 4, 5  |
 | Comms Court     | −6, 0.49, 5.5          | 11 × 7        | 6, 7  |
 
+Each deck is enclosed by a pressurized module (`src/world/habitat/habitatLayout.ts`). Walls stand on the deck edge except where a shared route runs within a body radius of it: the Habitat Commons south wall steps 0.8 m in from the concourse lane, the Resource Lab's north wall 0.9 m and its south wall 3.0 m (the Dawnlight trail crosses the deck's southern strip, which stays an open sampling terrace with the resource-lab rest spots), the Comms Court east wall 0.3 m from the promenade, and the Research Array's south wall stands 0.6 m outside its deck over a floored apron. Every door node keeps its airlock; the Southwind trail leaves Comms Court through a wider gate; ramps follow the walked chords.
+
 Seats anchor desks, laptops, chairs, and reversible local routes. Residents join an authored waypoint graph from their resting spots. Stair nodes encode floor changes; there is no generated collision mesh. Keep structures clear of routes, arrival pads, and the camera's view of arriving residents. See [Resident identity and journeys](resident-journeys.md).
 
 `terrain.ts` supplies smooth design heights and exact triangle-interpolated heights on the authoritative 254-segment grid. Most outer routes sit above the higher surface. The Basalt Field Station spur uses rendered triangle heights directly. Scenery uses terrain heights independently; broad structures such as the launchpad must account for their entire footprint, not only their center.

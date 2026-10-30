@@ -265,6 +265,144 @@ def sample_cabinet():
     for y in [-.4,-.2,0,.2,.4]:box('service vent',(.505,y,.65),(.015,.08,.25),black,.005)
     box('status readout',(0,.71,.85),(.45,.025,.23),glass,.02)
 
+
+# ---- Phase 3: pressurized habitat kit -------------------------------------
+# Tiles assemble into enclosures around the colony decks. Local convention for
+# wall-type tiles: the interior face lies on y=0, the exterior extends toward -Y
+# (glTF +Z), x runs along the wall, z is height with the floor at z=0. Dust
+# skirts drop below the floor so decks of different heights meet the ground.
+# Trim parts skip bevels: they are centimetres wide and the GLB budget is tight.
+warm=plain('interior lamp',(1.0,.82,.6),0,.4,2.6)
+liner=plain('interior liner',(.76,.73,.66),0,.8)
+leaf=plain('hydroponic foliage',(.28,.52,.22),0,.75)
+grow=plain('grow lamp',(.95,.45,.85),0,.3,2.5)
+def trim(name,pos,size,mat):return box(name,pos,size,mat,0)
+def stud(name,pos,r,depth,mat,axis='Z',verts=8):
+    bpy.ops.mesh.primitive_cylinder_add(vertices=verts,radius=r,depth=depth,location=pos)
+    o=bpy.context.object
+    if axis=='X':o.rotation_euler[1]=math.pi/2
+    if axis=='Y':o.rotation_euler[0]=math.pi/2
+    finish(o,name,mat,0)
+    for f in o.data.polygons:f.use_smooth=True
+    return o
+
+def hab_wall():
+    box('insulated wall panel',(0,-.13,1.6),(2,.22,3.2),shell,.03)
+    trim('interior liner',(0,.02,1.65),(1.92,.04,3.0),liner)
+    for x in [-.96,.96]:box('exterior rib',(x,-.3,1.6),(.08,.12,3.1),metal,.015)
+    box('tie band',(0,-.3,1.05),(2,.1,.09),metal,.015)
+    for x in [-.6,-.2,.2,.6]:stud('band fastener',(x,-.36,1.05),.022,.025,orange,axis='Y')
+    box('dust skirt',(0,-.3,-.24),(2,.1,1.12),metal,.02)
+    pipe('service conduit',[(-1,-.34,2.65),(1,-.34,2.65)],.035,black)
+    trim('ceiling cove lamp',(0,.055,3.0),(1.9,.05,.045),warm)
+
+def hab_glass():
+    box('glazing sill',(0,-.13,.36),(2,.22,.72),shell,.03)
+    trim('sill liner',(0,.02,.38),(1.92,.04,.68),liner)
+    trim('pressure glazing',(0,-.1,1.86),(1.9,.03,2.3),glass)
+    for x in [-.97,.97]:box('glazing mullion',(x,-.14,1.86),(.07,.2,2.34),metal,.012)
+    box('glazing transom',(0,-.13,3.1),(2,.22,.2),shell,.02)
+    box('sill rail',(0,-.3,.72),(2,.1,.09),metal,.015)
+    for x in [-.6,.6]:stud('sill fastener',(x,-.36,.72),.022,.025,orange,axis='Y')
+    box('dust skirt',(0,-.3,-.24),(2,.1,1.12),metal,.02)
+    trim('ceiling cove lamp',(0,.055,3.0),(1.9,.05,.045),warm)
+
+def hab_corner():
+    box('corner column',(0,0,1.6),(.4,.4,3.3),shell,.05)
+    for pos,size in [((0,-.22,1.6),(.1,.06,3.2)),((0,.22,1.6),(.1,.06,3.2)),((-.22,0,1.6),(.06,.1,3.2)),((.22,0,1.6),(.06,.1,3.2))]:
+        box('corner rib',pos,size,metal,.012)
+    box('corner cap',(0,0,3.3),(.46,.46,.12),metal,.02)
+    box('corner base',(0,0,-.28),(.46,.46,1.04),metal,.02)
+
+def hab_airlock(width=2,opening=1.3,depth=.6):
+    pillar=(width-opening)/2
+    for s in [-1,1]:
+        x=s*(opening/2+pillar/2)
+        box('airlock pillar',(x,-depth/2,1.6),(pillar,depth,3.2),shell,.04)
+        box('airlock plinth',(x,-depth/2,-.4),(pillar,depth,.8),metal,.02)
+        trim('door pocket seal',(s*(opening/2+.03),-depth/2,1.15),(.06,depth-.08,2.3),black)
+        for h in [.35,.75,1.15,1.55]:trim('safety marking',(x,-depth-.01,h),(pillar*.7,.02,.1),orange)
+    box('airlock header',(0,-depth/2,2.75),(width,depth,.9),shell,.04)
+    trim('header seal',(0,-depth/2,2.33),(opening+.12,depth-.08,.06),black)
+    trim('door light bar',(0,-depth-.02,2.45),(opening*.7,.03,.07),light)
+    box('airlock hood',(0,-depth-.42,3.05),(width+.2,.9,.14),shell,.03)
+    for x in [-width/2+.25,width/2-.25]:pipe('hood strut',[(x,-depth-.02,2.6),(x,-depth-.8,2.98)],.03,metal)
+    trim('access keypad',(opening/2+pillar/2,-depth-.03,1.35),(pillar*.5,.04,.22),black)
+    trim('keypad readout',(opening/2+pillar/2,-depth-.055,1.4),(pillar*.3,.01,.05),light)
+    trim('ceiling cove lamp',(0,.055,3.0),(width-.1,.05,.045),warm)
+
+def hab_gate():hab_airlock(3.2,2.4,.5)
+# Shallow variant for doors that open onto the shared concourse lane.
+def hab_airlock_flush():hab_airlock(2,1.3,.25)
+
+def hab_roof():
+    box('roof panel',(0,0,.08),(2,2,.16),shell,.03)
+    for y in [-.96,.96]:trim('roof seam rail',(0,y,.18),(2,.08,.06),metal)
+    for x in [-.96,.96]:trim('roof seam rail',(x,0,.18),(.08,2,.06),metal)
+    for x in [-.8,.8]:
+        for y in [-.8,.8]:stud('roof fastener',(x,y,.2),.03,.03,metal)
+    trim('ceiling liner',(0,0,-.02),(1.96,1.96,.04),liner)
+    trim('ceiling luminaire',(0,0,-.07),(1.1,.34,.06),warm)
+
+def hab_radiator():
+    box('radiator frame',(0,-.08,.5),(1.4,.16,1.0),metal,.02)
+    for i in range(9):trim('radiator fin',(-.6+i*.15,-.19,.5),(.04,.14,.86),shell)
+    pipe('coolant loop',[(-.62,-.1,-.02),(-.62,-.1,1.0),(.62,-.1,1.0),(.62,-.1,-.02)],.03,metal)
+    for x in [-.55,.55]:trim('radiator bracket',(x,.03,.5),(.12,.06,.9),metal)
+
+def hab_locker():
+    box('locker bank',(0,0,1.0),(1.2,.5,2.0),shell,.03)
+    trim('locker plinth',(0,0,.05),(1.24,.54,.1),metal)
+    for i in range(3):
+        x=-.4+i*.4
+        trim('locker door seam',(x,-.255,1.0),(.36,.02,1.9),black)
+        trim('locker door',(x,-.265,1.0),(.33,.015,1.84),metal)
+        trim('locker handle',(x+.1,-.29,1.1),(.03,.03,.16),orange)
+        for k in range(4):trim('locker vent',(x,-.28,1.75+k*.04),(.2,.01,.012),black)
+
+def hab_crate():
+    box('cargo crate',(0,0,.36),(.8,.8,.7),shell,.04)
+    for x in [-.25,.25]:trim('crate strap',(x,0,.36),(.06,.84,.74),orange)
+    for y in [-.41,.41]:
+        trim('crate rail',(0,y,.05),(.82,.04,.1),metal)
+        trim('crate rail',(0,y,.67),(.82,.04,.08),metal)
+    trim('cargo label',(0,-.41,.3),(.3,.01,.14),black)
+
+def hab_planter():
+    for x in [-.72,.72]:
+        for y in [-.25,.25]:stud('planter post',(x,y,.9),.025,1.8,metal)
+    for z in [.3,.85,1.4]:
+        trim('hydroponic tray',(0,0,z),(1.6,.6,.08),metal)
+        trim('nutrient bed',(0,0,z+.05),(1.5,.5,.03),black)
+        for i in range(4):
+            for j in range(2):
+                bpy.ops.mesh.primitive_uv_sphere_add(segments=10,ring_count=6,radius=.11,location=(-.54+i*.36,-.12+j*.24,z+.12))
+                o=bpy.context.object;o.scale=(1.25,1,.7);finish(o,'foliage',leaf)
+        trim('grow lamp',(0,0,z+.5),(1.5,.08,.03),grow)
+
+def hab_rack():
+    box('rack frame',(0,0,1.0),(.6,.8,2.0),black,.02)
+    trim('rack shell',(0,.02,1.0),(.56,.78,1.96),metal)
+    for k in range(9):
+        z=.25+k*.19
+        trim('server blade',(0,-.4,z),(.5,.03,.15),shell)
+        trim('blade status',(.17,-.42,z),(.06,.01,.02),light)
+        trim('blade handle',(-.2,-.42,z),(.05,.012,.06),orange)
+    trim('rack vent',(0,.4,1.0),(.5,.02,1.6),black)
+
+def hab_galley():
+    box('galley counter',(0,0,.5),(1.6,.7,1.0),shell,.03)
+    trim('counter top',(0,0,1.02),(1.66,.76,.05),metal)
+    for x in [-.5,.5]:
+        trim('counter drawer',(x,-.36,.7),(.6,.02,.3),metal)
+        trim('drawer pull',(x,-.38,.75),(.2,.02,.03),orange)
+    box('dispenser',(.35,-.1,1.35),(.4,.45,.6),metal,.02)
+    trim('dispenser spout',(.35,-.4,1.2),(.06,.2,.04),black)
+    trim('dispenser screen',(.35,-.33,1.5),(.25,.01,.15),light)
+    for i in range(3):stud('ration cup',(-.5+i*.2,-.1,1.12),.05,.14,shell,verts=12)
+    box('overhead cabinet',(0,.2,2.0),(1.6,.4,.6),shell,.02)
+    for x in [-.4,.4]:trim('cabinet door seam',(x,-.005,2.0),(.76,.01,.56),black)
+
 module('pressure-habitat',pressure)
 module('solar-rack',solar)
 module('sensor-mast',sensor)
@@ -280,6 +418,19 @@ module('telescope',telescope)
 module('orbital-relay',satellite)
 module('survey-console',survey_console)
 module('sample-cabinet',sample_cabinet)
+module('hab-wall',hab_wall)
+module('hab-glass',hab_glass)
+module('hab-corner',hab_corner)
+module('hab-airlock',hab_airlock)
+module('hab-gate',hab_gate)
+module('hab-airlock-flush',hab_airlock_flush)
+module('hab-roof',hab_roof)
+module('hab-radiator',hab_radiator)
+module('hab-locker',hab_locker)
+module('hab-crate',hab_crate)
+module('hab-planter',hab_planter)
+module('hab-rack',hab_rack)
+module('hab-galley',hab_galley)
 bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/'assets/blender/world-kit.blend'))
 # Preserve nested authored transforms while optimizing each module by material.
 for root in roots:

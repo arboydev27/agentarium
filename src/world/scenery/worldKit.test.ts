@@ -22,7 +22,7 @@ it('exports reusable hardware within its original placement envelopes', async ()
     '',
   );
   scene.updateMatrixWorld(true);
-  for (const [name, maximum] of [
+  const envelopes: [string, readonly [number, number, number], number?][] = [
     ['pressure-habitat', [6.3, 3.8, 6.4]],
     ['solar-rack', [4.3, 2.2, 2.5]],
     ['sensor-mast', [2.5, 4.2, 1.2]],
@@ -38,12 +38,27 @@ it('exports reusable hardware within its original placement envelopes', async ()
     ['orbital-relay', [6.4, 2.7, 2.2]],
     ['survey-console', [2.5, 1.6, 1.3]],
     ['sample-cabinet', [1.1, 1.5, 1.6]],
-  ] as const) {
+    // Habitat tiles are thin by design; their minimum extent is the wall depth.
+    ['hab-wall', [2.05, 4.05, 0.5], 0.3],
+    ['hab-glass', [2.05, 4.05, 0.5], 0.3],
+    ['hab-corner', [0.55, 4.2, 0.55], 0.45],
+    ['hab-airlock', [2.3, 4.05, 1.6]],
+    ['hab-gate', [3.5, 4.05, 1.6]],
+    ['hab-airlock-flush', [2.3, 4.05, 1.3]],
+    ['hab-roof', [2.05, 0.35, 2.05], 0.3],
+    ['hab-radiator', [1.6, 1.35, 0.35], 0.3],
+    ['hab-locker', [1.3, 2.05, 0.6]],
+    ['hab-crate', [0.9, 0.8, 0.9]],
+    ['hab-planter', [1.7, 1.95, 0.7]],
+    ['hab-rack', [0.65, 2.05, 0.9]],
+    ['hab-galley', [1.7, 2.35, 0.95]],
+  ];
+  for (const [name, maximum, minimum = 0.5] of envelopes) {
     const root = scene.getObjectByName(name);
     expect(root, name).toBeDefined();
     const size = new THREE.Box3().setFromObject(root!).getSize(new THREE.Vector3());
     size.toArray().forEach((value, i) => {
-      expect(value, `${name} axis ${i}`).toBeGreaterThan(0.5);
+      expect(value, `${name} axis ${i}`).toBeGreaterThan(minimum);
       expect(value, `${name} axis ${i}`).toBeLessThan(maximum[i] + 1e-5);
     });
     let meshes = 0;
@@ -85,9 +100,7 @@ it('keeps the exported structures outside resident walking corridors', async () 
     ['telescope', -31.25, -51.55],
     ['survey-console', 13.5, -40.4],
     ['sample-cabinet', -39, 43],
-    ['communications-dish', -1.5, 8.1, 1, 0, 0.49],
-    ['service-wall', -7, -8.9, 1, 0, 0.68],
-    ['service-wall', 7, -8.4, 1, 0, 1.1],
+    ['communications-dish', -1.5, 8.1, 1, 0, 3.91],
     ['control-cabin', 43.5, -118],
     ['launch-gantry', 46.4, -118],
     ['survey-rover', 54.6, -115, 1, -0.5],
@@ -115,7 +128,6 @@ it('keeps the exported structures outside resident walking corridors', async () 
     model.position.set(x, floor ?? renderedTerrainHeight(x, z), z);
     model.rotation.y = turn;
     model.scale.y = scaleY;
-    if (name === 'service-wall') model.scale.x = x < 0 ? 1.15 : 0.9;
     model.updateMatrixWorld(true);
     const bounds = new THREE.Box3().setFromObject(model);
     const triangles: THREE.Triangle[] = [];
