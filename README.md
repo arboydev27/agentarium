@@ -13,7 +13,6 @@ Visit **Expedition Base** to inspect the approved Blender reference, then explor
 - A 29.25 × 22.2 colony inside a continuous 1,200 × 1,200 desert landscape, with habitats, research facilities, mineral formations, craters, and distant mountains.
 - Eight expressive residents with alien equipment, stable identities, different walking preferences, and skeletal work/rest animations.
 - Authored journeys to colony facilities and exploration sites, including a spaceport with a decorative rocket cycle and rover.
-- Connected Colony, Planet, and Solar system views; zoom back in or select a resident to return to the surface.
 - Surface camera presets, a perspective Horizon, map scouting, resident following, watch mode, reduced motion, and rendering-quality controls.
 - A clearly labeled simulator with tasks, delegation, waiting, completion, failure, pause, speed, reset, an activity feed, and an inspector.
 - Opt-in local session discovery for Codex, Claude Code CLI, and Gemini CLI; up to eight sessions occupy stable seats, with pinned sessions first.

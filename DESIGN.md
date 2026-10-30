@@ -13,12 +13,8 @@ colors:
   machinery-frame: '#393d47'
   machinery-panel: '#667382'
   signal-cyan: '#8de3df'
-  orbital-space: '#10121e'
   navigation-paper: '#fbf0e1'
   navigation-ink: '#514238'
-  scale-paper: '#f5e9d9'
-  scale-active: '#754936'
-  scale-active-ink: '#fff5e9'
   body-ink: '#443a3b'
   panel-paper: '#fafbf3ec'
   field-paper: '#fffefa'
@@ -99,15 +95,6 @@ components:
     textColor: '{colors.navigation-ink}'
     rounded: '{rounded.navigation}'
     padding: '5px'
-  scale-navigation:
-    backgroundColor: '{colors.scale-paper}'
-    rounded: '{rounded.navigation}'
-    padding: '4px'
-  scale-navigation-active:
-    backgroundColor: '{colors.scale-active}'
-    textColor: '{colors.scale-active-ink}'
-    rounded: '{rounded.button}'
-    padding: '9px 15px'
   status-working:
     backgroundColor: '{colors.status-working-paper}'
     textColor: '{colors.status-working-ink}'
@@ -127,7 +114,7 @@ components:
 
 A warm, mineral world carries the experience: rust terrain, a dusty horizon, pale habitats, dark machinery, and restrained cyan equipment lights. Alien residents make the settlement feel inhabited while compact controls keep task context close. This is a stylized fictional planet, not a scientific Mars simulator.
 
-The world stays visually dominant from surface to orbit. Floating paper-like controls provide readable anchors above the scenery; existing sage task surfaces remain part of the implemented interface. Decorative life and factual task state have separate meanings. Expedition Base's approved Blender reference now establishes the material and authored-detail standard across the active world: colony hardware, scientific facilities, space vehicles, resident equipment, terrain, and orbital assets. This rollout extends the existing Mars colony identity while preserving the interface's tokens and layout.
+The world stays visually dominant. Floating paper-like controls provide readable anchors above the scenery; existing sage task surfaces remain part of the implemented interface. Decorative life and factual task state have separate meanings. Expedition Base's approved Blender reference now establishes the material and authored-detail standard across the active world: colony hardware, scientific facilities, space vehicles, resident equipment, and terrain. This rollout extends the existing Mars colony identity while preserving the interface's tokens and layout.
 
 **Key Characteristics:**
 
@@ -155,9 +142,7 @@ Warm iron-rich terrain and dusty sand establish the world; pale shells and blue-
 
 - **Habitat shell:** pale pressure structures and canopy surfaces.
 - **Machinery frame and panel:** dark supports, tanks, windows, and instrument housings.
-- **Orbital space:** the deep background behind planet and solar-system views.
 - **Navigation paper and ink:** opaque camera controls, orbit hints, and watch controls. Their opacity protects contrast over varying terrain.
-- **Scale paper and active rust:** scale navigation with an explicit selected state.
 - **Panel paper, field paper, and body ink:** quiet factual interface surfaces and text.
 
 **The Signal Accent Rule.** Keep cyan concentrated in equipment lights and small navigation cues; the mineral world supplies the dominant color.
@@ -177,9 +162,9 @@ DM Sans is the interface voice; Manrope gives the brand its compact, sturdy shap
 
 The scene fills the application at every scale, underneath floating controls. The final full-inset canvas rule takes precedence over older reserved-viewport rules. The application uses 100dvh, with an implemented minimum height of 640px, reduced to 580px at 800px and below.
 
-On desktop, the header is 80px high; the resident panel starts at the upper right with a 292px baseline width. Location context sits at the upper left. Camera destinations occupy a horizontally scrollable lower strip. The scale selector sits above the world, centered at 96px from the top.
+On desktop, the header is 80px high; the resident panel starts at the upper right with a 292px baseline width. Location context sits at the upper left. Camera destinations occupy a horizontally scrollable lower strip.
 
-At 1100px and below, the resident panel narrows, peripheral header content is hidden, and scale navigation moves to 150px above the bottom with its explanatory text hidden. At 800px and below, the header is 66px and floating controls compact. At 600px and below, location and resident entry points collapse into compact controls; expanded content remains scrollable. At 1600px and above, the resident panel grows to 315px. Short desktop viewports use denser placement. Preserve these content-specific breakpoints rather than forcing a uniform grid.
+At 1100px and below, the resident panel narrows and peripheral header content is hidden. At 800px and below, the header is 66px and floating controls compact. At 600px and below, location and resident entry points collapse into compact controls; expanded content remains scrollable. At 1600px and above, the resident panel grows to 315px. Short desktop viewports use denser placement. Preserve these content-specific breakpoints rather than forcing a uniform grid.
 
 The spacing tokens are recurring measured increments, not an enforced global spacing algorithm. Keep world overlays compact and bounded; their contents must not expand indefinitely over the scene.
 
@@ -187,7 +172,7 @@ The spacing tokens are recurring measured increments, not an enforced global spa
 
 Three-dimensional geometry, terrain relief, lighting, and atmospheric distance carry the primary depth. UI panels use a restrained hybrid of pale tonal surfaces, thin light borders, translucent backgrounds, blur, and soft shadows. Camera navigation and orbit hints specifically use opaque paper after the contrast correction.
 
-Panel shadows are broad and low-opacity; modal shadows are stronger to separate a focused task. Exact shadows, blur, and motion live in the sidecar because they are outside the frontmatter schema. Orbital entry uses a short fade, blur, and small scale settle; reduced motion disables this entry and parks ambient spacecraft.
+Panel shadows are broad and low-opacity; modal shadows are stronger to separate a focused task. Exact shadows, blur, and motion live in the sidecar because they are outside the frontmatter schema.
 
 ### World materials and scene lighting
 
@@ -221,7 +206,7 @@ Fields use a near-white fill, a fine sage border, compact padding, and rounded c
 
 ### Navigation
 
-Camera navigation uses opaque warm paper and dark brown labels, with a soft sage hover and active fill. Its destination strip scrolls horizontally. The scale selector groups Colony, Planet, and Solar system; its rust selected segment uses light text and an explicit pressed state. Scale selection and scene animation must not change the meaning of task state.
+Camera navigation uses opaque warm paper and dark brown labels, with a soft sage hover and active fill. Its destination strip scrolls horizontally. Scene animation must not change the meaning of task state.
 
 ### Chips
 
@@ -237,9 +222,9 @@ Expedition Base retains its separate reference habitat: external ribs, framed gl
 
 The editable Blender source retains separate named parts; runtime export joins meshes by material within each module. Reuse these modules for established equipment families and keep local titles in runtime labels. Existing lazy scenery boundaries and simplified fallback silhouettes preserve loading behavior. Runtime clones share loader-owned geometry and materials. Preserve each module's placement envelope, terrain contact, resident route clearance, and arrival sightlines when extending the kit.
 
-### Living colony and scale views
+### Living colony
 
-The surface combines authored habitats and destinations with continuous mineral terrain. Planet and solar-system views use independent scene coordinates, seamless procedural planetary textures, and simplified forms; their palette remains related to the surface. The orbital relay shares the authored hardware finish. Residents, spacecraft, survey gestures, and machinery provide decorative life. They must never substitute for factual status labels, task briefs, attention, or source-session actions.
+The surface combines authored habitats and destinations with continuous mineral terrain; there is one scale, and the Mars identity comes from the sky, horizon, and far landforms. Residents, the rocket cycle, survey gestures, and machinery provide decorative life. They must never substitute for factual status labels, task briefs, attention, or source-session actions.
 
 ## Do's and Don'ts
 
@@ -251,7 +236,7 @@ The surface combines authored habitats and destinations with continuous mineral 
 - Do preserve route clearance and arriving-resident sightlines when extending structures.
 - Do maintain fixed material scale and terrain contact across authored and procedural assets.
 - Do reuse the shared hardware modules and keep editable Blender parts separate from export optimization.
-- Do honor reduced motion for orbital entry and ambient spacecraft.
+- Do honor reduced motion for camera travel and the ambient rocket cycle.
 
 ### Don't:
 

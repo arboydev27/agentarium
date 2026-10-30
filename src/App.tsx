@@ -1,4 +1,3 @@
-import { UniverseControls } from './UniverseControls';
 import { WorldHUD } from './WorldHUD';
 import { LandmarkMap } from './LandmarkMap';
 import { SceneryStatus } from './SceneryStatus';
@@ -371,7 +370,6 @@ export default function App() {
           </Suspense>
         </SceneBoundary>
       </div>
-      <UniverseControls />
       <SceneryStatus />
       <header className="topbar">
         <a href="/" className="brand" aria-label="Agentarium home">

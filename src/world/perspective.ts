@@ -5,7 +5,7 @@ import { CAMERA_VIEWS, type WorldView } from './layout';
 export const SURFACE_FOV = 38;
 export const SURFACE_NEAR = 0.5;
 export const SURFACE_FAR = 420;
-/** Orbit distance at which the surface hands over to the planet view. */
+/** Farthest the surface camera can orbit from its target; zooming out stops here. */
 export const SURFACE_MAX_DISTANCE = 190;
 
 /**

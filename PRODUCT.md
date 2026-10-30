@@ -20,7 +20,7 @@ Keep the existing TypeScript, React, and Three.js stack. Preserve bridge integra
 
 ## Brand Commitments
 
-The user approved reinventing the world as an alien colony on a Mars-like planet, with desert terrain, alien residents, habitats, exploration, and a space program. Surface, planet, and solar-system views are the requested destination. This is a stylized fictional planet, not a scientific Mars simulator.
+The user approved reinventing the world as an alien colony on a Mars-like planet, with desert terrain, alien residents, habitats, exploration, and a space program. The surface is the product; the owner later removed the planet and solar-system views so the experience focuses on the colony and its horizon. This is a stylized fictional planet, not a scientific Mars simulator.
 
 ## Evidence on Hand
 

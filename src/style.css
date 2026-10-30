@@ -2629,78 +2629,7 @@ h1 span {
   }
 }
 
-.universe-controls {
-  position: absolute;
-  z-index: 40;
-  top: 96px;
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
-}
-.universe-controls > div {
-  display: flex;
-  background: #f5e9d9;
-  border-radius: 12px;
-  padding: 4px;
-  box-shadow: 0 5px 18px #33211d22;
-}
-.universe-controls button {
-  padding: 9px 15px;
-  white-space: nowrap;
-  color: #513e37;
-  border-radius: 9px;
-  font-size: 12px;
-}
-.universe-controls button[aria-pressed='true'] {
-  background: #754936;
-  color: #fff5e9;
-}
-.universe-controls p {
-  width: 270px;
-  color: #f5e9d9;
-  font-size: 12px;
-  line-height: 1.5;
-  text-shadow: 0 2px 5px #10121e;
-}
-@media (max-width: 1100px) {
-  .universe-controls {
-    top: auto;
-    bottom: 150px;
-  }
-  .universe-controls p {
-    display: none;
-  }
-}
-
-/* The world extends beneath its floating controls at every scale. */
+/* The world extends beneath its floating controls. */
 .app .world-canvas {
   inset: 0;
-}
-.surface-hidden .world-label {
-  display: none !important;
-}
-
-.orbital-scene {
-  position: absolute;
-  inset: 0;
-}
-.scale-arrival {
-  animation: scale-arrival 650ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-@keyframes scale-arrival {
-  from {
-    opacity: 0;
-    filter: blur(5px);
-    transform: scale(1.035);
-  }
-  to {
-    opacity: 1;
-    filter: blur(0);
-    transform: scale(1);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .scale-arrival {
-    animation: none;
-  }
 }
