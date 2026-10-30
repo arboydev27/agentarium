@@ -1,27 +1,23 @@
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
-import { useGLTF, useTexture } from '@react-three/drei';
+import { useGLTF, useKTX2 } from '@react-three/drei';
 import * as THREE from 'three';
 import { renderedTerrainHeight } from '../terrain';
 import { useWorld } from '../../state';
 import { REFERENCE_HABITAT as SITE } from './referenceHabitatPlacement';
+import { BASIS_TRANSCODER_PATH, surfaceTextureUrls } from '../surfaceTextures';
 
 const assetUrl = '/models/habitat/expedition-habitat.glb';
 const ignoreRaycast: THREE.Object3D['raycast'] = () => {};
 
 function ReferenceGround() {
   const quality = useWorld((s) => s.quality);
-  const originals = useTexture([
-    '/textures/habitat/regolith-color.png',
-    '/textures/habitat/regolith-normal.png',
-    '/textures/habitat/regolith-roughness.png',
-  ]);
+  const originals = useKTX2(surfaceTextureUrls('regolith'), BASIS_TRANSCODER_PATH);
   const textures = useMemo(
     () =>
       originals.map((source, index) => {
         const t = source.clone();
         t.wrapS = t.wrapT = THREE.RepeatWrapping;
         t.anisotropy = quality === 'high' ? 8 : 2;
-        t.colorSpace = index === 0 ? THREE.SRGBColorSpace : THREE.NoColorSpace;
         t.needsUpdate = true;
         return t;
       }),

@@ -6,3 +6,4 @@ bridge/data/
 package-lock.json
 public/models/
 .impeccable/
+public/basis/

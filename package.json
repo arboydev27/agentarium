@@ -12,7 +12,8 @@
     "bridge:demo": "node bridge/demo-events.mjs",
     "codex:proxy": "node bridge/codex-proxy.mjs",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "textures": "sh scripts/encode-textures.sh"
   },
   "dependencies": {
     "@react-three/drei": "^10.0.0",
