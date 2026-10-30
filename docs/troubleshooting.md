@@ -48,7 +48,7 @@ If residents become disconnected after restarting the bridge, that is expected r
 
 Run `npm run build` to check TypeScript and asset compilation. A large-chunk warning for the 3D bundle is a known optimization opportunity, not a build failure.
 
-For poor frame rate, use low quality, disable cinematic orbit, and check browser WebGL support. For missing characters, verify that `/models/robot.glb` is served successfully and inspect the browser console. Subpath hosting needs asset URL review. Network-blocked Google Fonts can change typography without affecting the local model asset.
+For poor frame rate, use low quality, disable cinematic orbit, and check browser WebGL support. For missing characters, verify that `/models/resident/colonist.glb` is served successfully and inspect the browser console. Subpath hosting needs asset URL review. Network-blocked Google Fonts can change typography without affecting the local model asset.
 
 ## A landmark shows a simple frame or a scenery error
 

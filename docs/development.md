@@ -43,7 +43,7 @@ For scene work, see [3D world](3d-world.md). For transport changes, keep the bro
 
 The repository folder and npm package are named `agentarium`; the displayed product remains Agent Grove. Existing `grove_*` tool names, `GROVE_*` variables, and deployment identifiers are intentional and do not imply stale filesystem references.
 
-The default database and hook script location are resolved from bridge modules. Generated provider configuration embeds absolute paths and must be regenerated after moving the project or replacing the Node executable. The browser model URL `/models/robot.glb` assumes root-based static hosting; a subpath deployment would need asset/base-path review.
+The default database and hook script location are resolved from bridge modules. Generated provider configuration embeds absolute paths and must be regenerated after moving the project or replacing the Node executable. The browser model URLs under `/models/` assume root-based static hosting; a subpath deployment would need asset/base-path review.
 
 ## Build and hosting boundaries
 

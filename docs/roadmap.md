@@ -24,7 +24,7 @@ Acceptance: independent sessions cannot accidentally overwrite one another, aban
 
 ## 3. Improve animation and world interaction
 
-The first character-life milestone now includes generated keyboard/attention poses, local reversible routes, staged arrival/departure, brief completion reactions, follow camera, and watch mode. The original robot is retained. The resident-variety milestone now adds eight procedural accessory styles, stable leisure preferences, authored cross-zone routing, exclusive destinations, and shared-corridor reservations. Distinct new body rigs, generated navmeshes, local crowd steering, and a measured device performance budget remain future work.
+The first character-life milestone now includes generated keyboard/attention poses, local reversible routes, staged arrival/departure, brief completion reactions, follow camera, and watch mode. The resident-variety milestone now adds eight procedural accessory styles, stable leisure preferences, authored cross-zone routing, exclusive destinations, and shared-corridor reservations. The visual rebuild's Phase 4 replaced the robot with an original rigged colonist and authored clips. Generated navmeshes, local crowd steering, and a measured device performance budget remain future work.
 
 The shared rig now has subtle anchored gestures at rest and shared destinations. Route reservations release cleared lanes while keeping the path ahead reserved, and they account for differently named overlapping lanes. Next, evaluate distinct body rigs against the keyboard/seat contract, add richer transition clips, and explore passing lanes or local crowd steering when capacity grows. Preserve reduced-motion alternatives and test interruptions.
 

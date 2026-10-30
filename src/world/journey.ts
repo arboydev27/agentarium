@@ -40,9 +40,7 @@ export class ResidentJourney extends ResidentMotion {
   }
   override get position(): Point {
     if (!this.trip) return super.position;
-    const point = routePoint(this.trip.path.points, this.trip.path.lengths, this.trip.distance);
-    point[1] += this.trip.seated * 0.18;
-    return point;
+    return routePoint(this.trip.path.points, this.trip.path.lengths, this.trip.distance);
   }
   override update(agent: Agent, delta: number, options: Options) {
     const dt = Math.max(0, Math.min(delta, 0.05));

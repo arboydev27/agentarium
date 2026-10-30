@@ -28,6 +28,14 @@ export function residentStyle(identity: string) {
       '#87b8b0',
     ][variant],
     trim: ['#f2e5c7', '#e1e9ce', '#dbe9e8', '#f4dccc'][variant % 4],
+    skin: ['#9fbfb4', '#c9b7a1', '#b3a9c7', '#a8c2a0', '#d1b0a0', '#9eb6c6', '#c4c0a4', '#b9a5b8'][
+      variant
+    ],
+    // Silhouette: head shape and build vary with the variant, never limb lengths,
+    // so every resident keeps the same keyboard and chair contact.
+    build: (
+      ['tall', 'wide', 'lean', 'broad', 'tall-broad', 'wide-lean', 'plain', 'tall-lean'] as const
+    )[variant],
     pace: 1.08 + (seed % 5) * 0.06,
     restSeconds: 10 + (seed % 9),
     visitSeconds: 7 + (seed % 7),

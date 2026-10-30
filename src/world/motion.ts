@@ -3,7 +3,6 @@ export type Point = [number, number, number];
 import { SEATS } from './layout';
 export { SEATS } from './layout';
 export const DESK_Z = -0.42;
-export const SIT_LIFT = 0.13;
 export function deskBound(status: Agent['status']) {
   return ['working', 'tool', 'waiting', 'failed'].includes(status);
 }
@@ -50,10 +49,9 @@ export class ResidentMotion {
     this.route = routeForSeat(seat);
     this.lengths = routeLengths(this.route);
   }
+  // Seated clips keep the root on the floor, so sitting never lifts the body.
   get position(): Point {
-    const p = routePoint(this.route, this.lengths, this.distance);
-    p[1] += this.sitting * SIT_LIFT;
-    return p;
+    return routePoint(this.route, this.lengths, this.distance);
   }
   update(
     agent: Agent,

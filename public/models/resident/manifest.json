@@ -1,0 +1,42 @@
+{
+  "source": "assets/blender/colonist.blend",
+  "generator": "assets/blender/build_resident.py",
+  "units": "metres",
+  "front": "+Z in glTF",
+  "height": 1.79,
+  "clips": [
+    "Walking",
+    "Rest",
+    "ThumbsUp",
+    "DeskType",
+    "DeskReview",
+    "DeskWait",
+    "DeskError",
+    "BenchRest",
+    "CafeBreak",
+    "GardenLook",
+    "SurveySky",
+    "SampleScan"
+  ],
+  "expressions": [
+    "Focused",
+    "Confused",
+    "Happy"
+  ],
+  "silhouettes": [
+    "TallCranium",
+    "WideHead",
+    "Broad",
+    "Slender"
+  ],
+  "accessories": [
+    "accessory-sensor-pods",
+    "accessory-cranial-crest",
+    "accessory-antenna",
+    "accessory-compound-optics",
+    "accessory-swept-horns",
+    "accessory-ear-fins",
+    "accessory-crystal-crown",
+    "accessory-visor"
+  ]
+}

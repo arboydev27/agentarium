@@ -30,7 +30,7 @@ Read from `src/World.tsx`, `src/world/Environment.tsx`, `src/world/WorldSurfaceM
 | Terrain              | 1,200 m plane, 254 segments (one vertex per 4.7 m). Height from a handful of sine functions. Vertex colors plus a grain texture. | The colony sits on a flat plane. No dunes, ridges, strata, or micro relief. Rocks are hex pebbles scattered on top. |
 | Textures             | Five 512 px families generated procedurally inside Blender.                                                                      | Noise, not material. No scanned detail, no macro variation, visible tiling.                                         |
 | Hardware kit         | Fifteen modules built from `box`, `cyl`, and `pipe` primitives in Python.                                                        | Reads as blocking geometry. No bevels, panels, bolts, cables, wear, or decals.                                      |
-| Residents            | `robot.glb` at 0.37 scale with procedural CCD posing. Color and accessory variants.                                              | Generic robots, not aliens. Poses, not animation.                                                                   |
+| Residents            | `robot.glb` at 0.37 scale with procedural CCD posing. Color and accessory variants (replaced in Phase 4).                        | Generic robots, not aliens. Poses, not animation.                                                                   |
 | Layout               | Desks and swivel chairs on open plinths under the sky. Habitats are flat walls behind them.                                      | The concept breaks before texture is even judged.                                                                   |
 
 ## The rebuild, in order
@@ -182,3 +182,19 @@ Not done in this phase, and why:
 - Hand-modelled detail at 20–40k triangles per module with baked AO and edge wear. The tiles are authored by the same deterministic Blender script as the rest of the kit (bevelled volumes, trim parts without bevels) at 0.4–1.8k triangles each; the kit GLB is already at 9.6 MB of its 10 MiB budget, so denser tiles need a second GLB and a texture-atlas pass first.
 - Pressurized corridors between modules and the "three or four modules on one plateau" relayout. The four decks, seats, door nodes, and route graph are unchanged; corridors would have to cross the concourse lane and the promenade that residents already walk.
 - Per-resident props and decals. Furnishing is per zone, not per resident.
+
+### Phase 4: implemented
+
+Shipped as the colonist generator (`assets/blender/build_resident.py` → `public/models/resident/colonist.glb`, 1.3 MB) and the character runtime (`src/world/character.ts`, the `Resident` component in `src/World.tsx`):
+
+- **An original alien, not a robot.** One body plan at 1.79 m: a long egg cranium with large tilted eyes and a narrow jaw, a slim segmented body with ball joints, three-finger mitten hands, a fitted suit with collar ring, chest readout, life-support pack, belt and boots. Eight residents differ by suit colour (the agent colour), trim, skin tone and accent palette, one of eight head accessories, and a build applied as shape keys (tall cranium, wide head, broad or slender torso). Limb lengths are shared so every variant keeps the same keyboard and chair contact.
+- **A rigged, clip-driven character.** A 16-bone skeleton skinned in Blender (smooth weights across the torso, rigid limbs). Twelve clips are authored by the generator's analytic solver (two-bone IK for arms and legs, keyed at 24 fps) and exported as named glTF animations: Walking, Rest, ThumbsUp, DeskType, DeskReview, DeskWait, DeskError, BenchRest, CafeBreak, GardenLook, SurveySky, SampleScan. Three.js crossfades them over 0.45 s; the CCD pose system, the runtime clip generator and the procedural accessories are deleted.
+- **Scale.** Standing height 1.79 m against the 1.3 m airlock openings and the 1.02 m desks; seated clips put the hips on the chair cushion with the root on the floor, so the seat lift and the bench lift in the motion controllers are gone. The walk cycle covers 1.2 m per clip second and is time-scaled to each resident's pace.
+- **Faces.** Focused, Confused and Happy blend shapes on the head, eased per frame from the resident state (working and tool use focused, waiting and failed confused, fresh completion happy, otherwise neutral).
+- **Contract tests.** `src/world/character.test.ts` loads the shipped GLB and checks every clip loops, both hands stay over the laptop keys in the typing clips, standing and bench loops stay anchored, the walk covers its stride, the expected morphs, accessories and material names exist, and that dressing eight residents clones materials without touching the shared asset.
+
+Not done in this phase, and why:
+
+- Retargeted motion-capture clips. Mixamo requires an Adobe account and licence acceptance that this project cannot automate, and CC0 clip packs would tie the rig to another skeleton; the authored clips keep the asset fully original and deterministic.
+- A dedicated sit-down and stand-up transition. The seated settle is the 0.45 s crossfade plus the existing 0.6 s sitting ramp, which reads cleanly at the desk scale; a transition clip would need the motion controller to wait on clip time.
+- A measured frame budget for eight skinned residents. Each resident is 11 draw calls (torso, six limb groups, three head groups, one accessory) and about 7k triangles; Phase 5 owns the budget.

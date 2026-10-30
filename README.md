@@ -175,7 +175,7 @@ Select a resident to pin or hide its session. **Manage sessions** restores hidde
 
 Select a seated-world resident and choose **Follow resident** to watch them travel between their home desk and shared destinations. Use the eye button in the top-right corner (or `W`) for **Watch mode**, which hides the roster and hotbar while retaining the place readout, the attention banner, and an exit control. Drag to stop following; Escape exits watch mode.
 
-Characters type, review, raise a hand while waiting, and briefly celebrate fresh completion before resting. Arrival/departure is staged when sessions change seats. Reduced motion skips travel and uses still poses. These behaviors use the existing robot rig; see [The 3D world](docs/3d-world.md) for the asset contract, limitations, and animation details.
+Characters type, review, raise a hand while waiting, and briefly celebrate fresh completion before resting. Arrival/departure is staged when sessions change seats. Reduced motion skips travel and uses still poses. Residents are original alien colonists with authored clips and expressions; see [The 3D world](docs/3d-world.md) for the asset contract, limitations, and animation details.
 
 ### Real-work attention
 

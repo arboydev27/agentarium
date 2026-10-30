@@ -6,9 +6,9 @@ Residents now have distinct looks and can visit destinations beyond their assign
 
 `personality.ts` derives a stable profile from resident identity, not seat index. The eight demo residents intentionally cover all eight styles: sensor pods, cranial crest, antennae, compound optics, swept horns, ear fins, crystal crown, and visor. Live identities deterministically select a style; different sessions can share one. Accent/trim palettes, pace (1.08–1.32 world units/second), rest time (10–18 seconds), destination preference, and visit duration (7–13 seconds) vary with the profile.
 
-Accessories are original procedural geometry attached to the bundled robot's animated head. The existing body rig and proportions are preserved for reliable keyboard contact and chair alignment. This milestone does not add eight new body meshes or human characters. Accessories remain visible at low quality and under reduced motion. Owned geometry/materials are disposed when residents leave; the shared GLB geometry is retained.
+Accessories are meshes inside the colonist GLB, skinned to the head bone; the renderer shows the one the profile names. Each profile also picks a skin tone and a build (tall, wide, lean, broad and their combinations) applied as shape keys on the head and torso. Limb lengths are shared by every variant for reliable keyboard contact and chair alignment. Accessories remain visible at low quality and under reduced motion. Cloned materials and skeletons are disposed when residents leave; the shared GLB geometry is retained.
 
-The shared rig's standing rest, bench rest, service-station break, survey, and sample-inspection loops now include small head, torso, and arm gestures. Their feet and hips remain anchored to the original floor or seat pose, and the desk-hand alignment remains separate. These are cosmetic movements; they do not represent provider activity.
+The standing rest, bench rest, service-station break, survey, and sample-inspection clips include small head, torso, and arm gestures. Their feet and hips remain anchored to the original floor or seat pose, and the desk-hand alignment remains separate. These are cosmetic movements; they do not represent provider activity.
 
 ## Destinations and routes
 
@@ -61,7 +61,7 @@ Demo automatic ticks leave idle residents alone for at least 60 seconds while ou
 1. Add or move floors/props in the layout and scenery modules.
 2. Add navigation nodes, connections, height transitions, and terminal destinations in `navigation.ts`. Keep branches clear of desk/resting positions and existing scenery.
 3. Keep new destinations outside decorative detail layers; a path must not disappear with camera zoom.
-4. Add destination poses in `rig.ts` and verify the shared skeleton contract. Keep accessory geometry independent of body animation tracks.
+4. Add destination clips in `assets/blender/build_resident.py`, regenerate the GLB, and extend the contract test in `src/world/character.test.ts`.
 5. Run layout, navigation, traffic, interruption, pause/removal, and asset tests. Inspect the new route in the browser, including reduced motion and follow mode.
 
 Tests cover all 120 home-to-destination routes, reverse paths, desk/chair and selected major-prop clearance, outside trail grade and clearance, a dry Southwind route, atomic leases, returning priority, overlapping lanes with different waypoint names, interrupted travel, and multi-resident simulations without body overlaps. These authored-footprint checks do not replace visual inspection or constitute a general collision solver.

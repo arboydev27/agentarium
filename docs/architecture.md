@@ -39,7 +39,7 @@ Simulation and live activity are separate modes. Changing mode replaces the brow
 | [world/scenery/Meadow.tsx](../src/world/scenery/Meadow.tsx) | Instanced meadow detail and amber oak                                     |
 | [world/DetailLayer.tsx](../src/world/DetailLayer.tsx)       | Camera/quality-based decorative detail mounting                           |
 | [world/motion.ts](../src/world/motion.ts)                   | Reversible resident routes and lifecycle motion                           |
-| [world/rig.ts](../src/world/rig.ts)                         | Authored character poses and keyboard alignment                           |
+| [world/character.ts](../src/world/character.ts)             | Colonist asset contract: clips, expressions, silhouettes, dressing        |
 | [state.ts](../src/state.ts)                                 | Zustand state, simulator, live ingestion, and UI settings                 |
 | [sessions.ts](../src/sessions.ts)                           | Session grouping and compatibility with older snapshots                   |
 | [bridge.ts](../src/bridge.ts)                               | Browser connection, authentication, snapshots, and reconnection           |
@@ -75,7 +75,7 @@ These tools operate on the same Zustand state as the UI. Demo mutation tools rej
 
 ## Persistence boundaries
 
-SQLite stores live agent snapshots, a bounded event log, bridge identity, and a separate bounded meaningful-history journal. Browser storage saves pin/hide choices, seen attention IDs, and bridge-scoped recap cursors. Selection, visual preferences, simulation state, connection credentials, and the ephemeral activity feed are not persisted. The GLB character model ships as a static asset; interface fonts currently load from Google Fonts.
+SQLite stores live agent snapshots, a bounded event log, bridge identity, and a separate bounded meaningful-history journal. Browser storage saves pin/hide choices, seen attention IDs, and bridge-scoped recap cursors. Selection, visual preferences, simulation state, connection credentials, and the ephemeral activity feed are not persisted. The colonist GLB ships as a static asset; interface fonts currently load from Google Fonts.
 
 ## Local-history path
 
@@ -89,7 +89,7 @@ Ambient effects in `world/Ambience.tsx` use mutable Three.js objects and do not 
 
 ## Resident identity and navigation
 
-`world/personality.ts` maps identity to stable accessory, palette, pace, and leisure timing. `world/appearance.ts` creates owned accessory meshes attached to the shared rig. `world/journey.ts` layers outings over the existing desk movement controller. `world/navigation.ts` owns an authored waypoint graph, shortest-path planning, destination leases, and atomic route-ahead reservations that release cleared lanes. A coordinator is scoped to the mounted Residents world and cleaned up with its residents; no navigation state is sent to the bridge. Graph travel and character animation remain outside decorative detail layers. See [Resident identity and journeys](resident-journeys.md).
+`world/personality.ts` maps identity to stable accessory, palette, pace, and leisure timing. `world/character.ts` dresses each cloned colonist with its colours, accessory and silhouette morphs. `world/journey.ts` layers outings over the existing desk movement controller. `world/navigation.ts` owns an authored waypoint graph, shortest-path planning, destination leases, and atomic route-ahead reservations that release cleared lanes. A coordinator is scoped to the mounted Residents world and cleaned up with its residents; no navigation state is sent to the bridge. Graph travel and character animation remain outside decorative detail layers. See [Resident identity and journeys](resident-journeys.md).
 
 ## Real-work projection
 

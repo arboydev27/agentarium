@@ -5,7 +5,6 @@ import { districtAt } from './world/hud';
 import { ResidentJourney } from './world/journey';
 import { NavigationTraffic } from './world/navigation';
 import { residentStyle } from './world/personality';
-import { dressResident } from './world/appearance';
 import { RenderStats } from './world/RenderStats';
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
@@ -17,7 +16,15 @@ type OrbitControlsImpl = ComponentRef<typeof OrbitControls>;
 import { useWorld } from './state';
 import type { Agent, Status } from './state';
 import { SEATS, routeForSeat } from './world/motion';
-import { createCharacterClips, ROBOT_SCALE } from './world/rig';
+import {
+  disposeColonist,
+  dressColonist,
+  easeExpression,
+  expressionFor,
+  headMeshes,
+  RESIDENT_MODEL_URL,
+  WALK_CYCLE_SPEED,
+} from './world/character';
 import { Box, Cylinder, Pot } from './world/primitives';
 import { Environment } from './world/Environment';
 import { CAMERA_VIEWS } from './world/layout';
@@ -128,49 +135,20 @@ function Resident({
   positions: Positions;
   traffic: NavigationTraffic;
 }) {
-  const { scene } = useGLTF('/models/robot.glb');
+  const { scene } = useGLTF(RESIDENT_MODEL_URL);
   const surfaceMaps = useSurfaceTextures('ceramic-paint');
   const style = useMemo(() => residentStyle(agent.id), [agent.id]);
+  // A skeleton-aware clone with its own materials, accessory and silhouette.
   const dressed = useMemo(() => {
     const copy = clone(scene);
-    copy.traverse((o) => {
-      if (o instanceof THREE.Mesh) {
-        o.castShadow = true;
-        o.receiveShadow = true;
-        const materials = Array.isArray(o.material) ? o.material : [o.material];
-        const cloned = materials.map((m) => {
-          const mat = m.clone() as THREE.MeshStandardMaterial;
-          if (mat.name === 'Main') mat.color.set(agent.color);
-          if (mat.name === 'Grey') mat.color.set(style.trim);
-          if (mat.name === 'Black') mat.color.set('#253c36');
-          mat.roughness = mat.name === 'Black' ? 0.35 : 0.62;
-          mat.metalness = mat.name === 'Grey' ? 0.42 : 0.1;
-          if (mat.name !== 'Black') applySurfaceDetails(mat, surfaceMaps, 1.6, true);
-          mat.transparent = true;
-          return mat;
-        });
-        o.material = Array.isArray(o.material) ? cloned : cloned[0];
-      }
-    });
-    const wardrobe = dressResident(copy, style);
-    copy.traverse((object) => {
-      if (!(object instanceof THREE.Mesh)) return;
-      for (const material of Array.isArray(object.material) ? object.material : [object.material]) {
-        if (material instanceof THREE.MeshStandardMaterial && material.userData.wardrobe)
-          applySurfaceDetails(material, surfaceMaps, 1.6, true);
-      }
-    });
-    return { copy, wardrobe };
+    const materials = dressColonist(copy, { color: agent.color, style });
+    for (const material of materials)
+      if (material.userData.role === 'suit' || material.userData.role === 'trim')
+        applySurfaceDetails(material, surfaceMaps, 1.6, true);
+    return { copy, materials, faces: headMeshes(copy) };
   }, [scene, agent.color, style, surfaceMaps]);
   const model = dressed.copy;
-  const materials = useMemo(() => {
-    const all: THREE.Material[] = [];
-    model.traverse((o) => {
-      if (o instanceof THREE.Mesh)
-        all.push(...(Array.isArray(o.material) ? o.material : [o.material]));
-    });
-    return [...new Set(all)];
-  }, [model]);
+  const materials = dressed.materials;
   const mixer = useMemo(() => new THREE.AnimationMixer(model), [model]);
   const active = useRef<THREE.AnimationAction | null>(null);
   const currentClip = useRef('');
@@ -210,17 +188,9 @@ function Resident({
     return () => {
       mixer.stopAllAction();
       mixer.uncacheRoot(model);
-      materials.forEach((m) => {
-        if (!m.userData.wardrobe) m.dispose();
-      });
-      dressed.wardrobe.dispose();
-      const skeletons = new Set<THREE.Skeleton>();
-      model.traverse((o) => {
-        if (o instanceof THREE.SkinnedMesh) skeletons.add(o.skeleton);
-      });
-      skeletons.forEach((skeleton) => skeleton.dispose());
+      disposeColonist(model, materials);
     };
-  }, [materials, mixer, model, dressed]);
+  }, [materials, mixer, model]);
   useFrame((_, delta) => {
     if (!root.current) return;
     motion.update(agent, delta, { reduced, playing, leaving, now: Date.now(), outings });
@@ -250,8 +220,15 @@ function Resident({
       currentClip.current = name;
       if (reduced) mixer.update(0);
     }
-    if (active.current) active.current.timeScale = name === 'Walking' ? style.pace / 1.05 : 1;
-    mixer.update(reduced || (!playing && !leaving) ? 0 : Math.min(delta, 0.05));
+    if (active.current)
+      active.current.timeScale = name === 'Walking' ? style.pace / WALK_CYCLE_SPEED : 1;
+    const step = reduced || (!playing && !leaving) ? 0 : Math.min(delta, 0.05);
+    mixer.update(step);
+    easeExpression(
+      dressed.faces,
+      expressionFor(agent.status, motion.celebration > 0),
+      reduced ? 1 : 1 - Math.exp(-6 * Math.min(delta, 0.05)),
+    );
     if (motion.exited && !exited.current) {
       exited.current = true;
       onExit();
@@ -274,7 +251,7 @@ function Resident({
         document.body.style.cursor = 'auto';
       }}
     >
-      <primitive object={model} scale={ROBOT_SCALE} dispose={null} />
+      <primitive object={model} dispose={null} />
       {selected && !leaving && (
         <mesh ref={selectedRing} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.025, 0]}>
           <ringGeometry args={[0.63, 0.69, 48]} />
@@ -400,8 +377,7 @@ function WorldLabel({
   return <group ref={anchor} position={[0, height, 0]} />;
 }
 function Residents({ positions }: { positions: Positions }) {
-  const { scene, animations } = useGLTF('/models/robot.glb');
-  const clips = useMemo(() => createCharacterClips(scene, animations), [scene, animations]);
+  const { animations: clips } = useGLTF(RESIDENT_MODEL_URL);
   const agents = useWorld((s) => s.agents);
   const traffic = useMemo(() => new NavigationTraffic(), []);
   return (
@@ -787,4 +763,4 @@ export default function World() {
     </Canvas>
   );
 }
-useGLTF.preload('/models/robot.glb');
+useGLTF.preload(RESIDENT_MODEL_URL);
