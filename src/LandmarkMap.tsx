@@ -263,8 +263,11 @@ export function LandmarkMap({
     >
       <button
         ref={toggle}
+        id="landmark-toggle"
         className={'landmark-toggle' + (open ? ' active' : '')}
         aria-expanded={open}
+        aria-keyshortcuts="M"
+        aria-label={open ? 'Close landmark map (M)' : 'Open landmark map (M)'}
         aria-controls="landmark-map"
         onClick={() => {
           if (open) close();
@@ -275,7 +278,7 @@ export function LandmarkMap({
             setOpen(true);
           }
         }}
-        title="Open landmark map"
+        title="Landmark map (M)"
       >
         <Map size={17} aria-hidden="true" />
         <span>Map</span>

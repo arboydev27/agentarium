@@ -9,7 +9,7 @@ Restart the bridge after updating, then reconnect through Simulation / Manage co
 - **Search tasks** searches resident names, providers, session IDs, task labels, supplied objectives, and request text in the current view.
 - **List order → Attention first** sorts attention ahead of routine activity. The list is not limited to eight residents.
 - **World seating → Pins, then attention first** prioritizes non-hidden attention sessions for unpinned seats. Pins retain priority, hidden sessions remain hidden, and eligible residents retain their seats. The overflow count includes unseated subagents; subagents share a session's resident.
-- **Need attention → View all** clears search and session filters and includes hidden and unseated residents. Select a task to read its brief and first-reported request time.
+- The **need you** banner (and the **need you** count) clears search and session filters and includes hidden and unseated residents. Select a task to read its brief and first-reported request time.
 - **Mark seen locally** acknowledges an episode without resolving it. A new episode becomes unseen. Saved acknowledgements are scoped to bridge database, agent, and episode, and bounded to the latest 512 acknowledgements in this browser origin. Older acknowledgements may appear unseen again.
 - **Recap** loads meaningful hook/proxy changes since the last explicit review. Refresh retrieves newer changes; Load more follows the same fixed upper cursor. Mark loaded changes reviewed advances only through loaded entries, not unread pages or later arrivals. It never clears unresolved attention.
 
@@ -55,4 +55,4 @@ Automated checks cover status-only compatibility, rich validation, request ident
 
 ## World HUD shortcuts
 
-The compact top-left panel replaces the introductory headline. Counts open matching tasks and clear prior search/session filters; status shortcuts include hidden tasks without restoring or reseating them. “Here” means assigned a visible world seat, not currently inside the camera viewport. Unknown includes disconnected or stale observation, and attention remains available even during uncertainty. Watch mode keeps the location selector and any attention indicator.
+The top-left readout shows the current place and the task counts. Counts open the list pane with the matching filter and clear prior search/session filters; status shortcuts include hidden tasks without restoring or reseating them. The amber **need you** banner at the top centre opens the attention list from anywhere, including watch mode and phones. “Here” means assigned a visible world seat, not currently inside the camera viewport. Unknown includes disconnected or stale observation, and attention remains available even during uncertainty. Watch mode keeps the place readout and the attention banner. See [Interface](interface.md) for the full HUD.

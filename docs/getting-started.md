@@ -53,7 +53,7 @@ Use **Simulation** in the connection controls to return to demo activity. For is
 
 ## Understand connection diagnostics
 
-The header says **Bridge connected** after authentication. The connection dialog separately shows the count of newly accepted events, their local receipt time, and the providers observed since the latest successful connection. A saved snapshot can contain residents while the new-event count remains zero. Neither a snapshot nor an open socket confirms that a provider is currently working.
+The connection pill in the top-right corner says **Bridge live** after authentication. The connection dialog separately shows the count of newly accepted events, their local receipt time, and the providers observed since the latest successful connection. A saved snapshot can contain residents while the new-event count remains zero. Neither a snapshot nor an open socket confirms that a provider is currently working.
 
 The dialog includes a synthetic transport test and separate Claude, Gemini, and Codex setup guidance. Codex local discovery can observe saved desktop sessions when explicitly enabled; the separate App Server proxy does not attach to desktop chats. Authentication failures require correcting the token and reconnecting; other connection losses retry automatically.
 

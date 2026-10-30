@@ -44,7 +44,7 @@ Before replacing the rig, check scale, forward axis, floor origin, unique saniti
 
 Resident labels are DOM buttons positioned each frame by projecting a 3D anchor into the viewport. Text is assigned with `textContent`. A selected resident’s label shows cosmetic location/activity; tooltips expose it for all residents. The inspector labels the assigned zone as Home, since a resident may be visiting somewhere else. Labels are hidden when outside the view and can be toggled in settings; selection can keep a label visible. Both world selection and the ordinary resident list update the same store.
 
-The list and inspector provide a text-based way to inspect activity without interpreting character gestures. Clicking empty canvas space clears selection. The application wraps world loading with Suspense and an error boundary.
+The roster, the list pane, and the resident pane provide a text-based way to inspect activity without interpreting character gestures (see [Interface](interface.md)). Clicking empty canvas space clears selection. The application wraps world loading with Suspense and an error boundary.
 
 ## Cameras and lighting
 
@@ -58,7 +58,7 @@ Northstar Spaceport extends the Expedition Base approach through a saddle in the
 
 Select a resident occupying a seat and choose **Follow resident**. The camera follows the actual moving character, including trips across the island. The follow angle is raised to reduce foreground obstruction. Dragging or choosing a preset stops following. A session leaving the visible eight releases the follow camera. **Stop following** returns to the selected preset.
 
-The eye button in the header enters **Watch mode**: the world fills the viewport, panels are hidden, and only the selected resident retains its label. A compact overlay keeps simulation/live connection context, attention access, and an exit button visible. Watching does not automatically start camera orbit or follow an agent. It respects the existing camera choice. Escape exits watch mode; outside watch mode it stops following, then clears selection. Dialogs retain their own Escape handling.
+The eye button in the top-right system cluster (or `W`) enters **Watch mode**: the roster, hotbar, transport, map, and any open pane are hidden, and only the selected resident retains its label. The place readout, the attention banner, and a caption with an exit button stay visible. Watching does not automatically start camera orbit or follow an agent. It respects the existing camera choice. Escape exits watch mode; outside watch mode it stops following, then clears selection. Dialogs retain their own Escape handling.
 
 Watch and follow choices are temporary. Reduced motion makes camera placement immediate, and low quality lowers resolution/shadow cost and removes fine decorative layers. No frame-rate claim is made without device profiling.
 

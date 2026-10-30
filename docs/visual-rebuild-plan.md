@@ -125,6 +125,15 @@ Acceptance: every preset reads as a finished shot, frame time stays within budge
 
 Phases 1 and 2 alone will change the project more than everything done in the last month. They are also the cheapest.
 
+## Interface
+
+Two interface decisions were made before Phase 3, and both are shipped:
+
+- **The orbital scales are gone.** Planet and Solar system views, the scale store, the second Canvas, and the procedural planet textures were deleted. Zooming out stops at the surface camera's far limit. Mars is read from the surface: sky, horizon, far landforms. The world is one place, and the renderer work in Phases 3 to 5 only has to serve that place.
+- **The web-app chrome is gone.** The 80px top bar, brand row, account chrome, white card panels, and the SaaS toolbar are replaced by a game HUD ([docs/interface.md](interface.md)): the world fills the viewport, overlays sit on the edges and corners on dark glass with thin lines, residents are a party-style roster strip with a slide-in detail pane, viewpoints are a number-keyed hotbar, the simulator is a small transport, the map is a corner toggle, and non-essential HUD fades after four seconds idle. Amber attention is the one element that never dims or hides. Keyboard panning, map scouting, watch mode, reduced motion, and narrow screens all survived; the look of the 3D world, the data model, and the bridge did not change.
+
+Why: the owner judged the previous shell to read as a dashboard, which fought every rendering improvement. A HUD lets the surface carry the identity and makes the remaining phases visible instead of boxed in.
+
 ## Status
 
 ### Phase 1: implemented

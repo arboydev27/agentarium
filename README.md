@@ -13,8 +13,8 @@ Visit **Expedition Base** to inspect the approved Blender reference, then explor
 - A 29.25 × 22.2 colony inside a continuous 1,200 × 1,200 desert landscape, with habitats, research facilities, mineral formations, craters, and distant mountains.
 - Eight expressive residents with alien equipment, stable identities, different walking preferences, and skeletal work/rest animations.
 - Authored journeys to colony facilities and exploration sites, including a spaceport with a decorative rocket cycle and rover.
-- Surface camera presets, a perspective Horizon, map scouting, resident following, watch mode, reduced motion, and rendering-quality controls.
-- A clearly labeled simulator with tasks, delegation, waiting, completion, failure, pause, speed, reset, an activity feed, and an inspector.
+- A game-style HUD over the fullscreen world: a resident roster, a viewpoint hotbar with number keys, an attention banner, map scouting, resident following, watch mode, reduced motion, and rendering-quality controls.
+- A clearly labeled simulator with tasks, delegation, waiting, completion, failure, pause, speed, reset, an activity feed, and a resident pane.
 - Opt-in local session discovery for Codex, Claude Code CLI, and Gemini CLI; up to eight sessions occupy stable seats, with pinned sessions first.
 - Guided local connection setup, fresh-event diagnostics, and a session filter for live residents.
 - An authenticated loopback event bridge with SQLite state, ordering, deduplication, WebSocket delivery, reconnect snapshots, and disconnect indicators.
@@ -173,7 +173,7 @@ Select a resident to pin or hide its session. **Manage sessions** restores hidde
 
 ### Watch your residents work
 
-Select a seated-world resident and choose **Follow resident** to watch them travel between their home desk and shared destinations. Use the eye button in the header for **Watch mode**, which hides the panels while retaining connection context, attention access, and an exit control. Drag to stop following; Escape exits watch mode.
+Select a seated-world resident and choose **Follow resident** to watch them travel between their home desk and shared destinations. Use the eye button in the top-right corner (or `W`) for **Watch mode**, which hides the roster and hotbar while retaining the place readout, the attention banner, and an exit control. Drag to stop following; Escape exits watch mode.
 
 Characters type, review, raise a hand while waiting, and briefly celebrate fresh completion before resting. Arrival/departure is staged when sessions change seats. Reduced motion skips travel and uses still poses. These behaviors use the existing robot rig; see [The 3D world](docs/3d-world.md) for the asset contract, limitations, and animation details.
 
