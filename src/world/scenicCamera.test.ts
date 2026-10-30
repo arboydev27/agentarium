@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
-import { measureScenicFrame } from './scenicCamera';
+import { HORIZON_GROUND_RADIUS, measureScenicFrame } from './scenicCamera';
 import { selectScenicRegions, SCENIC_REGIONS } from './scenicVisibility';
 
 function overview(width = 1280, height = 720, zoom = 30) {
@@ -45,7 +45,7 @@ describe('scenic camera asset coverage', () => {
     camera.position.set(0, 12, 0);
     camera.lookAt(0, 12, -1);
     const frame = measureScenicFrame(camera);
-    expect(frame.visibleGroundRadius).toBe(Infinity);
+    expect(frame.visibleGroundRadius).toBe(HORIZON_GROUND_RADIUS);
     expect(selectScenicRegions({ mode: 'orthographic', ...frame })).toHaveLength(
       SCENIC_REGIONS.length,
     );

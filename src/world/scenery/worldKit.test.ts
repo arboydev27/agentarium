@@ -23,7 +23,10 @@ it('exports reusable hardware within its original placement envelopes', async ()
   );
   scene.updateMatrixWorld(true);
   const envelopes: [string, readonly [number, number, number], number?][] = [
-    ['pressure-habitat', [6.3, 3.8, 6.4]],
+    ['pressure-habitat', [6.3, 4.4, 6.4]],
+    ['relay-mast', [3.6, 10.3, 3.6]],
+    ['fuel-farm', [4.5, 1.8, 3.3]],
+    ['pad-beacon', [0.3, 0.7, 0.3], 0.25],
     ['solar-rack', [4.3, 2.2, 2.5]],
     ['sensor-mast', [2.5, 4.2, 1.2]],
     ['service-wall', [10.4, 5.4, 2.5]],
@@ -104,6 +107,13 @@ it('keeps the exported structures outside resident walking corridors', async () 
     ['control-cabin', 43.5, -118],
     ['launch-gantry', 46.4, -118],
     ['survey-rover', 54.6, -115, 1, -0.5],
+    ['fuel-farm', 55, -124, 1, 0.2],
+    ['relay-mast', 7, -44],
+    ...[0, 1, 2, 3, 4, 5, 6, 7].map((i): [string, number, number] => [
+      'pad-beacon',
+      49 + Math.cos((i * Math.PI) / 4) * 4.1,
+      -118 + Math.sin((i * Math.PI) / 4) * 4.1,
+    ]),
     ...[3, 5.5, 8, 10.5].map((x): [string, number, number, number, number, number] => [
       'resource-tank',
       x,

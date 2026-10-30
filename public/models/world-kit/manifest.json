@@ -29,7 +29,10 @@
     "hab-crate",
     "hab-planter",
     "hab-rack",
-    "hab-galley"
+    "hab-galley",
+    "relay-mast",
+    "fuel-farm",
+    "pad-beacon"
   ],
   "units": "metres",
   "front": "+Z in glTF"

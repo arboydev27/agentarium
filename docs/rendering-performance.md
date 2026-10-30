@@ -2,9 +2,33 @@
 
 > The frame-time and scene-counter measurements below describe historical Earth-world builds. They are not performance measurements of the Mars colony. Re-profile the current production build before treating them as a budget. Current rendering architecture is documented in [World layout](world-layout.md).
 
-The completed Mars asset rollout ships a shared fifteen-module hardware GLB of 8,728,944 bytes (about 8.3 MiB), plus a separate reference habitat of about 6.8 MiB. The 10 MiB hardware test cap and per-module mesh limits are export guardrails, not benchmarks of network loading, GPU memory, or frame time. Material texture sampling and authored detail add rendering work; shared cached geometry/materials and per-material export merging limit duplication. No controlled performance benchmark was run for this rollout. See [World asset upgrade](world-asset-upgrade.md) for implementation and review scope.
+The colony ships a shared hardware kit GLB of about 7.4 MB (geometry only; its surface textures are the shared PNGs under `public/textures/habitat`), a 1.3 MB resident, and a separate reference habitat of about 6.8 MiB. The 10 MiB hardware test cap and per-module mesh limits are export guardrails, not benchmarks of network loading, GPU memory, or frame time. Material texture sampling and authored detail add rendering work; shared cached geometry/materials and per-material export merging limit duplication. No controlled performance benchmark was run for this rollout. See [World asset upgrade](world-asset-upgrade.md) for implementation and review scope.
 
 Append `?renderStats=1` to the local app URL, for example `http://127.0.0.1:5173/?renderStats=1`. A small overlay reports average interval FPS, the 95th-percentile frame interval, renderer draw calls and triangles, allocated geometry/texture counts, and the current number of full-detail terrain tiles. Remove the query parameter and reload to disable it. Nothing is transmitted or persisted.
+
+## Phase 5 measurements (October 30, 2026)
+
+Embedded development browser inside the Claude desktop app, 1024 × 768 viewport, eight simulated residents, daylight, 120 Hz display. These are settled single samples after the camera arrived, taken after the overlay was fixed to count every pass (see below). The display caps readings at 120 fps.
+
+| Preset               | Quality | fps | p95 ms | draws | triangles |
+| -------------------- | ------- | --- | ------ | ----- | --------- |
+| Overview             | high    | 66  | 17.5   | 1,973 | 1.94 M    |
+| Overview             | low     | 120 | 9.6    | 1,422 | 1.47 M    |
+| Northstar Spaceport  | high    | 120 | 10.3   | 655   | 0.83 M    |
+| Northstar Spaceport  | low     | 120 | 9.5    | 431   | 0.78 M    |
+| Survey Lookout       | high    | 120 | 9.7    | 783   | 0.89 M    |
+| Expedition Base      | high    | 118 | 10.3   | 653   | 0.78 M    |
+| Deep Sky Array       | high    | 120 | 9.6    | 1,088 | 1.25 M    |
+| Basalt Field Station | high    | 120 | 10.2   | 639   | 0.74 M    |
+| Southwind Crater     | high    | 120 | 9.1    | 650   | 0.73 M    |
+| Dawnlight Biolab     | high    | 88  | 12.3   | 1,873 | 1.84 M    |
+| Helios Power Field   | high    | 120 | 10.3   | 719   | 0.93 M    |
+| Amber Bluff          | high    | 120 | 9.8    | 585   | 0.64 M    |
+| Horizon              | high    | 65  | 21.9   | 2,089 | 2.17 M    |
+
+The Overview, Dawnlight and Horizon carry the colony: eight skinned residents at eleven draws each, four enclosed modules drawn as instanced tile groups per side, and the desks. The Overview's p95 sits just above one 60 Hz frame and the Horizon, which also mounts every landmark it can see, sits at 22 ms; everything else has headroom. Changes in this phase that moved the numbers: the high-quality shadow map is 2048 pixels (was 4096), the kit no longer carries embedded textures (one shared set instead of two), and horizon shots mount detail within 150 m of the focus rather than every landmark. The dust field is one draw; each dust devil is one draw while present.
+
+**Overlay fix.** Before this phase the overlay read the renderer counters after the post-processing composer's final pass, so with post-processing on it reported one draw and one triangle. It now accumulates across the frame and resets once per frame, so draws and triangles include the shadow pass, the ambient-occlusion pass and the composer.
 
 ## What the numbers mean
 

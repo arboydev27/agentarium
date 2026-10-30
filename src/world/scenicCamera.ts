@@ -1,6 +1,9 @@
 import * as THREE from 'three';
 import type { ScenicFrame, ScenicPoint } from './scenicVisibility';
 
+/** Detail reach, in metres from the focus, for shots whose frame includes the horizon. */
+export const HORIZON_GROUND_RADIUS = 150;
+
 type GroundScratch = { near: THREE.Vector3; far: THREE.Vector3 };
 const sharedScratch: GroundScratch = { near: new THREE.Vector3(), far: new THREE.Vector3() };
 
@@ -28,12 +31,16 @@ export function measureScenicFrame(camera: THREE.Camera): ScenicFrame {
   camera.updateMatrixWorld();
   const focus = groundIntersection(camera, 0, 0, 0, scratch);
   const cameraPoint = { x: camera.position.x, z: camera.position.z };
-  if (!focus) return { focus: cameraPoint, camera: cameraPoint, visibleGroundRadius: Infinity };
+  if (!focus)
+    return { focus: cameraPoint, camera: cameraPoint, visibleGroundRadius: HORIZON_GROUND_RADIUS };
   let radius = 0;
   for (const ndcX of [-1, 1]) {
     for (const ndcY of [-1, 1]) {
       const ground = groundIntersection(camera, ndcX, ndcY, 0, scratch);
-      if (!ground) return { focus, camera: cameraPoint, visibleGroundRadius: Infinity };
+      // A frame edge above the horizon sees the whole plain; mount detail only within a
+      // finite reach so a composed shot does not load every landmark at once.
+      if (!ground)
+        return { focus, camera: cameraPoint, visibleGroundRadius: HORIZON_GROUND_RADIUS };
       radius = Math.max(radius, Math.hypot(ground.x - focus.x, ground.z - focus.z));
       // Tall landmarks can enter the view before their ground footprint does.
       const elevated = groundIntersection(camera, ndcX, ndcY, 12, scratch);

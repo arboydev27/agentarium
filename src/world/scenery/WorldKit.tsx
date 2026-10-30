@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
+import { useKitScene } from './kitMaterials';
 
 export type WorldKitModule =
   | 'pressure-habitat'
@@ -30,14 +30,17 @@ export type WorldKitModule =
   | 'hab-crate'
   | 'hab-planter'
   | 'hab-rack'
-  | 'hab-galley';
+  | 'hab-galley'
+  | 'relay-mast'
+  | 'fuel-farm'
+  | 'pad-beacon';
 
 /** Cache-busting query changes whenever the kit is regenerated. */
-export const WORLD_KIT_URL = '/models/world-kit/colony-hardware.glb?v=colony-6';
+export const WORLD_KIT_URL = '/models/world-kit/colony-hardware.glb?v=colony-7';
 
 /** Cache-owned geometry and materials are shared across independently placed clones. */
 export function WorldKit({ module }: { module: WorldKitModule }) {
-  const { scene } = useGLTF(WORLD_KIT_URL);
+  const { scene } = useKitScene();
   const model = useMemo(() => {
     const source = scene.getObjectByName(module);
     if (!source) throw new Error(`World kit is missing ${module}`);

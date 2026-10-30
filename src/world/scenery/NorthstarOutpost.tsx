@@ -1,11 +1,14 @@
 import { WorldKit } from './WorldKit';
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useWorld } from '../../state';
 import { Box, Cylinder, Sign } from '../primitives';
 import { renderedTerrainHeight } from '../terrain';
 import { NORTHSTAR_TOWER_XZ } from './northstarPlacement';
+import { KitInstances } from '../habitat/KitInstances';
+import type { Placement } from '../habitat/habitatLayout';
+import { launchDustWash, roverPatrolPose } from '../ambientLife';
 
 export function ExpeditionRover() {
   return (
@@ -15,9 +18,55 @@ export function ExpeditionRover() {
   );
 }
 
+/** The rover patrols a loop east of the pad; reduced motion parks it at the loop start. */
+function RoverPatrol({
+  originX,
+  originZ,
+  ground,
+}: {
+  originX: number;
+  originZ: number;
+  ground: number;
+}) {
+  const rover = useRef<THREE.Group>(null);
+  const time = useRef(0);
+  const reduced = useWorld((s) => s.reducedMotion);
+  useFrame((_, delta) => {
+    if (!rover.current) return;
+    if (!reduced) time.current += Math.min(delta, 0.05);
+    const pose = roverPatrolPose(time.current);
+    rover.current.position.set(
+      pose.x,
+      renderedTerrainHeight(originX + pose.x, originZ + pose.z) - ground,
+      pose.z,
+    );
+    rover.current.rotation.y = pose.heading;
+  });
+  return (
+    <group ref={rover} name="rover-patrol">
+      <ExpeditionRover />
+    </group>
+  );
+}
+
+function PadBeacons({ lift }: { lift: number }) {
+  const placements = useMemo(
+    () =>
+      Array.from({ length: 8 }, (_, i): Placement => ({
+        module: 'pad-beacon',
+        position: [Math.cos((i * Math.PI) / 4) * 4.1, lift, Math.sin((i * Math.PI) / 4) * 4.1],
+        rotationY: 0,
+        scale: [1, 1, 1],
+      })),
+    [lift],
+  );
+  return <KitInstances module="pad-beacon" placements={placements} />;
+}
+
 function Rocket() {
   const craft = useRef<THREE.Group>(null);
   const plume = useRef<THREE.Mesh>(null);
+  const wash = useRef<THREE.Mesh>(null);
   const timer = useRef(0);
   const reduced = useWorld((s) => s.reducedMotion);
   // This is a decorative flight cycle. It does not read or write provider state.
@@ -27,6 +76,7 @@ function Rocket() {
       craft.current.position.y = -0.55;
       craft.current.visible = true;
       plume.current.visible = false;
+      if (wash.current) wash.current.visible = false;
       return;
     }
     timer.current = (timer.current + Math.min(delta, 0.05)) % 90;
@@ -36,13 +86,26 @@ function Rocket() {
     craft.current.position.y = (flying ? elapsed * elapsed * 0.65 : 0) - 0.55;
     plume.current.visible = flying;
     plume.current.scale.y = 1 + Math.sin(timer.current * 25) * 0.12;
+    if (wash.current) {
+      // Ignition throws a ring of pad dust outward under the climbing rocket.
+      const dust = launchDustWash(flying ? elapsed : -1);
+      wash.current.visible = dust.opacity > 0;
+      wash.current.scale.setScalar(Math.max(dust.scale, 0.001));
+      (wash.current.material as THREE.MeshBasicMaterial).opacity = dust.opacity;
+    }
   });
   return (
-    <group ref={craft} name="decorative-survey-launch">
-      <WorldKit module="survey-rocket" />
-      <mesh ref={plume} position={[0, 0.15, 0]} rotation={[Math.PI, 0, 0]} visible={false}>
-        <coneGeometry args={[0.48, 2.3, 12]} />
-        <meshBasicMaterial color="#ffd58d" transparent opacity={0.8} />
+    <group name="decorative-survey-launch">
+      <group ref={craft}>
+        <WorldKit module="survey-rocket" />
+        <mesh ref={plume} position={[0, 0.15, 0]} rotation={[Math.PI, 0, 0]} visible={false}>
+          <coneGeometry args={[0.48, 2.3, 12]} />
+          <meshBasicMaterial color="#ffd58d" transparent opacity={0.8} />
+        </mesh>
+      </group>
+      <mesh ref={wash} position={[0, 0.16, 0]} rotation={[-Math.PI / 2, 0, 0]} visible={false}>
+        <ringGeometry args={[0.55, 1, 40]} />
+        <meshBasicMaterial color="#d6a580" transparent opacity={0} depthWrite={false} />
       </mesh>
     </group>
   );
@@ -94,13 +157,15 @@ export function NorthstarOutpost() {
         <group position={[-2.6, 0, 0]}>
           <WorldKit module="launch-gantry" />
         </group>
+        <PadBeacons lift={0.12} />
       </group>
       <group
-        position={[5.6, renderedTerrainHeight(x + 5.6, z + 3) - ground, 3]}
-        rotation={[0, -0.5, 0]}
+        position={[6, renderedTerrainHeight(x + 6, z - 6) - ground, -6]}
+        rotation={[0, 0.2, 0]}
       >
-        <ExpeditionRover />
+        <WorldKit module="fuel-farm" />
       </group>
+      <RoverPatrol originX={x} originZ={z} ground={ground} />
       <Box
         finish="ceramic-paint"
         pos={[-5.5, (cabinBase + cabinBottom) / 2, 0]}

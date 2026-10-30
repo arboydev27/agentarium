@@ -79,6 +79,23 @@ export const SEATS: Point[] = [
   [-8.5, 0.49, 6],
   [-4.5, 0.49, 6],
 ];
+/**
+ * A composed shot: the camera sits on `bearing` degrees from the look point
+ * (0 = south of it, 90 = east), `pitch` degrees above it. Landmark shots use a
+ * low pitch so a foreground, the landmark and the horizon share the frame;
+ * the colony shots stay steep so the dollhouse interiors read.
+ */
+function shot(look: Point, bearing: number, pitch: number, span: [number, number]) {
+  const b = (bearing * Math.PI) / 180;
+  const p = (pitch * Math.PI) / 180;
+  const reach = 40;
+  const pos: Point = [
+    look[0] + Math.sin(b) * Math.cos(p) * reach,
+    look[1] + Math.sin(p) * reach,
+    look[2] + Math.cos(b) * Math.cos(p) * reach,
+  ];
+  return { pos, look, span };
+}
 export const CAMERA_VIEWS: Record<WorldView, { pos: Point; look: Point; span: [number, number] }> =
   {
     overview: { pos: [27, 26, 35], look: [0, 2.8, 0], span: [40, 32] },
@@ -86,34 +103,24 @@ export const CAMERA_VIEWS: Record<WorldView, { pos: Point; look: Point; span: [n
     garden: { pos: [15, 12, 18], look: [7, 1.8, 5], span: [16, 12] },
     studio: { pos: [15, 12, 9], look: [7, 2.2, -5], span: [16, 12] },
     courtyard: { pos: [1, 11, 18], look: [-6, 1.5, 5.5], span: [16, 12] },
-    lookout: { pos: [27, 16, -16], look: [LOOKOUT.x, 4, LOOKOUT.z], span: [24, 17] },
-    orchard: { pos: [61, 22, -55], look: [43, 9.7, -76], span: [25, 18] },
-    northstar: {
-      pos: [NORTHSTAR_OUTPOST.x - 12, 24, NORTHSTAR_OUTPOST.z - 18],
-      look: [NORTHSTAR_OUTPOST.centerX + 1, 12, NORTHSTAR_OUTPOST.centerZ - 2],
-      span: [32, 24],
-    },
-    observatory: { pos: [-45, 20, -30], look: [OBSERVATORY.x, 5.5, OBSERVATORY.z], span: [27, 19] },
-    hollow: {
-      pos: [WOODLAND_HOLLOW.x + 15, 14, WOODLAND_HOLLOW.z + 19],
-      look: [WOODLAND_HOLLOW.x - 3, 2, WOODLAND_HOLLOW.z + 1],
-      span: [28, 20],
-    },
-    mere: { pos: [-27, 15, 65], look: [-48, 1.5, 45], span: [28, 20] },
-    dawnlight: {
-      pos: [63, 18, 48],
-      look: [DAWNLIGHT_GLASSHOUSE.centerX + 1, 2, DAWNLIGHT_GLASSHOUSE.centerZ + 1],
-      span: [27, 19],
-    },
-    windward: {
-      pos: [57, 20, 1],
-      look: [WINDWARD_MILL.centerX, 5, WINDWARD_MILL.centerZ],
-      span: [30, 21],
-    },
-    amber: {
-      pos: [-89, 19, 112],
-      look: [AMBER_BLUFF.x, 5, AMBER_BLUFF.z],
-      span: [34, 24],
-    },
+    lookout: shot([LOOKOUT.x, 3.5, LOOKOUT.z], 31, 15, [24, 17]),
+    orchard: shot([43, 9.2, -76], 41, 15, [25, 18]),
+    northstar: shot(
+      [NORTHSTAR_OUTPOST.centerX + 7, 10, NORTHSTAR_OUTPOST.centerZ - 8],
+      -118,
+      14,
+      [32, 24],
+    ),
+    observatory: shot([OBSERVATORY.x, 4.5, OBSERVATORY.z], -37, 15, [27, 19]),
+    hollow: shot([WOODLAND_HOLLOW.x - 3, 2.5, WOODLAND_HOLLOW.z + 1], 45, 15, [28, 20]),
+    mere: shot([-48, 1.5, 45], 46, 14, [28, 20]),
+    dawnlight: shot(
+      [DAWNLIGHT_GLASSHOUSE.centerX + 1, 2.5, DAWNLIGHT_GLASSHOUSE.centerZ + 1],
+      42,
+      15,
+      [27, 19],
+    ),
+    windward: shot([WINDWARD_MILL.centerX, 4, WINDWARD_MILL.centerZ], -37, 16, [30, 21]),
+    amber: shot([AMBER_BLUFF.x, 6, AMBER_BLUFF.z], 32, 15, [34, 24]),
     horizon: { pos: [0, 12, 35], look: [0, 2, -22], span: [50, 28] },
   };

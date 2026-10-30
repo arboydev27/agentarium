@@ -632,7 +632,7 @@ function Lighting() {
   const hemisphere = useRef<THREE.HemisphereLight>(null);
   const dayness = useDayness();
   const shadowHalf = useRef(0);
-  const mapSize = quality === 'low' ? 1024 : 4096;
+  const mapSize = quality === 'low' ? 1024 : 2048;
   const palette = useMemo(
     () => ({
       sunDay: new THREE.Color(SKY.day.sunColor),

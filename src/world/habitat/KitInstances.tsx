@@ -1,8 +1,8 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, type RefObject } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { WORLD_KIT_URL, type WorldKitModule } from '../scenery/WorldKit';
+import type { WorldKitModule } from '../scenery/WorldKit';
+import { applyKitSurface, useKitScene, type KitMaps } from '../scenery/kitMaterials';
 import type { Placement } from './habitatLayout';
 import { fadedOpacity } from './reveal';
 
@@ -17,8 +17,17 @@ type Part = {
   baseOpacity: number;
 };
 
-function prepareMaterial(source: THREE.Material): THREE.MeshStandardMaterial {
+function prepareMaterial(
+  source: THREE.Material,
+  maps: KitMaps,
+  fades: boolean,
+): THREE.MeshStandardMaterial {
+  // Navigation lights pulse through the one shared material unless this set fades.
+  if (!fades && source.name === 'airlock navigation light')
+    return source as THREE.MeshStandardMaterial;
   const material = (source as THREE.MeshStandardMaterial).clone();
+  // Material.clone() drops the compile hook that carries the grain; reapply it.
+  applyKitSurface(material, maps);
   if (material.name === 'blue reflective glazing') {
     // The kit authors glazing opaque; the habitats need to see through it.
     material.transparent = true;
@@ -50,7 +59,7 @@ export function KitInstances({
   /** Fraction of opacity kept when fully revealed, so walls remain as ghost outlines. */
   floor?: number;
 }) {
-  const { scene } = useGLTF(WORLD_KIT_URL);
+  const { scene, maps } = useKitScene();
   const parts = useMemo(() => {
     const root = scene.getObjectByName(module);
     if (!root) throw new Error(`World kit is missing ${module}`);
@@ -59,7 +68,7 @@ export function KitInstances({
     const result: Part[] = [];
     root.traverse((object) => {
       if (!(object instanceof THREE.Mesh)) return;
-      const material = prepareMaterial(object.material as THREE.Material);
+      const material = prepareMaterial(object.material as THREE.Material, maps, !!fade);
       result.push({
         geometry: object.geometry as THREE.BufferGeometry,
         material,
@@ -68,8 +77,14 @@ export function KitInstances({
       });
     });
     return result;
-  }, [scene, module]);
-  useEffect(() => () => parts.forEach((part) => part.material.dispose()), [parts]);
+  }, [scene, maps, module, fade]);
+  useEffect(
+    () => () =>
+      parts.forEach((part) => {
+        if (part.material.name !== 'airlock navigation light' || fade) part.material.dispose();
+      }),
+    [parts, fade],
+  );
   if (!placements.length) return null;
   return (
     <>

@@ -17,30 +17,50 @@ def module(name, build):
         if o.parent is None: o.parent=root
     roots.append(root)
 
+def placed(build,loc=(0,0,0),rz=0):
+    """Build a part group at the origin, then move it as one pivot (kept through the per-material join)."""
+    before=set(bpy.data.objects);build();created=set(bpy.data.objects)-before
+    pivot=bpy.data.objects.new('placed group',None);bpy.context.collection.objects.link(pivot)
+    for o in created:
+        if o.parent is None:o.parent=pivot
+    pivot.location=loc;pivot.rotation_euler[2]=rz
+    return pivot
+
 def pressure():
+    # Outpost habitat on the habitat-tile standard: ribbed hull, glazing band,
+    # a hab airlock, side radiators, dust skirt. Same 6.2 m raft as before.
     cyl('cast circular raft',(0,0,.2),3.1,.4,concrete)
-    # Retain the route-tested dome envelope; ribbed panels replace the smooth cap.
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=48,ring_count=24,radius=2.8,location=(0,0,.4))
-    o=bpy.context.object
+    cyl('dust skirt',(0,0,.5),2.78,.3,metal)
+    cyl('pressure hull',(0,0,1.75),2.5,2.7,shell)
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=48,ring_count=16,radius=1,location=(0,0,3.05))
+    o=bpy.context.object;o.scale=(2.56,2.56,.7);bpy.ops.object.transform_apply(location=False,rotation=False,scale=True)
     import bmesh
     bm=bmesh.new();bm.from_mesh(o.data)
     bmesh.ops.delete(bm,geom=[v for v in bm.verts if v.co.z < -.001],context='VERTS')
-    bm.to_mesh(o.data);bm.free();finish(o,'insulated dome',shell)
+    bm.to_mesh(o.data);bm.free();finish(o,'insulated roof',shell)
+    for p in o.data.polygons:p.use_smooth=True
+    for h in [1.0,2.55]:cyl('tie band',(0,0,h),2.58,.1,metal)
     for i in range(12):
-        angle=i*math.pi/6
-        pts=[(math.cos(angle)*2.82*math.sin(t*math.pi/2),math.sin(angle)*2.82*math.sin(t*math.pi/2),.4+2.82*math.cos(t*math.pi/2)) for t in [0,.2,.4,.6,.8,1]]
-        pipe('pressure seam',pts,.035,metal)
-    box('airlock housing',(0,-2.3,1.1),(1.7,1.5,2),shell,.22)
-    box('door gasket',(0,-3.065,1.1),(1.22,.06,1.65),black,.1)
-    for x in [-.29,.29]: box('split door',(x,-3.11,1.1),(.55,.055,1.5),metal,.06)
-    box('airlock transom',(0,-3.15,1.65),(.85,.035,.08),light,.01)
-    for x in [-.72,.72]:
-        box('safety marking',(x,-3.1,1.15),(.055,.03,1.3),orange,.01)
-    for a in [0,math.pi/2,math.pi]:
-        x,y=2.4*math.cos(a),2.4*math.sin(a)
-        panel=box('service access',(x,y,1.2),(.7,.12,.55),metal,.05);panel.rotation_euler[2]=a-math.pi/2
-    cyl('roof vent',(0,0,3.25),.35,.18,metal)
-    for i in range(4): cyl('vent baffle',(0,0,3.34+i*.07),.28,.035,metal)
+        a=i*math.pi/6+math.pi/12
+        rib=box('exterior rib',(math.cos(a)*2.56,math.sin(a)*2.56,1.75),(.14,.1,2.6),metal,.015);rib.rotation_euler[2]=a
+    for i in range(5):
+        a=-math.pi/2+(i-2)*.36
+        pane=trim('pressure glazing',(math.cos(a)*2.5,math.sin(a)*2.5,1.95),(.06,.62,.6),glass);pane.rotation_euler[2]=a
+        for s_ in [-1,1]:
+            m=box('glazing mullion',(math.cos(a+s_*.16)*2.52,math.sin(a+s_*.16)*2.52,1.95),(.08,.08,.7),metal,.01);m.rotation_euler[2]=a+s_*.16
+    placed(lambda:hab_airlock(2,1.3,.5,hood=False,plinth=False),(0,-2.36,0))
+    box('door canopy',(0,-2.98,3.05),(2.3,.52,.12),shell,.03)
+    for x in [-.95,.95]:pipe('canopy strut',[(x,-2.86,2.62),(x,-3.2,3.0)],.03,metal)
+    for s_,rz in [(1,math.pi/2),(-1,-math.pi/2)]:placed(hab_radiator,(s_*2.56,.3,1.3),rz)
+    for a in [math.pi*.72,math.pi*1.28]:
+        x,y=2.5*math.cos(a),2.5*math.sin(a)
+        panel=box('service access',(x,y,1.3),(.7,.12,.55),metal,.05);panel.rotation_euler[2]=a-math.pi/2
+    pipe('service conduit',[(-2.1,-1.55,2.5),(-2.62,-.4,2.5),(-2.62,1.2,2.5),(-2.1,2.0,2.5)],.035,black)
+    pipe('coolant line',[(2.62,-.9,2.4),(2.62,.3,2.4)],.03,metal)
+    cyl('roof vent',(0,0,3.55),.35,.2,metal)
+    for i in range(3):cyl('vent baffle',(0,0,3.66+i*.04),.28,.03,metal)
+    cyl('navigation light',(0,.6,3.72),.1,.06,light)
+    cyl('antenna base',(1.6,1.2,3.4),.06,.5,metal);cyl('antenna whip',(1.6,1.2,4.0),.015,.6,black)
 
 def solar():
     for x in [-1.4,1.4]:
@@ -314,19 +334,20 @@ def hab_corner():
     box('corner cap',(0,0,3.3),(.46,.46,.12),metal,.02)
     box('corner base',(0,0,-.28),(.46,.46,1.04),metal,.02)
 
-def hab_airlock(width=2,opening=1.3,depth=.6):
+def hab_airlock(width=2,opening=1.3,depth=.6,hood=True,plinth=True):
     pillar=(width-opening)/2
     for s in [-1,1]:
         x=s*(opening/2+pillar/2)
         box('airlock pillar',(x,-depth/2,1.6),(pillar,depth,3.2),shell,.04)
-        box('airlock plinth',(x,-depth/2,-.4),(pillar,depth,.8),metal,.02)
+        if plinth:box('airlock plinth',(x,-depth/2,-.4),(pillar,depth,.8),metal,.02)
         trim('door pocket seal',(s*(opening/2+.03),-depth/2,1.15),(.06,depth-.08,2.3),black)
         for h in [.35,.75,1.15,1.55]:trim('safety marking',(x,-depth-.01,h),(pillar*.7,.02,.1),orange)
     box('airlock header',(0,-depth/2,2.75),(width,depth,.9),shell,.04)
     trim('header seal',(0,-depth/2,2.33),(opening+.12,depth-.08,.06),black)
     trim('door light bar',(0,-depth-.02,2.45),(opening*.7,.03,.07),light)
-    box('airlock hood',(0,-depth-.42,3.05),(width+.2,.9,.14),shell,.03)
-    for x in [-width/2+.25,width/2-.25]:pipe('hood strut',[(x,-depth-.02,2.6),(x,-depth-.8,2.98)],.03,metal)
+    if hood:
+        box('airlock hood',(0,-depth-.42,3.05),(width+.2,.9,.14),shell,.03)
+        for x in [-width/2+.25,width/2-.25]:pipe('hood strut',[(x,-depth-.02,2.6),(x,-depth-.8,2.98)],.03,metal)
     trim('access keypad',(opening/2+pillar/2,-depth-.03,1.35),(pillar*.5,.04,.22),black)
     trim('keypad readout',(opening/2+pillar/2,-depth-.055,1.4),(pillar*.3,.01,.05),light)
     trim('ceiling cove lamp',(0,.055,3.0),(width-.1,.05,.045),warm)
@@ -431,6 +452,76 @@ module('hab-crate',hab_crate)
 module('hab-planter',hab_planter)
 module('hab-rack',hab_rack)
 module('hab-galley',hab_galley)
+
+def reflector(radius,z,tilt):
+    vertices=[];faces=[]
+    for j in range(7):
+        r=.02+j/6*radius
+        for i in range(32):
+            a=i*math.pi/16;vertices.append((r*math.cos(a),r*math.sin(a),.4*r*r/radius))
+    for j in range(6):
+        for i in range(32):
+            a=j*32+i;b=j*32+(i+1)%32;faces.append((a,b,b+32,a+32))
+    m=bpy.data.meshes.new('relay reflector');m.from_pydata(vertices,[],faces);m.update()
+    o=bpy.data.objects.new('relay reflector',m);bpy.context.collection.objects.link(o);finish(o,'relay reflector',shell)
+    o.location=(0,0,z);o.rotation_euler[0]=tilt
+    return o
+
+def relay_mast():
+    cyl('relay footing',(0,0,.15),1.3,.3,concrete)
+    for i in range(3):
+        a=i*2*math.pi/3+math.pi/2
+        pipe('tower leg',[(math.cos(a)*.95,math.sin(a)*.95,.3),(math.cos(a)*.3,math.sin(a)*.3,8.4)],.05,metal)
+        cyl('leg anchor',(math.cos(a)*.95,math.sin(a)*.95,.36),.12,.12,metal)
+    for h in [1.6,3.2,4.8,6.4,8.0]:
+        r=.95-(h-.3)/8.1*.65
+        for i in range(3):
+            a=i*2*math.pi/3+math.pi/2;b=a+2*math.pi/3
+            pipe('tower brace',[(math.cos(a)*r,math.sin(a)*r,h),(math.cos(b)*r,math.sin(b)*r,h)],.025,metal)
+            pipe('tower diagonal',[(math.cos(a)*r,math.sin(a)*r,h),(math.cos(b)*(r-.13),math.sin(b)*(r-.13),h+1.6)],.02,metal)
+    cyl('relay platform',(0,0,8.5),.75,.12,metal)
+    for i in range(8):
+        a=i*math.pi/4;cyl('rail post',(math.cos(a)*.7,math.sin(a)*.7,8.8),.02,.5,metal,verts=8)
+    cyl('platform rail',(0,0,9.05),.7,.03,metal)
+    cyl('mast top',(0,0,9.3),.06,1.6,metal)
+    cyl('relay beacon',(0,0,10.15),.1,.14,light)
+    for s_,tilt in [(1,.95),(-1,1.15)]:
+        d=reflector(.8,0,0);d.location=(s_*.95,-.1,8.95);d.rotation_euler=(1.2,0,s_*.9)
+        pipe('reflector arm',[(s_*.45,0,8.6),(s_*.9,-.05,8.9)],.03,metal)
+    for a in [0,math.pi*.5]:
+        pipe('guy cable',[(math.cos(a)*.6,math.sin(a)*.6,8.2),(math.cos(a)*1.4,math.sin(a)*1.4,.35)],.012,black)
+        cyl('guy anchor',(math.cos(a)*1.4,math.sin(a)*1.4,.3),.08,.1,concrete)
+    box('relay cabinet',(0,1.1,.75),(.7,.4,.9),metal,.03)
+    box('cabinet readout',(0,.88,.95),(.3,.02,.1),light,.005)
+    pipe('feed cable',[(0,.95,1.15),(0,.5,2.4),(0,.2,8.4)],.018,black)
+
+def fuel_farm():
+    box('fuel farm raft',(0,0,.1),(4.2,3,.2),concrete)
+    for y in [-.85,.85]:
+        cyl('propellant tank',(0,y,1.0),.68,3.1,shell,axis='X')
+        for x in [-1.1,1.1]:
+            cyl('tank strap',(x,y,1.0),.71,.1,metal,axis='X')
+            box('tank cradle',(x,y,.45),(.3,1.55,.5),metal,.03)
+        for x in [-1.58,1.58]:cyl('tank end',(x,y,1.0),.45,.08,metal,axis='X')
+        box('tank marking',(0,y,1.69),(.9,.14,.02),orange,.005)
+    pipe('transfer manifold',[(1.65,-.85,1.0),(1.95,-.85,1.0),(1.95,.85,1.0),(1.65,.85,1.0)],.06,metal)
+    pipe('fill line',[(-1.65,.85,1.0),(-1.95,.85,1.0),(-1.95,.85,.25),(-2.08,.85,.1)],.05,metal)
+    for y in [-.85,.85]:
+        cyl('tank valve stem',(1.95,y,1.28),.05,.4,metal)
+        cyl('valve wheel',(1.95,y,1.5),.17,.035,orange)
+    box('farm readout',(0,0,.55),(.45,.22,.5),black,.025)
+    box('readout screen',(0,-.12,.62),(.3,.02,.14),light,.005)
+    for x in [-1.9,1.9]:box('safety bollard',(x,-1.35,.4),(.14,.14,.6),orange,.01)
+
+def pad_beacon():
+    cyl('beacon base',(0,0,.04),.14,.08,concrete)
+    cyl('beacon post',(0,0,.3),.045,.45,metal)
+    cyl('beacon lamp',(0,0,.58),.08,.12,light)
+    cyl('beacon cap',(0,0,.66),.09,.03,metal)
+
+module('relay-mast',relay_mast)
+module('fuel-farm',fuel_farm)
+module('pad-beacon',pad_beacon)
 bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/'assets/blender/world-kit.blend'))
 # Preserve nested authored transforms while optimizing each module by material.
 for root in roots:
@@ -446,8 +537,13 @@ for root in roots:
         for o in members:o.select_set(True)
         bpy.context.view_layer.objects.active=members[0]
         bpy.ops.object.join();o=bpy.context.object
-        matrix=o.matrix_world.copy();o.parent=root;o.matrix_world=matrix;o.name=root.name+' / '+mat.name
+        # Bake the group to an identity transform so its node carries no rotation
+        # (axis-aligned bounds of a rotated node over-estimate the envelope).
+        matrix=o.matrix_world.copy();o.parent=None;o.matrix_world=matrix
+        bpy.ops.object.select_all(action='DESELECT');o.select_set(True);bpy.context.view_layer.objects.active=o
+        bpy.ops.object.transform_apply(location=True,rotation=True,scale=True)
+        o.parent=root;o.name=root.name+' / '+mat.name
 kitout=ROOT/'public/models/world-kit';kitout.mkdir(parents=True,exist_ok=True)
 bpy.ops.object.select_all(action='SELECT')
-bpy.ops.export_scene.gltf(filepath=str(kitout/'colony-hardware.glb'),export_format='GLB',use_selection=True,export_apply=True,export_yup=True)
+bpy.ops.export_scene.gltf(filepath=str(kitout/'colony-hardware.glb'),export_format='GLB',use_selection=True,export_apply=True,export_yup=True,export_image_format='NONE')
 (kitout/'manifest.json').write_text(json.dumps({'source':'assets/blender/world-kit.blend','generator':'assets/blender/build_world_kit.py','modules':[r.name for r in roots],'units':'metres','front':'+Z in glTF'},indent=2)+'\n')

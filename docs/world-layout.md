@@ -6,21 +6,21 @@ Agentarium is a Mars-inspired alien colony surrounded by finite desert terrain. 
 
 Stable internal IDs preserve saved views, seating, and navigation while the displayed destinations use the colony theme.
 
-| Internal view | Destination          | Character                                                            |
-| ------------- | -------------------- | -------------------------------------------------------------------- |
-| café          | Habitat Commons      | Open service spine, canopy, shared workstations                      |
-| garden        | Resource Lab         | Processing tanks and sample equipment                                |
-| studio        | Research Array       | Raised research deck and service wall                                |
-| courtyard     | Comms Court          | Communications dish and illuminated paths                            |
-| lookout       | Survey Lookout       | Sensor masts and survey console                                      |
-| orchard       | Expedition Base      | Blender-authored reference habitat, textured ground, solar equipment |
-| observatory   | Deep Sky Array       | Telescope terrace and antenna fringe                                 |
-| northstar     | Northstar Spaceport  | Rocket, launchpad, gantry, control cabin, rover                      |
-| hollow        | Basalt Field Station | Remote habitat and instrumentation                                   |
-| dawnlight     | Dawnlight Biolab     | Two pressure habitats north of the approach                          |
-| windward      | Helios Power Field   | Habitat, solar racks, tall sensor mast                               |
-| mere          | Southwind Crater     | Mineral basin and sampling station                                   |
-| amber         | Amber Bluff          | Scenic stratified rock formation                                     |
+| Internal view | Destination          | Character                                                                          |
+| ------------- | -------------------- | ---------------------------------------------------------------------------------- |
+| café          | Habitat Commons      | Open service spine, canopy, shared workstations                                    |
+| garden        | Resource Lab         | Processing tanks and sample equipment                                              |
+| studio        | Research Array       | Raised research deck and service wall                                              |
+| courtyard     | Comms Court          | Communications dish and illuminated paths                                          |
+| lookout       | Survey Lookout       | Sensor masts, survey console and relay mast                                        |
+| orchard       | Expedition Base      | Blender-authored reference habitat, textured ground, solar equipment               |
+| observatory   | Deep Sky Array       | Telescope terrace and antenna fringe                                               |
+| northstar     | Northstar Spaceport  | Rocket, launchpad with beacons, gantry, control cabin, fuel farm, patrolling rover |
+| hollow        | Basalt Field Station | Outpost habitat and instrumentation                                                |
+| dawnlight     | Dawnlight Biolab     | Two outpost habitats north of the approach                                         |
+| windward      | Helios Power Field   | Habitat, solar racks, tall sensor mast                                             |
+| mere          | Southwind Crater     | Mineral basin and sampling station                                                 |
+| amber         | Amber Bluff          | Scenic stratified rock formation                                                   |
 
 Slate Reach and Amber Bluff are scenic formations, not resident destinations. Authored trails connect the other outer destinations and two trail rests. Procedural rocks fill the wilderness while respecting route exclusions. Residents do not freely traverse every terrain triangle.
 
@@ -43,7 +43,7 @@ Seats anchor desks, laptops, chairs, and reversible local routes. Residents join
 
 ## Surface exploration
 
-Overview and destination presets use viewport-aware orthographic framing. Horizon uses a perspective camera. Drag/orbit, keyboard arrows, map scouting, resident following, and watch mode provide different ways to explore. Shift increases keyboard pan distance. Camera focus stays within X/Z ±210, well inside the finite terrain boundary.
+Overview and the four colony presets use steep viewport-aware framing so the dollhouse interiors read. The nine landmark presets are composed shots (`shot()` in `src/world/layout.ts`): the camera sits on the preset's bearing at a 14 to 16 degree pitch, so foreground ground, the landmark and the horizon share the frame. Horizon is a fixed perspective placement. Drag/orbit, keyboard arrows, map scouting, resident following, and watch mode provide different ways to explore. Shift increases keyboard pan distance. Camera focus stays within X/Z ±210, well inside the finite terrain boundary.
 
 Map scouting moves the camera without moving residents. North is negative Z. Manual camera adjustment clears preset highlighting. Focus labels describe the current location independently of the selected preset. Basalt Flats, Iron Highlands, and Amber Foothills provide broader geographic context.
 
@@ -57,7 +57,7 @@ Terrain maintains a merged full-detail cover near the camera and coarse cover el
 
 Routes and arrival ground remain mounted independently of scenery loading. Detailed scenery must agree with fallback placement and remain within its visibility bounds. `scenicFallbackPlan.test.ts` checks fallback bounds, route clearance, and arrival sightlines.
 
-Low surface quality uses DPR 1 and 512-pixel shadows; high quality allows DPR up to 1.6 and 2048-pixel shadows. A local diagnostic overlay is available with `?renderStats=1`. No representative-device frame-rate guarantee has been established. See [Rendering performance](rendering-performance.md) and [Spatial streaming](spatial-streaming.md) for the underlying infrastructure; older names in code refer to stable region identities.
+Low surface quality uses DPR 1, 1024-pixel shadows, no post-processing and no dust; high quality allows DPR up to 1.6, 2048-pixel shadows, the post-processing composer, the dust field and dust devils. Shots whose frame includes the horizon mount landmark detail within 150 m of the focus; farther regions keep their silhouettes. A local diagnostic overlay is available with `?renderStats=1`. No representative-device frame-rate guarantee has been established. See [Rendering performance](rendering-performance.md) and [Spatial streaming](spatial-streaming.md) for the underlying infrastructure; older names in code refer to stable region identities.
 
 ## Factual activity and decorative life
 

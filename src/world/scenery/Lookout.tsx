@@ -7,6 +7,15 @@ import { SensorMast } from './ColonyHardware';
 export function MeadowLookout() {
   return (
     <group name="survey-lookout">
+      <group
+        position={[
+          LOOKOUT.x - 6.5,
+          renderedTerrainHeight(LOOKOUT.x - 6.5, LOOKOUT.z - 6),
+          LOOKOUT.z - 6,
+        ]}
+      >
+        <WorldKit module="relay-mast" />
+      </group>
       <SensorMast x={LOOKOUT.x - 3.8} z={LOOKOUT.z - 2.5} height={5.2} />
       <SensorMast x={LOOKOUT.x + 3.8} z={LOOKOUT.z - 2.5} height={3.6} />
       <group

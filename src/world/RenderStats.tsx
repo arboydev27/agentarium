@@ -9,6 +9,9 @@ export function RenderStats() {
   const samples = useRef<number[]>([]);
   const elapsed = useRef(0);
   useEffect(() => {
+    // Post-processing renders several passes per frame; accumulate them all and
+    // reset once per frame here instead of after every renderer.render().
+    gl.info.autoReset = false;
     const output = document.createElement('output');
     output.setAttribute('aria-label', 'Rendering diagnostics');
     output.setAttribute('aria-live', 'off');
@@ -17,11 +20,15 @@ export function RenderStats() {
     gl.domElement.parentElement?.appendChild(output);
     node.current = output;
     return () => {
+      gl.info.autoReset = true;
       output.remove();
       node.current = null;
     };
   }, [gl]);
   useFrame(({ scene }, delta) => {
+    const calls = gl.info.render.calls;
+    const triangles = gl.info.render.triangles;
+    gl.info.reset();
     // Discard tab-resume gaps; intervals include browser scheduling, not just GPU work.
     if (delta <= 0 || delta > 0.25 || document.hidden) return;
     samples.current.push(delta * 1000);
@@ -32,7 +39,7 @@ export function RenderStats() {
     const { fps, p95 } = frameSummary(samples.current);
     const terrain = scene.getObjectByName('spatial-terrain');
     const tiles = terrain ? ` · ${terrain.userData.fineCount} fine terrain tiles` : '';
-    node.current.textContent = `${fps.toFixed(0)} fps · p95 ${p95.toFixed(1)} ms · ${gl.info.render.calls} draws · ${gl.info.render.triangles.toLocaleString()} triangles · ${gl.info.memory.geometries} geometries · ${gl.info.memory.textures} textures${tiles}`;
+    node.current.textContent = `${fps.toFixed(0)} fps · p95 ${p95.toFixed(1)} ms · ${calls} draws · ${triangles.toLocaleString()} triangles · ${gl.info.memory.geometries} geometries · ${gl.info.memory.textures} textures${tiles}`;
   });
   return null;
 }
