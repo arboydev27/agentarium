@@ -1,4 +1,5 @@
-import { useSurfaceTextures } from './surfaceTextures';
+import { useTerrainTextures } from './terrainTextures';
+import { createTerrainMaterial } from './TerrainMaterial';
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -70,31 +71,9 @@ export function TerrainTiles() {
   const [completedJump, setCompletedJump] = useState<number | null>(null);
   const elapsed = useRef(0.2);
   const direction = useRef(new THREE.Vector3());
-  const maps = useSurfaceTextures('regolith');
-  const material = useMemo(() => {
-    const result = new THREE.MeshStandardMaterial({
-      vertexColors: true,
-      map: maps[0],
-      normalMap: maps[1],
-      normalScale: new THREE.Vector2(0.45, 0.45),
-      roughnessMap: maps[2],
-      roughness: 1,
-      side: THREE.DoubleSide,
-    });
-    // Preserve biome colors: the source texture contributes grain, not a second red tint.
-    result.onBeforeCompile = (shader) => {
-      shader.fragmentShader = shader.fragmentShader.replace(
-        '#include <map_fragment>',
-        `#ifdef USE_MAP
-          vec4 grain = texture2D(map, vMapUv);
-          float variation = clamp(grain.r * 1.6 + 0.48, 0.72, 1.22);
-          diffuseColor.rgb *= variation;
-        #endif`,
-      );
-    };
-    result.customProgramCacheKey = () => 'regolith-biome-grain-v1';
-    return result;
-  }, [maps]);
+  const quality = useWorld((state) => state.quality);
+  const textures = useTerrainTextures();
+  const material = useMemo(() => createTerrainMaterial(textures, quality), [textures, quality]);
   useEffect(() => () => material.dispose(), [material]);
 
   const destination: GroundPoint | undefined =

@@ -1,4 +1,4 @@
-import { WorldSurfaceMaterial } from '../WorldSurfaceMaterial';
+import { WornGroundMaterial, withAcross } from '../WornGround';
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { walkwayHeight } from '../terrain';
@@ -19,10 +19,8 @@ function WindwardTrail() {
       }
     }
     const positions: number[] = [];
-    const colors: number[] = [];
+    const across: number[] = [];
     const indices: number[] = [];
-    const edge = new THREE.Color('#9f9a7d');
-    const center = new THREE.Color('#d3c5a1');
     samples.forEach(([x, z], index) => {
       const [px, pz] = samples[Math.max(0, index - 1)];
       const [nx, nz] = samples[Math.min(samples.length - 1, index + 1)];
@@ -33,8 +31,7 @@ function WindwardTrail() {
         const sx = x + normalX * side;
         const sz = z + normalZ * side;
         positions.push(sx, walkwayHeight(sx, sz, 0.08), sz);
-        const color = side === 0 ? center : edge;
-        colors.push(color.r, color.g, color.b);
+        across.push(side);
       }
       if (index) {
         const a = (index - 1) * 3;
@@ -45,20 +42,14 @@ function WindwardTrail() {
     });
     const ribbon = new THREE.BufferGeometry();
     ribbon.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-    ribbon.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
     ribbon.setIndex(indices);
     ribbon.computeVertexNormals();
-    return ribbon;
+    return withAcross(ribbon, across);
   }, []);
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <mesh name="windward-branch-trail" geometry={geometry} receiveShadow>
-      <WorldSurfaceMaterial
-        family="cast-foundation"
-        vertexColors
-        roughness={1}
-        side={THREE.DoubleSide}
-      />
+      <WornGroundMaterial tone="walk" />
     </mesh>
   );
 }
@@ -67,29 +58,26 @@ function ArrivalCircle() {
   const geometry = useMemo(() => {
     const { x, z } = WINDWARD_MILL;
     const positions = [x, walkwayHeight(x, z, 0.1), z];
+    const across = [0];
     const indices: number[] = [];
     for (let index = 0; index <= 32; index++) {
       const angle = (index / 32) * Math.PI * 2;
       const px = x + Math.cos(angle) * 2.75;
       const pz = z + Math.sin(angle) * 2.75;
       positions.push(px, walkwayHeight(px, pz, 0.1), pz);
+      across.push(1);
       if (index) indices.push(0, index, index + 1);
     }
     const pad = new THREE.BufferGeometry();
     pad.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     pad.setIndex(indices);
     pad.computeVertexNormals();
-    return pad;
+    return withAcross(pad, across);
   }, []);
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <mesh name="windward-arrival-circle" geometry={geometry} receiveShadow>
-      <WorldSurfaceMaterial
-        family="cast-foundation"
-        color="#bcb59a"
-        roughness={1}
-        side={THREE.DoubleSide}
-      />
+      <WornGroundMaterial tone="pad" />
     </mesh>
   );
 }

@@ -1,4 +1,5 @@
 import { WorldSurfaceMaterial } from '../WorldSurfaceMaterial';
+import { WornGroundMaterial, withAcross } from '../WornGround';
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { ORCHARD } from '../layout';
@@ -21,10 +22,8 @@ function OrchardPath() {
       }
     }
     const positions: number[] = [];
-    const colors: number[] = [];
+    const across: number[] = [];
     const indices: number[] = [];
-    const edgeColor = new THREE.Color('#ae986f');
-    const centerColor = new THREE.Color('#dccba5');
     samples.forEach(([x, z], i) => {
       const [px, pz] = samples[Math.max(0, i - 1)];
       const [nx, nz] = samples[Math.min(samples.length - 1, i + 1)];
@@ -37,8 +36,7 @@ function OrchardPath() {
         const edgeX = x + normalX * side * 1.05;
         const edgeZ = z + normalZ * side * 1.05;
         positions.push(edgeX, walkwayHeight(edgeX, edgeZ, lift), edgeZ);
-        const color = side === 0 ? centerColor : edgeColor;
-        colors.push(color.r, color.g, color.b);
+        across.push(side);
       }
       if (i) {
         const a = (i - 1) * 3;
@@ -48,20 +46,14 @@ function OrchardPath() {
     });
     const path = new THREE.BufferGeometry();
     path.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-    path.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
     path.setIndex(indices);
     path.computeVertexNormals();
-    return path;
+    return withAcross(path, across);
   }, []);
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <mesh name="orchard-branch-path" geometry={geometry} receiveShadow>
-      <WorldSurfaceMaterial
-        family="cast-foundation"
-        vertexColors
-        roughness={1}
-        side={THREE.DoubleSide}
-      />
+      <WornGroundMaterial tone="walk" />
     </mesh>
   );
 }

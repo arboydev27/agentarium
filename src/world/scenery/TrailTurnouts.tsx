@@ -1,4 +1,4 @@
-import { WorldSurfaceMaterial } from '../WorldSurfaceMaterial';
+import { WornGroundMaterial, withAcross } from '../WornGround';
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { Box, Cylinder } from '../primitives';
@@ -10,15 +10,17 @@ function TurnoutSurface({ trailIndex, side }: { trailIndex: number; side: number
     const [trailX, , trailZ] = meadowTrailPoint(trailIndex);
     const [centerX, , centerZ] = turnoutPoint(trailIndex, side, 4.8);
     const positions: number[] = [];
+    const across: number[] = [];
     const indices: number[] = [];
     for (let step = 0; step <= 8; step++) {
       const t = step / 8;
       const x = THREE.MathUtils.lerp(trailX, centerX, t);
       const z = THREE.MathUtils.lerp(trailZ, centerZ, t);
       const lift = 0.055 + t * 0.035;
-      for (const edge of [-0.8, 0.8]) {
+      for (const edge of [-1, 1]) {
         const edgeZ = z + edge;
         positions.push(x, walkwayHeight(x, edgeZ, lift), edgeZ);
+        across.push(edge);
       }
       if (step) {
         const a = (step - 1) * 2;
@@ -27,29 +29,26 @@ function TurnoutSurface({ trailIndex, side }: { trailIndex: number; side: number
     }
     const hub = positions.length / 3;
     positions.push(centerX, walkwayHeight(centerX, centerZ, 0.09), centerZ);
+    across.push(0);
     const ring = hub + 1;
     for (let step = 0; step <= 28; step++) {
       const angle = (step / 28) * Math.PI * 2;
-      const x = centerX + Math.cos(angle) * 2.3;
-      const z = centerZ + Math.sin(angle) * 2.3;
+      const x = centerX + Math.cos(angle) * 2.6;
+      const z = centerZ + Math.sin(angle) * 2.6;
       positions.push(x, walkwayHeight(x, z, 0.09), z);
+      across.push(1);
       if (step) indices.push(hub, ring + step - 1, ring + step);
     }
     const surface = new THREE.BufferGeometry();
     surface.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     surface.setIndex(indices);
     surface.computeVertexNormals();
-    return surface;
+    return withAcross(surface, across);
   }, [trailIndex, side]);
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <mesh geometry={geometry} name={`trail-turnout-surface-${trailIndex}`} receiveShadow>
-      <WorldSurfaceMaterial
-        family="cast-foundation"
-        color="#c8bd99"
-        roughness={1}
-        side={THREE.DoubleSide}
-      />
+      <WornGroundMaterial tone="walk" />
     </mesh>
   );
 }

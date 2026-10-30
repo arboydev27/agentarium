@@ -5,3 +5,4 @@ bridge/data/
 *.tsbuildinfo
 package-lock.json
 public/models/
+.impeccable/

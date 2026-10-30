@@ -1,4 +1,4 @@
-import { WorldSurfaceMaterial } from './WorldSurfaceMaterial';
+import { WornGroundMaterial, withAcross } from './WornGround';
 import { ScenicFallback } from './scenery/ScenicFallback';
 import { DesertGeology } from './DesertGeology';
 import { MeadowChunks } from './scenery/MeadowChunks';
@@ -36,6 +36,7 @@ import { TrailTurnouts } from './scenery/TrailTurnouts';
 function LandscapePath() {
   const geometry = useMemo(() => {
     const positions: number[] = [];
+    const across: number[] = [];
     const indices: number[] = [];
     for (let i = 0; i <= 34; i++) {
       const [center, , z] = meadowTrailPoint(i);
@@ -43,9 +44,10 @@ function LandscapePath() {
       const next = meadowTrailPoint(i + 1)[0];
       const lateral = (next - previous) / 4.7;
       for (const side of [-1, 1]) {
-        const x = center + side * 1.15;
-        const edgeZ = z + side * lateral * 1.15;
+        const x = center + side * 1.45;
+        const edgeZ = z + side * lateral * 1.45;
         positions.push(x, walkwayHeight(x, edgeZ, 0.045), edgeZ);
+        across.push(side);
       }
       if (i) {
         const a = (i - 1) * 2;
@@ -56,17 +58,12 @@ function LandscapePath() {
     path.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     path.setIndex(indices);
     path.computeVertexNormals();
-    return path;
+    return withAcross(path, across);
   }, []);
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <mesh name="decorative-meadow-trail" geometry={geometry} receiveShadow>
-      <WorldSurfaceMaterial
-        family="cast-foundation"
-        color="#c6bc94"
-        roughness={1}
-        side={THREE.DoubleSide}
-      />
+      <WornGroundMaterial tone="vehicle" />
     </mesh>
   );
 }
@@ -75,14 +72,16 @@ function LookoutBranch() {
   const geometry = useMemo(() => {
     const [startX, , startZ] = meadowTrailPoint(12);
     const positions: number[] = [];
+    const across: number[] = [];
     const indices: number[] = [];
     for (let i = 0; i <= 20; i++) {
       const t = i / 20;
       const x = THREE.MathUtils.lerp(startX, LOOKOUT.x, t);
       const z = THREE.MathUtils.lerp(startZ, LOOKOUT.z, t);
       for (const side of [-1, 1]) {
-        const edgeZ = z + side * 0.78;
+        const edgeZ = z + side * 1.0;
         positions.push(x, walkwayHeight(x, edgeZ, 0.05 + t * 0.05), edgeZ);
+        across.push(side);
       }
       if (i) {
         const a = (i - 1) * 2;
@@ -93,17 +92,12 @@ function LookoutBranch() {
     branch.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     branch.setIndex(indices);
     branch.computeVertexNormals();
-    return branch;
+    return withAcross(branch, across);
   }, []);
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <mesh name="lookout-branch" geometry={geometry} receiveShadow>
-      <WorldSurfaceMaterial
-        family="cast-foundation"
-        color="#c6bc94"
-        roughness={1}
-        side={THREE.DoubleSide}
-      />
+      <WornGroundMaterial tone="walk" />
     </mesh>
   );
 }

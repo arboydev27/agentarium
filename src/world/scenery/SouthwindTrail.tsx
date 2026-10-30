@@ -1,4 +1,5 @@
 import { WorldSurfaceMaterial } from '../WorldSurfaceMaterial';
+import { WornGroundMaterial, withAcross } from '../WornGround';
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useWorld } from '../../state';
@@ -26,10 +27,8 @@ function TrailRibbon() {
   const geometry = useMemo(() => {
     const samples = trailSamples();
     const positions: number[] = [];
-    const colors: number[] = [];
+    const across: number[] = [];
     const indices: number[] = [];
-    const edge = new THREE.Color('#b9ad88');
-    const worn = new THREE.Color('#d0c29b');
     for (let index = 0; index < samples.length; index++) {
       const [x, z] = samples[index];
       const [px, pz] = samples[Math.max(0, index - 1)];
@@ -37,15 +36,11 @@ function TrailRibbon() {
       const length = Math.hypot(nx - px, nz - pz) || 1;
       const sidewaysX = -(nz - pz) / length;
       const sidewaysZ = (nx - px) / length;
-      for (const [offset, color] of [
-        [-0.9, edge],
-        [0, worn],
-        [0.9, edge],
-      ] as const) {
-        const sx = x + sidewaysX * offset;
-        const sz = z + sidewaysZ * offset;
+      for (const side of [-1, 0, 1]) {
+        const sx = x + sidewaysX * side * 1.1;
+        const sz = z + sidewaysZ * side * 1.1;
         positions.push(sx, walkwayHeight(sx, sz, 0.08), sz);
-        colors.push(color.r, color.g, color.b);
+        across.push(side);
       }
       if (index > 0) {
         const a = (index - 1) * 3;
@@ -56,20 +51,14 @@ function TrailRibbon() {
     }
     const ribbon = new THREE.BufferGeometry();
     ribbon.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-    ribbon.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
     ribbon.setIndex(indices);
     ribbon.computeVertexNormals();
-    return ribbon;
+    return withAcross(ribbon, across);
   }, []);
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <mesh name="southwind-walking-trail" geometry={geometry} receiveShadow>
-      <WorldSurfaceMaterial
-        family="cast-foundation"
-        vertexColors
-        roughness={1}
-        side={THREE.DoubleSide}
-      />
+      <WornGroundMaterial tone="walk" />
     </mesh>
   );
 }

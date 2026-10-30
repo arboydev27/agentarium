@@ -758,6 +758,17 @@ function Lighting() {
     </>
   );
 }
+// Canvas content suspends while terrain layers bake and scenic assets load.
+// The render loop can go idle meanwhile and nothing restarts it once the
+// tree commits, so request a frame explicitly after every commit here.
+function WakeRenderLoop() {
+  const invalidate = useThree((state) => state.invalidate);
+  useEffect(() => {
+    invalidate();
+  });
+  return null;
+}
+
 export default function World() {
   const scale = useUniverse((s) => s.scale);
   const quality = useWorld((s) => s.quality);
@@ -790,6 +801,7 @@ export default function World() {
           }}
           onPointerMissed={() => useWorld.getState().select(null)}
         >
+          <WakeRenderLoop />
           <Lighting />
           <Environment />
           <Suspense fallback={null}>

@@ -1,4 +1,4 @@
-import { WorldSurfaceMaterial } from '../WorldSurfaceMaterial';
+import { WornGroundMaterial, withAcross } from '../WornGround';
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { renderedTerrainHeight } from '../terrain';
@@ -19,10 +19,8 @@ function WoodlandTrail() {
       }
     }
     const positions: number[] = [];
-    const colors: number[] = [];
+    const across: number[] = [];
     const indices: number[] = [];
-    const middle = new THREE.Color('#b9b49a');
-    const edge = new THREE.Color('#828c79');
     samples.forEach(([x, z], index) => {
       const [px, pz] = samples[Math.max(0, index - 1)];
       const [nx, nz] = samples[Math.min(samples.length - 1, index + 1)];
@@ -33,8 +31,7 @@ function WoodlandTrail() {
         const sx = x + normalX * side * 0.95;
         const sz = z + normalZ * side * 0.95;
         positions.push(sx, renderedTerrainHeight(sx, sz) + 0.08, sz);
-        const color = side === 0 ? middle : edge;
-        colors.push(color.r, color.g, color.b);
+        across.push(side);
       }
       if (index) {
         const a = (index - 1) * 3;
@@ -45,20 +42,14 @@ function WoodlandTrail() {
     });
     const ribbon = new THREE.BufferGeometry();
     ribbon.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-    ribbon.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
     ribbon.setIndex(indices);
     ribbon.computeVertexNormals();
-    return ribbon;
+    return withAcross(ribbon, across);
   }, []);
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <mesh name="woodland-hollow-trail" geometry={geometry} receiveShadow>
-      <WorldSurfaceMaterial
-        family="cast-foundation"
-        vertexColors
-        roughness={1}
-        side={THREE.DoubleSide}
-      />
+      <WornGroundMaterial tone="walk" />
     </mesh>
   );
 }
@@ -67,10 +58,7 @@ function HollowClearing() {
   const geometry = useMemo(() => {
     const { x, z } = WOODLAND_HOLLOW;
     const positions = [x, renderedTerrainHeight(x, z) + 0.08, z];
-    const colors: number[] = [];
-    const center = new THREE.Color('#b5ad8f');
-    const rim = new THREE.Color('#8c987d');
-    colors.push(center.r, center.g, center.b);
+    const across = [0];
     const indices: number[] = [];
     for (let index = 0; index <= 36; index++) {
       const angle = (index / 36) * Math.PI * 2;
@@ -78,25 +66,19 @@ function HollowClearing() {
       const px = x + Math.cos(angle) * radius;
       const pz = z + Math.sin(angle) * radius;
       positions.push(px, renderedTerrainHeight(px, pz) + 0.08, pz);
-      colors.push(rim.r, rim.g, rim.b);
+      across.push(1);
       if (index) indices.push(0, index, index + 1);
     }
     const clearing = new THREE.BufferGeometry();
     clearing.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-    clearing.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
     clearing.setIndex(indices);
     clearing.computeVertexNormals();
-    return clearing;
+    return withAcross(clearing, across);
   }, []);
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <mesh name="woodland-hollow-arrival" geometry={geometry} receiveShadow>
-      <WorldSurfaceMaterial
-        family="cast-foundation"
-        vertexColors
-        roughness={1}
-        side={THREE.DoubleSide}
-      />
+      <WornGroundMaterial tone="walk" />
     </mesh>
   );
 }

@@ -6,13 +6,14 @@ import { useWorld } from '../../state';
 import { selectDetailChunks, type DetailChunk } from '../chunks';
 import { biomeInfluence } from '../biomes';
 import { buildMeadowPieces, meadowChunkHasDetail } from './meadowPlacement';
+import { createRockGeometry } from '../rocks';
 
 function useSharedMeshes() {
   const shared = useMemo(
     () => ({
       hummockGeometry: new THREE.SphereGeometry(1, 7, 5),
       flowerGeometry: new THREE.IcosahedronGeometry(1, 0),
-      rockGeometry: new THREE.DodecahedronGeometry(1, 0),
+      rockGeometry: createRockGeometry(5, 1),
       hummockMaterial: new THREE.MeshStandardMaterial({ roughness: 1, flatShading: true }),
       flowerMaterial: new THREE.MeshStandardMaterial({ roughness: 1, flatShading: true }),
       rockMaterial: new THREE.MeshStandardMaterial({ roughness: 1, flatShading: true }),
@@ -93,7 +94,7 @@ function MeadowChunk({
     });
     pieces.rocks.forEach(({ x, y, z, size, shade }, i) => {
       matrix.compose(
-        position.set(x, y + size * 0.27, z),
+        position.set(x, y + size * 0.12, z),
         rotation,
         scale.set(size, size * 0.6, size * 0.8),
       );

@@ -1,4 +1,4 @@
-import { WorldSurfaceMaterial } from '../WorldSurfaceMaterial';
+import { WornGroundMaterial, withAcross } from '../WornGround';
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { walkwayHeight } from '../terrain';
@@ -18,25 +18,19 @@ function EastTrail() {
       }
     }
     const positions: number[] = [];
-    const colors: number[] = [];
+    const across: number[] = [];
     const indices: number[] = [];
-    const edge = new THREE.Color('#a89c77');
-    const middle = new THREE.Color('#d3c7a2');
     samples.forEach(([x, z], index) => {
       const [px, pz] = samples[Math.max(0, index - 1)];
       const [nx, nz] = samples[Math.min(samples.length - 1, index + 1)];
       const length = Math.hypot(nx - px, nz - pz) || 1;
       const normalX = -(nz - pz) / length;
       const normalZ = (nx - px) / length;
-      for (const [side, color] of [
-        [-1, edge],
-        [0, middle],
-        [1, edge],
-      ] as const) {
+      for (const side of [-1, 0, 1]) {
         const sx = x + normalX * side;
         const sz = z + normalZ * side;
         positions.push(sx, walkwayHeight(sx, sz, 0.08), sz);
-        colors.push(color.r, color.g, color.b);
+        across.push(side);
       }
       if (index > 0) {
         const a = (index - 1) * 3;
@@ -47,20 +41,14 @@ function EastTrail() {
     });
     const path = new THREE.BufferGeometry();
     path.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-    path.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
     path.setIndex(indices);
     path.computeVertexNormals();
-    return path;
+    return withAcross(path, across);
   }, []);
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <mesh name="dawnlight-east-trail" geometry={geometry} receiveShadow>
-      <WorldSurfaceMaterial
-        family="cast-foundation"
-        vertexColors
-        roughness={1}
-        side={THREE.DoubleSide}
-      />
+      <WornGroundMaterial tone="walk" />
     </mesh>
   );
 }
@@ -69,6 +57,7 @@ function Forecourt() {
   const geometry = useMemo(() => {
     const { x: centerX, z: centerZ } = DAWNLIGHT_GLASSHOUSE;
     const positions = [centerX, walkwayHeight(centerX, centerZ, 0.09), centerZ];
+    const across = [0];
     const indices: number[] = [];
     const segments = 32;
     for (let index = 0; index <= segments; index++) {
@@ -77,23 +66,19 @@ function Forecourt() {
       const x = centerX + Math.cos(angle) * radius;
       const z = centerZ + Math.sin(angle) * radius;
       positions.push(x, walkwayHeight(x, z, 0.09), z);
+      across.push(1);
       if (index > 0) indices.push(0, index, index + 1);
     }
     const pad = new THREE.BufferGeometry();
     pad.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     pad.setIndex(indices);
     pad.computeVertexNormals();
-    return pad;
+    return withAcross(pad, across);
   }, []);
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <mesh name="dawnlight-arrival-forecourt" geometry={geometry} receiveShadow>
-      <WorldSurfaceMaterial
-        family="cast-foundation"
-        color="#c6b995"
-        roughness={1}
-        side={THREE.DoubleSide}
-      />
+      <WornGroundMaterial tone="pad" />
     </mesh>
   );
 }
@@ -126,12 +111,7 @@ function ConservatoryFloor() {
   useEffect(() => () => geometry.dispose(), [geometry]);
   return (
     <mesh name="dawnlight-conservatory-floor" geometry={geometry} receiveShadow>
-      <WorldSurfaceMaterial
-        family="cast-foundation"
-        color="#c8c2a2"
-        roughness={1}
-        side={THREE.DoubleSide}
-      />
+      <WornGroundMaterial tone="pad" />
     </mesh>
   );
 }

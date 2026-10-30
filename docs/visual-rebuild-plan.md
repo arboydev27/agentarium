@@ -140,3 +140,20 @@ Shipped in the surface renderer (`src/World.tsx`, `src/world/Sky.tsx`, `src/worl
 - `?lookdev=<view>&night=1` pins a preset, pauses the simulator, and disables cinematic motion for before/after captures. Baseline captures from before this phase are in `.impeccable/review/`.
 
 Not done in this phase: cascaded shadow maps (the single fitted frustum was sufficient at 4096 px), a time-of-day slider (the day/night toggle drives a smooth transition instead), a color-grade LUT, and depth of field in cinematic mode. Scenic landmark streaming now measures the perspective frustum; low camera angles see further, so more landmark modules load than under the orthographic camera.
+
+### Phase 2: implemented
+
+Shipped in the terrain stack (`src/world/noise.ts`, `src/world/terrain.ts`, `src/world/terrainBake.ts`, `src/world/terrainTextures.ts`, `src/world/TerrainMaterial.ts`, `src/world/WornGround.tsx`, `src/world/rocks.ts`, `src/world/DesertGeology.tsx`):
+
+- **Height.** The sine folds are gone. `terrainHeight()` now layers deterministic gradient noise on the authored macro shape: domain-warped swells at ~150 m, plains relief at ~55 m, and noise-driven folds and northern crest. It remains the single source of truth for routes, placement, and tests. Amplitude per wavelength is budgeted to the 4.72 m render grid so every route chord still passes its clearance tests; the plateau edge and the observatory and orchard clearing ramps were widened for the same reason, and the crater floor reaches past the shoreline so grid vertices beside the water sit on it.
+- **Ground layers.** Three tileable PBR layers (sand with wind ripples, pebbled gravel, cracked basalt) are baked from the same noise at start-up in Web Workers (512 px at high quality, 256 px at low) as colour, normal, and roughness maps. No texture files or third-party licences are involved, and the bake is covered by tests for warmth, contrast, and seamless wrapping.
+- **Material.** `TerrainMaterial` splats the three layers by slope and noise, samples each at two scales with a rotated second lookup to break tiling, applies a 170 m macro tint and a 23 m mid tint, darkens dust in dips, blends a fine sand normal within ten metres of the camera, and folds the authored biome vertex colours in as a tint instead of using them as the whole albedo.
+- **Rocks.** The hex "formations" are four noise-displaced rock variants in three size classes, settled into the ground with flattened undersides, instanced per variant, and shaded with the baked basalt layer through the existing triplanar detail path. Meadow pebbles use the same rock body.
+- **Paths.** Every authored route surface (meadow trail, lookout branch, turnouts, Southwind, Woodland, Northstar, Windward, Orchard, Observatory, and Dawnlight trails and pads) uses `WornGroundMaterial`: compacted sand that fades into the regolith through an `across` attribute with noisy edges and scuffs; the meadow trail is the vehicle route and carries twin ruts.
+- **Render loop.** The canvas content suspends while layers bake and scenic assets load, and the React Three Fiber loop could stay idle after the tree committed (the blank first frame seen during Phase 1). `WakeRenderLoop` in `src/World.tsx` requests a frame after every commit.
+
+Not done in this phase, and why:
+
+- The 0.25 m near-camera mesh. The 254-segment grid is the walkable contract that routes, scenery placement, and dozens of tests sample through `renderedTerrainHeight()`; a clipmap needs a separate visual mesh with a matching feet-on-ground policy and is its own piece of work.
+- Carving the far ridge, mesas, and distant landforms into the heightmap. Unselected tiles still render as one flat fan per 75 m tile, which would erase any landform placed in the height field at those distances; this depends on the clipmap above.
+- Scanned CC0 rock meshes and path decals as separate assets. Procedural rock bodies and the worn-ground surfaces cover the same ground without downloads; swap in scans when the Blender pipeline (Phase 3) is set up.
