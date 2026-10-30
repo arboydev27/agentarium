@@ -7,7 +7,7 @@ import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useWorld } from '../state';
-import { CAMERA_VIEWS, LOOKOUT } from './layout';
+import { LOOKOUT } from './layout';
 import {
   SCENIC_REGIONS,
   selectScenicRegions,
@@ -15,6 +15,7 @@ import {
   type ScenicRegionId,
 } from './scenicVisibility';
 import { measureScenicFrame } from './scenicCamera';
+import { presetCamera } from './perspective';
 import { TerrainTiles } from './TerrainTiles';
 import { ScenicAsset } from './ScenicAsset';
 import { preloadScenicAssets } from './scenicAssets';
@@ -114,35 +115,22 @@ function ScenicMounts() {
   const quality = useWorld((state) => state.quality);
   const size = useThree((state) => state.size);
   const renderCamera = useThree((state) => state.camera);
-  const allIds = useMemo(() => new Set(SCENIC_REGIONS.map((region) => region.id)), []);
-  const [visible, setVisible] = useState<ReadonlySet<ScenicRegionId>>(() => {
-    if (view === 'horizon' || !(renderCamera instanceof THREE.OrthographicCamera)) return allIds;
-    return new Set(
-      selectScenicRegions({ mode: 'orthographic', ...measureScenicFrame(renderCamera) }).map(
-        (region) => region.id,
+  const [visible, setVisible] = useState<ReadonlySet<ScenicRegionId>>(
+    () =>
+      new Set(
+        selectScenicRegions({ mode: 'orthographic', ...measureScenicFrame(renderCamera) }).map(
+          (region) => region.id,
+        ),
       ),
-    );
-  });
+  );
   const selected = useRef<ReadonlySet<ScenicRegionId>>(visible);
   const [completedJump, setCompletedJump] = useState<number | null>(null);
   const elapsed = useRef(0.2);
   const lastRadius = useRef(60);
-  const presetCamera = useMemo(() => new THREE.OrthographicCamera(), []);
   const presetTarget = useMemo<ScenicFrame | undefined>(() => {
-    if (view === 'horizon' || customized || !size.width || !size.height) return undefined;
-    const preset = CAMERA_VIEWS[view];
-    presetCamera.left = -size.width / 2;
-    presetCamera.right = size.width / 2;
-    presetCamera.top = size.height / 2;
-    presetCamera.bottom = -size.height / 2;
-    presetCamera.near = 0.1;
-    presetCamera.far = 360;
-    presetCamera.zoom = Math.min(size.width / preset.span[0], size.height / preset.span[1]);
-    presetCamera.position.fromArray(preset.pos);
-    presetCamera.lookAt(new THREE.Vector3(...preset.look));
-    presetCamera.updateProjectionMatrix();
-    return measureScenicFrame(presetCamera);
-  }, [view, customized, size.width, size.height, presetCamera]);
+    if (customized || !size.width || !size.height) return undefined;
+    return measureScenicFrame(presetCamera(view, size.width / size.height));
+  }, [view, customized, size.width, size.height]);
   const jumpActive = Boolean(customized && cameraJump && cameraJump.sequence !== completedJump);
   const jumpTarget: ScenicFrame | undefined =
     jumpActive && cameraJump
@@ -166,31 +154,26 @@ function ScenicMounts() {
     elapsed.current += delta;
     if (elapsed.current < 0.2) return;
     elapsed.current = 0;
-    const next =
-      view === 'horizon' || !(camera instanceof THREE.OrthographicCamera)
-        ? [...SCENIC_REGIONS]
-        : (() => {
-            const current = measureScenicFrame(camera);
-            if (Number.isFinite(current.visibleGroundRadius))
-              lastRadius.current = current.visibleGroundRadius;
-            if (
-              jumpActive &&
-              cameraJump &&
-              Math.hypot(current.focus.x - cameraJump.x, current.focus.z - cameraJump.z) < 6
-            )
-              setCompletedJump(cameraJump.sequence);
-            return selectScenicRegions(
-              { mode: 'orthographic', ...current, target },
-              selected.current,
-            );
-          })();
+    const current = measureScenicFrame(camera);
+    if (Number.isFinite(current.visibleGroundRadius))
+      lastRadius.current = current.visibleGroundRadius;
+    if (
+      jumpActive &&
+      cameraJump &&
+      Math.hypot(current.focus.x - cameraJump.x, current.focus.z - cameraJump.z) < 6
+    )
+      setCompletedJump(cameraJump.sequence);
+    const next = selectScenicRegions(
+      { mode: 'orthographic', ...current, target },
+      selected.current,
+    );
     const ids = new Set(next.map((region) => region.id));
     if (ids.size === selected.current.size && [...ids].every((id) => selected.current.has(id)))
       return;
     selected.current = ids;
     setVisible(ids);
   });
-  const active = view === 'horizon' ? allIds : new Set([...visible, ...prefetched]);
+  const active = new Set([...visible, ...prefetched]);
   return (
     <group name="spatial-scenic-landmarks">
       {SCENIC_REGIONS.map((region) =>

@@ -11,7 +11,7 @@ function LightStrip({ position, width }: { position: [number, number, number]; w
   return (
     <mesh position={position}>
       <boxGeometry args={[width, 0.035, 0.035]} />
-      <meshStandardMaterial color={cyan} emissive={cyan} emissiveIntensity={1.4} />
+      <meshStandardMaterial color={cyan} emissive={cyan} emissiveIntensity={2.2} />
     </mesh>
   );
 }

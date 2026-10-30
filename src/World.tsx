@@ -1,7 +1,6 @@
 import { useSurfaceTextures } from './world/surfaceTextures';
 import { applySurfaceDetails } from './world/WorldSurfaceMaterial';
 import { WorldKit } from './world/scenery/WorldKit';
-import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { useUniverse } from './world/universe';
 import { OrbitalWorld } from './world/OrbitalWorld';
 import { districtAt } from './world/hud';
@@ -25,7 +24,16 @@ import { Box, Cylinder, Pot } from './world/primitives';
 import { Environment } from './world/Environment';
 import { CAMERA_VIEWS } from './world/layout';
 import { CAMERA_PAN_BOUNDS, clampPanDelta, isPanKey, keyboardPanDelta } from './world/cameraPan';
-import { WORLD_FOG_NEAR, WORLD_FOG_FAR } from './world/terrainTileVisibility';
+import {
+  fitDistance,
+  presetPosition,
+  SURFACE_FAR,
+  SURFACE_FOV,
+  SURFACE_MAX_DISTANCE,
+  SURFACE_NEAR,
+} from './world/perspective';
+import { SKY, SkyDome, SkyEnvironment, skyHorizonColor, useDayness } from './world/Sky';
+import { PostProcessing } from './world/PostProcessing';
 import { renderedTerrainHeight } from './world/terrain';
 import {
   mapIsActive,
@@ -91,7 +99,7 @@ function Laptop({ status }: { status?: Status }) {
           <meshStandardMaterial
             color={active ? screenColor : '#334940'}
             emissive={active ? '#74c99a' : '#000000'}
-            emissiveIntensity={0.25}
+            emissiveIntensity={active ? 1.8 : 0.1}
           />
         </mesh>
         {[0, 1, 2, 3, 4].map((i) => (
@@ -463,6 +471,8 @@ function Residents({ positions }: { positions: Positions }) {
     </>
   );
 }
+const FOLLOW_DIRECTION = new THREE.Vector3(5, 7.5, 7).normalize();
+const FOLLOW_SPAN: [number, number] = [10, 8];
 function Camera({ positions }: { positions: Positions }) {
   const controls = useRef<OrbitControlsImpl>(null);
   const view = useWorld((s) => s.camera);
@@ -477,79 +487,40 @@ function Camera({ positions }: { positions: Positions }) {
     if (follow && !followVisible) useWorld.setState({ followAgent: null });
   }, [follow, followVisible]);
   const reduced = useWorld((s) => s.reducedMotion);
-  const { camera, size, set, gl } = useThree();
-  // Canvas owns this orthographic camera for its whole lifetime. Only Horizon
-  // swaps the active camera; the Canvas, residents, and scenery stay mounted.
-  const orthographic = useRef(camera as THREE.OrthographicCamera);
-  const perspective = useMemo(() => new THREE.PerspectiveCamera(48, 1, 0.1, 420), []);
-  const activeCamera = view === 'horizon' ? perspective : orthographic.current;
-  const orthographicLook = useRef(new THREE.Vector3());
-  const switchingCamera = useRef(false);
+  const { camera, size, gl } = useThree();
+  const aspect = size.width / Math.max(size.height, 1);
   const moving = useRef(true);
   const keyboardPanning = useRef(false);
   const targetPos = useRef(new THREE.Vector3());
   const targetLook = useRef(new THREE.Vector3());
-  const zoom = useRef(30);
   const lastMapPublish = useRef(Number.NEGATIVE_INFINITY);
   const lastJump = useRef(0);
-  useLayoutEffect(() => {
-    // Fiber resizes only its active camera. Keep the parked orthographic
-    // projection current too, so returning from Horizon after a resize works.
-    const ortho = orthographic.current;
-    ortho.left = -size.width / 2;
-    ortho.right = size.width / 2;
-    ortho.top = size.height / 2;
-    ortho.bottom = -size.height / 2;
-    ortho.updateProjectionMatrix();
-    perspective.aspect = size.width / size.height;
-    perspective.updateProjectionMatrix();
-  }, [perspective, size.width, size.height]);
-  useLayoutEffect(() => {
-    if (camera === activeCamera) return;
-    if (view === 'horizon') {
-      perspective.position.fromArray(CAMERA_VIEWS.horizon.pos);
-      perspective.lookAt(new THREE.Vector3(...CAMERA_VIEWS.horizon.look));
-    }
-    switchingCamera.current = true;
-    set({ camera: activeCamera });
-  }, [activeCamera, camera, perspective, set, view]);
-  useLayoutEffect(() => {
-    if (!switchingCamera.current || camera !== activeCamera || !controls.current) return;
-    controls.current.target.copy(
-      view === 'horizon'
-        ? new THREE.Vector3(...CAMERA_VIEWS.horizon.look)
-        : orthographicLook.current,
-    );
-    controls.current.update();
-    switchingCamera.current = false;
-  }, [activeCamera, camera, view]);
   useEffect(() => {
-    const preset = CAMERA_VIEWS[view];
-    zoom.current = Math.min(size.width / preset.span[0], size.height / preset.span[1]);
-    targetPos.current.fromArray(preset.pos);
-    targetLook.current.fromArray(preset.look);
+    presetPosition(view, aspect, SURFACE_FOV, targetPos.current);
+    targetLook.current.fromArray(CAMERA_VIEWS[view].look);
     moving.current = true;
     keyboardPanning.current = false;
+    // Aspect changes are handled below without restarting travel for a customized orbit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view, version]);
+  useEffect(() => {
+    if (useWorld.getState().cameraCustomized || useWorld.getState().followAgent) return;
+    presetPosition(view, aspect, SURFACE_FOV, targetPos.current);
+    moving.current = true;
+  }, [view, aspect]);
   useEffect(() => {
     if (!cameraJump || cameraJump.sequence === lastJump.current || !controls.current) return;
     lastJump.current = cameraJump.sequence;
     const { x, z } = cameraJump;
     const y = renderedTerrainHeight(x, z) + 1;
     const destination = new THREE.Vector3(x, y, z);
-    // Translate the whole orbit so its pitch, distance, and zoom are preserved.
+    // Translate the whole orbit so its pitch and distance are preserved.
     const offset = destination.clone().sub(controls.current.target);
     targetPos.current.copy(camera.position).add(offset);
     targetLook.current.copy(destination);
     moving.current = true;
     keyboardPanning.current = false;
   }, [cameraJump, camera]);
-  useEffect(() => {
-    if (view === 'horizon' || useWorld.getState().followAgent) return;
-    const preset = CAMERA_VIEWS[view];
-    zoom.current = Math.min(size.width / preset.span[0], size.height / preset.span[1]);
-    moving.current = true;
-  }, [view, size.width, size.height]);
   useEffect(() => {
     const world = gl.domElement.closest('.world-canvas') as HTMLElement | null;
     if (!world) return;
@@ -595,23 +566,20 @@ function Camera({ positions }: { positions: Positions }) {
         : null;
     if (point) {
       targetLook.current.set(point.x, point.y + 1, point.z);
-      targetPos.current.set(point.x + 5, point.y + 8.5, point.z + 7);
-      zoom.current = Math.min(size.width / 10, size.height / 8);
+      targetPos.current
+        .copy(FOLLOW_DIRECTION)
+        .multiplyScalar(fitDistance(FOLLOW_SPAN, SURFACE_FOV, aspect))
+        .add(targetLook.current);
       moving.current = true;
     }
     if (moving.current && controls.current) {
       const alpha = reduced ? 1 : 1 - Math.exp(-4 * d);
       camera.position.lerp(targetPos.current, alpha);
       controls.current.target.lerp(targetLook.current, alpha);
-      if (camera instanceof THREE.OrthographicCamera)
-        camera.zoom = THREE.MathUtils.lerp(camera.zoom, zoom.current, alpha);
-      camera.updateProjectionMatrix();
       controls.current.update();
       if (
         camera.position.distanceTo(targetPos.current) < 0.02 &&
-        controls.current.target.distanceTo(targetLook.current) < 0.02 &&
-        (!(camera instanceof THREE.OrthographicCamera) ||
-          Math.abs(camera.zoom - zoom.current) < 0.02)
+        controls.current.target.distanceTo(targetLook.current) < 0.02
       ) {
         moving.current = false;
         keyboardPanning.current = false;
@@ -634,7 +602,6 @@ function Camera({ positions }: { positions: Positions }) {
         }
         controls.current.update();
       }
-      if (camera === orthographic.current) orthographicLook.current.copy(controls.current.target);
       const location = districtAt(controls.current.target.x, controls.current.target.z);
       if (useWorld.getState().worldLocation !== location)
         useWorld.setState({ worldLocation: location });
@@ -658,19 +625,14 @@ function Camera({ positions }: { positions: Positions }) {
       makeDefault
       enableDamping
       dampingFactor={0.07}
-      maxPolarAngle={view === 'horizon' ? Math.PI / 2 + 0.13 : Math.PI / 2.12}
-      minPolarAngle={0.2}
-      minZoom={5}
-      maxZoom={150}
-      minDistance={5}
-      maxDistance={190}
+      maxPolarAngle={Math.PI / 2 - 0.05}
+      minPolarAngle={0.15}
+      minDistance={4}
+      maxDistance={SURFACE_MAX_DISTANCE}
       autoRotate={cinematic && !reduced && !follow}
       autoRotateSpeed={0.35}
       onEnd={() => {
-        if (
-          (view !== 'horizon' && (camera as THREE.OrthographicCamera).zoom <= 5.05) ||
-          (view === 'horizon' && controls.current && controls.current.getDistance() >= 189.5)
-        )
+        if (controls.current && controls.current.getDistance() >= SURFACE_MAX_DISTANCE - 0.5)
           useUniverse.getState().setScale('planet');
       }}
       onStart={() => {
@@ -681,61 +643,118 @@ function Camera({ positions }: { positions: Positions }) {
     />
   );
 }
+const SHADOW_HALF_MIN = 14;
+const SHADOW_HALF_MAX = 110;
+const SUN_DISTANCE = 90;
+const FOG_DENSITY = 0.0042;
+const LIGHT_SCRATCH = new THREE.Vector3();
+const AMBIENT = {
+  day: {
+    ambient: 0.1,
+    hemisphere: 0.35,
+    sky: new THREE.Color('#d9a278'),
+    ground: new THREE.Color('#4a2a1e'),
+  },
+  night: {
+    ambient: 0.08,
+    hemisphere: 0.28,
+    sky: new THREE.Color('#5d6a9c'),
+    ground: new THREE.Color('#15111c'),
+  },
+};
 function Lighting() {
   const quality = useWorld((s) => s.quality);
   const night = useWorld((s) => s.night);
+  const { scene } = useThree();
   const sun = useRef<THREE.DirectionalLight>(null);
-  const { gl, scene } = useThree();
-  useEffect(() => {
-    const generator = new THREE.PMREMGenerator(gl);
-    const room = new RoomEnvironment();
-    const target = generator.fromScene(room, 0.04);
-    const previous = scene.environment;
-    const previousIntensity = scene.environmentIntensity;
-    scene.environment = target.texture;
-    scene.environmentIntensity = 0.28;
-    room.dispose();
-    generator.dispose();
-    return () => {
-      scene.environment = previous;
-      scene.environmentIntensity = previousIntensity;
-      target.dispose();
-    };
-  }, [gl, scene]);
+  const ambient = useRef<THREE.AmbientLight>(null);
+  const hemisphere = useRef<THREE.HemisphereLight>(null);
+  const dayness = useDayness();
+  const shadowHalf = useRef(0);
+  const mapSize = quality === 'low' ? 1024 : 4096;
+  const palette = useMemo(
+    () => ({
+      sunDay: new THREE.Color(SKY.day.sunColor),
+      sunNight: new THREE.Color(SKY.night.sunColor),
+      fogDay: new THREE.Color(SKY.day.horizon),
+      fogNight: new THREE.Color(SKY.night.horizon),
+    }),
+    [],
+  );
   useFrame((state) => {
     const controls = state.controls as OrbitControlsImpl | null;
-    if (!sun.current || !controls) return;
-    // Follow exploration so remote facilities receive the same contact shadows as home.
-    sun.current.target.position.copy(controls.target);
-    sun.current.target.updateMatrixWorld();
-    sun.current.position.set(
-      controls.target.x - 10,
-      controls.target.y + 20,
-      controls.target.z + 12,
+    const light = sun.current;
+    if (!light || !controls) return;
+    const d = dayness.current;
+    // The one key light blends from moon to sun with the sky.
+    const direction = LIGHT_SCRATCH.copy(SKY.night.sunDirection)
+      .lerp(SKY.day.sunDirection, d)
+      .normalize();
+    light.color.copy(palette.sunNight).lerp(palette.sunDay, d);
+    light.intensity = THREE.MathUtils.lerp(SKY.night.sunIntensity, SKY.day.sunIntensity, d);
+    light.target.position.copy(controls.target);
+    light.target.updateMatrixWorld();
+    light.position.copy(controls.target).addScaledVector(direction, SUN_DISTANCE);
+    // Fit the shadow frustum to the orbit: crisp up close, still covering wide views.
+    const half = THREE.MathUtils.clamp(
+      controls.getDistance() * 0.95,
+      SHADOW_HALF_MIN,
+      SHADOW_HALF_MAX,
     );
-  });
+    if (Math.abs(half - shadowHalf.current) > shadowHalf.current * 0.08) {
+      shadowHalf.current = half;
+      const shadowCamera = light.shadow.camera;
+      shadowCamera.left = -half;
+      shadowCamera.right = half;
+      shadowCamera.top = half;
+      shadowCamera.bottom = -half;
+      shadowCamera.near = 1;
+      shadowCamera.far = SUN_DISTANCE * 2.4;
+      shadowCamera.updateProjectionMatrix();
+      light.shadow.normalBias = ((2 * half) / mapSize) * 1.5;
+      light.shadow.needsUpdate = true;
+    }
+    if (ambient.current) {
+      ambient.current.intensity = THREE.MathUtils.lerp(
+        AMBIENT.night.ambient,
+        AMBIENT.day.ambient,
+        d,
+      );
+    }
+    if (hemisphere.current) {
+      hemisphere.current.intensity = THREE.MathUtils.lerp(
+        AMBIENT.night.hemisphere,
+        AMBIENT.day.hemisphere,
+        d,
+      );
+      hemisphere.current.color.copy(AMBIENT.night.sky).lerp(AMBIENT.day.sky, d);
+      hemisphere.current.groundColor.copy(AMBIENT.night.ground).lerp(AMBIENT.day.ground, d);
+    }
+    if (scene.fog) scene.fog.color.copy(palette.fogNight).lerp(palette.fogDay, d);
+    if (scene.background instanceof THREE.Color)
+      scene.background.copy(palette.fogNight).lerp(palette.fogDay, d);
+  }, -1.5);
   return (
     <>
-      <color attach="background" args={[night ? '#211e31' : '#d9a184']} />
-      <fog attach="fog" args={[night ? '#211e31' : '#d9a184', WORLD_FOG_NEAR, WORLD_FOG_FAR]} />
-      <ambientLight intensity={night ? 0.35 : 0.25} color={night ? '#a2b6ed' : '#fff8e7'} />
-      <hemisphereLight args={[night ? '#849ccf' : '#ffe1bc', '#7b403b', night ? 0.55 : 0.65]} />
+      <color attach="background" args={[skyHorizonColor(night)]} />
+      <fogExp2 attach="fog" args={[skyHorizonColor(night), FOG_DENSITY]} />
+      <SkyDome dayness={dayness} />
+      <SkyEnvironment dayness={dayness} />
+      <ambientLight ref={ambient} intensity={AMBIENT.day.ambient} color="#e3b48f" />
+      <hemisphereLight
+        ref={hemisphere}
+        args={[AMBIENT.day.sky, AMBIENT.day.ground, AMBIENT.day.hemisphere]}
+      />
       <directionalLight
         ref={sun}
-        position={[-10, 20, 12]}
-        intensity={night ? 0.7 : 2.8}
-        color={night ? '#b2bff0' : '#ffe6b0'}
+        position={[-56, 50, 50]}
+        intensity={SKY.day.sunIntensity}
+        color={SKY.day.sunColor}
         castShadow
-        shadow-mapSize={quality === 'low' ? [512, 512] : [2048, 2048]}
-        shadow-camera-left={-23}
-        shadow-camera-right={23}
-        shadow-camera-top={22}
-        shadow-camera-bottom={-22}
-        shadow-bias={-0.0003}
-        shadow-normalBias={0.015}
-        shadow-radius={2}
+        shadow-mapSize={[mapSize, mapSize]}
+        shadow-bias={-0.00012}
+        shadow-normalBias={0.02}
       />
-      <directionalLight position={[10, 8, -8]} intensity={night ? 0.4 : 0.35} color="#b2d5d0" />
     </>
   );
 }
@@ -756,11 +775,19 @@ export default function World() {
       >
         <Canvas
           frameloop={scale === 'colony' ? 'always' : 'never'}
-          orthographic
           shadows
           dpr={quality === 'low' ? 1 : [1, 1.6]}
-          camera={{ position: [27, 26, 35], zoom: 30, near: 0.1, far: 360 }}
+          camera={{
+            fov: SURFACE_FOV,
+            position: [27, 26, 35],
+            near: SURFACE_NEAR,
+            far: SURFACE_FAR,
+          }}
           gl={{ antialias: true, powerPreference: 'high-performance' }}
+          onCreated={({ gl }) => {
+            gl.toneMapping = THREE.AgXToneMapping;
+            gl.toneMappingExposure = 1;
+          }}
           onPointerMissed={() => useWorld.getState().select(null)}
         >
           <Lighting />
@@ -769,6 +796,7 @@ export default function World() {
             <Residents key={mode} positions={positions} />
           </Suspense>
           <Camera positions={positions} />
+          <PostProcessing />
           {new URLSearchParams(window.location.search).get('renderStats') === '1' && (
             <RenderStats />
           )}

@@ -4,6 +4,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useWorld } from '../state';
 import { CAMERA_VIEWS } from './layout';
+import { presetCamera } from './perspective';
 import {
   TERRAIN_TILES,
   mergeFineTerrainTiles,
@@ -112,23 +113,7 @@ export function TerrainTiles() {
         z: cameraJump.z - (target?.z ?? frame.current.focus.z),
       });
     }
-    const targetCamera =
-      view === 'horizon'
-        ? new THREE.PerspectiveCamera(48, size.width / size.height, 0.1, 420)
-        : new THREE.OrthographicCamera(
-            -size.width / 2,
-            size.width / 2,
-            size.height / 2,
-            -size.height / 2,
-            0.1,
-            360,
-          );
-    if (targetCamera instanceof THREE.OrthographicCamera)
-      targetCamera.zoom = Math.min(size.width / preset.span[0], size.height / preset.span[1]);
-    targetCamera.position.fromArray(preset.pos);
-    targetCamera.lookAt(new THREE.Vector3(...preset.look));
-    targetCamera.updateProjectionMatrix();
-    return visibleTerrainTileIds(targetCamera);
+    return visibleTerrainTileIds(presetCamera(view, size.width / size.height));
   }, [
     view,
     cameraVersion,

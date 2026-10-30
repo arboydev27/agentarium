@@ -5,7 +5,7 @@ type GroundScratch = { near: THREE.Vector3; far: THREE.Vector3 };
 const sharedScratch: GroundScratch = { near: new THREE.Vector3(), far: new THREE.Vector3() };
 
 function groundIntersection(
-  camera: THREE.OrthographicCamera,
+  camera: THREE.Camera,
   ndcX: number,
   ndcY: number,
   height: number,
@@ -23,7 +23,7 @@ function groundIntersection(
   };
 }
 
-export function measureScenicFrame(camera: THREE.OrthographicCamera): ScenicFrame {
+export function measureScenicFrame(camera: THREE.Camera): ScenicFrame {
   const scratch = sharedScratch;
   camera.updateMatrixWorld();
   const focus = groundIntersection(camera, 0, 0, 0, scratch);
