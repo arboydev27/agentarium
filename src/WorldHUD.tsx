@@ -2,21 +2,15 @@ import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, MapPin } from 'lucide-react';
 import type { Agent } from './state';
 import { worldCounts, type WorkFilter } from './world/hud';
-import {
-  WORLD_VIEWS,
-  WORLD_VIEW_LABELS,
-  WORLD_LOCATION_LABELS,
-  type WorldLocation,
-  type WorldView,
-} from './world/layout';
+import { WORLD_LOCATION_LABELS, type WorldLocation } from './world/layout';
 
+/** Top-left readout: wordmark, current place, and the factual task counts. */
 export function WorldHUD({
   agents,
   paused,
   demo,
   compact,
   location,
-  navigate,
   filter,
 }: {
   agents: Agent[];
@@ -24,7 +18,6 @@ export function WorldHUD({
   demo: boolean;
   compact: boolean;
   location: WorldLocation;
-  navigate: (view: WorldView) => void;
   filter: (view: WorkFilter | 'attention') => void;
 }) {
   const counts = worldCounts(agents, paused);
@@ -41,10 +34,6 @@ export function WorldHUD({
     return () => document.removeEventListener('pointerdown', onOutsidePointer);
   }, [mobileExpanded]);
 
-  const openView = (view: WorldView) => {
-    setMobileExpanded(false);
-    navigate(view);
-  };
   const openFilter = (view: WorkFilter | 'attention') => {
     setMobileExpanded(false);
     filter(view);
@@ -54,7 +43,9 @@ export function WorldHUD({
     <section
       ref={rootRef}
       className={
-        'world-hud' + (compact ? ' compact' : '') + (mobileExpanded ? ' mobile-expanded' : '')
+        'world-hud hud-fades' +
+        (compact ? ' compact' : '') +
+        (mobileExpanded ? ' mobile-expanded' : '')
       }
       aria-label="World overview"
       onKeyDown={(event) => {
@@ -75,51 +66,38 @@ export function WorldHUD({
       >
         <MapPin size={14} aria-hidden="true" />
         <span className="world-hud-mobile-name">{WORLD_LOCATION_LABELS[location]}</span>
-        {counts.attention > 0 && (
-          <span className="world-hud-mobile-attention" aria-hidden="true">
-            {counts.attention}
-          </span>
-        )}
         <ChevronDown size={14} className={mobileExpanded ? 'rotate-180' : ''} aria-hidden="true" />
       </button>
       <div className="world-hud-details" id="world-hud-details">
         <div className="world-location">
-          <h1>The Colony</h1>
-          <span aria-hidden="true">/</span>
-          <span className="world-location-name">{WORLD_LOCATION_LABELS[location]}</span>
+          <span className="hud-wordmark" aria-label="Agentarium">
+            Agentarium
+          </span>
+          <h1 className="world-location-name">{WORLD_LOCATION_LABELS[location]}</h1>
         </div>
-        <select
-          className="world-jump"
-          aria-label="Jump to viewpoint"
-          value=""
-          onChange={(event) => openView(event.target.value as WorldView)}
-        >
-          <option value="" disabled>
-            Jump to viewpoint…
-          </option>
-          {WORLD_VIEWS.map((view) => (
-            <option key={view} value={view}>
-              {WORLD_VIEW_LABELS[view]}
-            </option>
-          ))}
-        </select>
         {!compact && (
           <>
             <div className="hud-counts" aria-label="Task filters">
               <button onClick={() => openFilter('working')}>
-                <i className="dot working" />
-                {counts.working} working
+                <i className="dot working" aria-hidden="true" />
+                <b>{counts.working}</b> working
               </button>
               <button
                 className={counts.attention ? 'has-attention' : ''}
                 onClick={() => openFilter('attention')}
               >
-                <i className="dot waiting" />
-                {counts.attention} need attention
+                <i className="dot waiting" aria-hidden="true" />
+                <b>{counts.attention}</b> need you
               </button>
-              <button onClick={() => openFilter('completed')}>{counts.completed} completed</button>
-              <button onClick={() => openFilter('unknown')}>{counts.unknown} unknown</button>
-              <button onClick={() => openFilter('here')}>{counts.here} here</button>
+              <button onClick={() => openFilter('completed')}>
+                <b>{counts.completed}</b> done
+              </button>
+              <button onClick={() => openFilter('unknown')}>
+                <b>{counts.unknown}</b> unknown
+              </button>
+              <button onClick={() => openFilter('here')}>
+                <b>{counts.here}</b> here
+              </button>
             </div>
             <p>
               {demo ? 'Simulation' : paused ? 'Updates paused' : 'Last reported activity'} ·{' '}
@@ -128,8 +106,8 @@ export function WorldHUD({
           </>
         )}
         {compact && counts.attention > 0 && (
-          <button className="hud-attention" onClick={() => openFilter('attention')}>
-            {counts.attention} need attention
+          <button className="hud-attention-inline" onClick={() => openFilter('attention')}>
+            {counts.attention} need you
           </button>
         )}
       </div>

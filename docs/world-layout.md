@@ -45,17 +45,9 @@ Overview and destination presets use viewport-aware orthographic framing. Horizo
 
 Map scouting moves the camera without moving residents. North is negative Z. Manual camera adjustment clears preset highlighting. Focus labels describe the current location independently of the selected preset. Basalt Flats, Iron Highlands, and Amber Foothills provide broader geographic context.
 
-## Surface, planet, and solar system
+## One scale: the surface
 
-`UniverseControls.tsx` and `world/universe.ts` coordinate three independent scales:
-
-- **Colony:** detailed terrain, residents, and authored destinations.
-- **Planet:** a procedurally textured mineral sphere, atmosphere shell, satellite, and colony beacon.
-- **Solar system:** a stylized fictional system with the home planet as a return target.
-
-Zooming out at the surface camera limit enters Planet; zooming farther out enters Solar system. Zooming inward reverses those transitions. Explicit scale buttons are also available. Selecting a resident or requesting a surface viewpoint returns to Colony.
-
-The surface Canvas stays mounted while hidden in orbit, with its render loop stopped. Returning preserves the parked surface camera and resident context. Orbital scenes use independent coordinates; they do not render the detailed surface at astronomical distances. Procedural planet texture sampling is continuous across longitude and the poles. Orbital entry uses a short fade; reduced motion disables that transition and parks ambient spacecraft.
+The world has one scale. The surface Canvas is the only scene; zooming out stops at `SURFACE_MAX_DISTANCE` (`src/world/perspective.ts`) so the colony stays in view against its sky, horizon, and far landforms. The former Planet and Solar system views, their procedural planet textures, and the scale selector were removed so the product focuses on the surface world.
 
 ## Detail and visibility
 
@@ -73,6 +65,6 @@ Zooming away does not disconnect the bridge or remove sessions from the task lis
 
 ## Extending and verifying
 
-Update layout and navigation before placing new structures. Preserve route clearance, terrain contact, arrival visibility, and simplified distant representations. Keep frame animation on mutable Three.js objects and dispose component-owned GPU resources. Profile draw calls, shadow cost, and memory before expanding further. This is a finite explorable world, not an infinite terrain generator or physical solar-system simulation.
+Update layout and navigation before placing new structures. Preserve route clearance, terrain contact, arrival visibility, and simplified distant representations. Keep frame animation on mutable Three.js objects and dispose component-owned GPU resources. Profile draw calls, shadow cost, and memory before expanding further. This is a finite explorable world, not an infinite terrain generator.
 
-Run `npm test` and `npm run build`. Review surface presets, camera limits, the complete scale round trip, high/low quality, evening light, reduced motion, narrow viewports, task selection from orbit, and scenic loading failure/retry. Track remaining reinvention work in [Mars reinvention](mars-reinvention.md).
+Run `npm test` and `npm run build`. Review surface presets, camera limits, high/low quality, evening light, reduced motion, narrow viewports, and scenic loading failure/retry. Track remaining reinvention work in [Mars reinvention](mars-reinvention.md).

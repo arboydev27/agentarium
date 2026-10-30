@@ -1,6 +1,6 @@
 # Blender reference habitat
 
-**Expedition Base** is the approved material and asset reference area. Use the viewpoint selector to visit it. Its authored finish now extends across the active world through a separate fifteen-module shared hardware kit, textured procedural scenery, resident equipment, and orbital assets. This document describes the reference habitat; [World asset upgrade](world-asset-upgrade.md) records the completed wider rollout.
+**Expedition Base** is the approved material and asset reference area. Use the viewpoint selector to visit it. Its authored finish now extends across the active world through a separate fifteen-module shared hardware kit, textured procedural scenery, and resident equipment. This document describes the reference habitat; [World asset upgrade](world-asset-upgrade.md) records the completed wider rollout.
 
 ## Source and export
 

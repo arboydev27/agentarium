@@ -1,6 +1,6 @@
 # Managing live sessions
 
-The live world has eight seats. Select a resident to **Pin session** or **Hide session**. These controls organize Agentarium; they never delete, archive, resume, or stop a provider's chat or task. Simulation keeps its original residents and controls.
+The live world has eight seats. Select a resident in the roster to open its pane, then **Pin session** or **Hide session**. These controls organize Agentarium; they never delete, archive, resume, or stop a provider's chat or task. Simulation keeps its original residents and controls.
 
 ## Pinning and seating
 
@@ -14,13 +14,13 @@ The live world has eight seats. Select a resident to **Pin session** or **Hide s
 
 Hiding removes every resident in the session from the normal list and the world, and removes its pin. Fresh events do not automatically unhide it. The bridge continues to receive its events.
 
-Use **Show residents → Hidden sessions** to inspect hidden residents in the current snapshot. Use **Manage sessions → Hidden sessions → Restore** to restore any saved choice, including sessions currently absent. Restoring returns a session to the recent-session pool; it does not repin it or guarantee a seat.
+In the list pane (`R`), use **Show residents → Hidden sessions** to inspect hidden residents in the current snapshot. Use **Manage sessions → Hidden sessions → Restore** to restore any saved choice, including sessions currently absent. Restoring returns a session to the recent-session pool; it does not repin it or guarantee a seat.
 
 The session dropdown and Show residents filter affect the list only. They do not change seat assignments. If filters have no matches, the list explains why.
 
 ## Attention across all sessions
 
-The **need attention · View all** button remains available when the resident panel is collapsed. It clears the session filter and opens all waiting/failed residents, including hidden sessions, subagents, and sessions outside the grove. Inspect them and optionally restore or pin their session. These are last reported states, not a separate confirmation that a provider is currently awaiting input.
+The amber **need you** banner at the top of the screen is always available, including in watch mode and on phones. It clears the session filter and opens all waiting/failed residents, including hidden sessions, subagents, and sessions outside the grove. Inspect them and optionally restore or pin their session. These are last reported states, not a separate confirmation that a provider is currently awaiting input.
 
 The attention view does not automatically displace pinned sessions or modify saved choices. Completion or later accepted progress/idle evidence resolves an episode; unknown/disconnected evidence preserves earlier unresolved attention. There are no desktop notifications or provider-control actions.
 
@@ -42,7 +42,7 @@ On a bridge restart, persisted telemetry preserves its last status and carries `
 
 - `src/preferences.ts`: versioned, validated browser storage with failure handling.
 - `src/shared/live.mjs`: pin priority, hidden exclusion, stable seat allocation.
-- `src/SessionControls.tsx`: inspector controls and saved-choice manager.
+- `src/SessionControls.tsx`: resident-pane controls and saved-choice manager.
 - `src/sessions.ts`: normal/hidden/attention filtering.
 - `src/preferences.test.ts`, `src/bridge.test.ts`, and bridge integration tests: pin capacity, new arrivals, child hiding, restoration, reload persistence, storage errors, simulation isolation, disconnects, and restart evidence.
 

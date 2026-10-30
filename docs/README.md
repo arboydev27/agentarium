@@ -18,6 +18,7 @@ Implementation guides describe the current code; planning documents are explicit
 | [Bridge protocol](bridge-protocol.md)                  | Event schema, HTTP, WebSocket, authentication, persistence, and configuration        |
 | [Provider integrations](provider-integrations.md)      | Claude, Gemini, Codex, and custom telemetry                                          |
 | [3D world](3d-world.md)                                | Scene construction, character animation, cameras, and performance                    |
+| [Interface](interface.md)                              | The game HUD: layout, roster, panes, keyboard, idle fade, and narrow screens         |
 | [World layout and rendering](world-layout.md)          | Zone dimensions, seat placement, detail levels, and expansion guidance               |
 | [Resident identity and journeys](resident-journeys.md) | Accessories, personalities, cross-zone routing, reservations, and interruption rules |
 | [Rendering performance](rendering-performance.md)      | Local frame timing, scene cost, quality checks, and measurement limits               |
@@ -27,7 +28,7 @@ Implementation guides describe the current code; planning documents are explicit
 | [Roadmap](roadmap.md)                                  | Current limitations and proposed next milestones                                     |
 | [World expansion plan](world-expansion-plan.md)        | Horizon, connected districts, streaming, and performance gates                       |
 
-For a first run, start with Getting started. For a new provider, read Agent lifecycle, Bridge protocol, and Provider integrations. For visual changes, read Architecture and 3D world.
+For a first run, start with Getting started. For a new provider, read Agent lifecycle, Bridge protocol, and Provider integrations. For visual changes, read Architecture, 3D world, and Interface.
 
 - [Real-work attention and recap](real-work.md): task briefs, attention-first views, optional context, durable history, and current integration limits.
 
@@ -42,7 +43,7 @@ The Agentarium plan tracks an implementation in progress; its usage guide distin
 
 The implementation includes an eight-seat 3D environment, a simulator, a live event bridge, SQLite snapshots, provider adapters, and optional browser automation tools. It observes external agents; it does not launch real AI work, manage provider credentials, or schedule tasks. A working resident indicates the latest reported status, not independent proof that a model is currently computing.
 
-The project uses a shared animated rig with alien equipment, identity-based palettes, and authored travel between colony facilities. Continuous desert terrain, craters, and distant mountains surround the settlement. Terrain combines fine nearby tiles and coarse coverage; inactive landmarks retain silhouettes. Colony, Planet, and Solar system views share task context. Northstar Spaceport includes a decorative rocket cycle and rover. Generated navmeshes, unbounded terrain, bespoke character bodies, and film-quality animation remain future work. Provider adapters have fixture tests; compatibility with a particular installed provider must be verified in that environment.
+The project uses a shared animated rig with alien equipment, identity-based palettes, and authored travel between colony facilities. Continuous desert terrain, craters, and distant mountains surround the settlement. Terrain combines fine nearby tiles and coarse coverage; inactive landmarks retain silhouettes. The Mars identity comes from the surface itself: sky, horizon, and far landforms. Northstar Spaceport includes a decorative rocket cycle and rover. Generated navmeshes, unbounded terrain, bespoke character bodies, and film-quality animation remain future work. Provider adapters have fixture tests; compatibility with a particular installed provider must be verified in that environment.
 
 See [Mars reinvention](mars-reinvention.md) for implementation evidence and limitations.
 

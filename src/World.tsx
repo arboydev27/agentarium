@@ -1,8 +1,6 @@
 import { useSurfaceTextures } from './world/surfaceTextures';
 import { applySurfaceDetails } from './world/WorldSurfaceMaterial';
 import { WorldKit } from './world/scenery/WorldKit';
-import { useUniverse } from './world/universe';
-import { OrbitalWorld } from './world/OrbitalWorld';
 import { districtAt } from './world/hud';
 import { ResidentJourney } from './world/journey';
 import { NavigationTraffic } from './world/navigation';
@@ -631,10 +629,6 @@ function Camera({ positions }: { positions: Positions }) {
       maxDistance={SURFACE_MAX_DISTANCE}
       autoRotate={cinematic && !reduced && !follow}
       autoRotateSpeed={0.35}
-      onEnd={() => {
-        if (controls.current && controls.current.getDistance() >= SURFACE_MAX_DISTANCE - 0.5)
-          useUniverse.getState().setScale('planet');
-      }}
       onStart={() => {
         moving.current = false;
         keyboardPanning.current = false;
@@ -770,52 +764,36 @@ function WakeRenderLoop() {
 }
 
 export default function World() {
-  const scale = useUniverse((s) => s.scale);
   const quality = useWorld((s) => s.quality);
   const mode = useWorld((s) => s.mode);
   const positions = useMemo<Positions>(() => new Map(), []);
   return (
-    <>
-      <div
-        className={scale === 'colony' ? 'surface-scene' : 'surface-scene surface-hidden'}
-        style={{
-          position: 'absolute',
-          inset: 0,
-          visibility: scale === 'colony' ? 'visible' : 'hidden',
-        }}
-      >
-        <Canvas
-          frameloop={scale === 'colony' ? 'always' : 'never'}
-          shadows
-          dpr={quality === 'low' ? 1 : [1, 1.6]}
-          camera={{
-            fov: SURFACE_FOV,
-            position: [27, 26, 35],
-            near: SURFACE_NEAR,
-            far: SURFACE_FAR,
-          }}
-          gl={{ antialias: true, powerPreference: 'high-performance' }}
-          onCreated={({ gl }) => {
-            gl.toneMapping = THREE.AgXToneMapping;
-            gl.toneMappingExposure = 1;
-          }}
-          onPointerMissed={() => useWorld.getState().select(null)}
-        >
-          <WakeRenderLoop />
-          <Lighting />
-          <Environment />
-          <Suspense fallback={null}>
-            <Residents key={mode} positions={positions} />
-          </Suspense>
-          <Camera positions={positions} />
-          <PostProcessing />
-          {new URLSearchParams(window.location.search).get('renderStats') === '1' && (
-            <RenderStats />
-          )}
-        </Canvas>
-      </div>
-      {scale !== 'colony' && <OrbitalWorld />}
-    </>
+    <Canvas
+      shadows
+      dpr={quality === 'low' ? 1 : [1, 1.6]}
+      camera={{
+        fov: SURFACE_FOV,
+        position: [27, 26, 35],
+        near: SURFACE_NEAR,
+        far: SURFACE_FAR,
+      }}
+      gl={{ antialias: true, powerPreference: 'high-performance' }}
+      onCreated={({ gl }) => {
+        gl.toneMapping = THREE.AgXToneMapping;
+        gl.toneMappingExposure = 1;
+      }}
+      onPointerMissed={() => useWorld.getState().select(null)}
+    >
+      <WakeRenderLoop />
+      <Lighting />
+      <Environment />
+      <Suspense fallback={null}>
+        <Residents key={mode} positions={positions} />
+      </Suspense>
+      <Camera positions={positions} />
+      <PostProcessing />
+      {new URLSearchParams(window.location.search).get('renderStats') === '1' && <RenderStats />}
+    </Canvas>
   );
 }
 useGLTF.preload('/models/robot.glb');
