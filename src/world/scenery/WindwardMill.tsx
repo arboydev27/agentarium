@@ -1,5 +1,7 @@
 import { WINDWARD_MILL as SITE } from './windwardPlacement';
 import { PressureHabitat, SolarRack, SensorMast } from './ColonyHardware';
+import { AmbientRover } from '../ambient/Rover';
+import { roverLoopById } from '../ambientLife';
 
 export function WindwardMill() {
   return (
@@ -16,6 +18,7 @@ export function WindwardMill() {
         )),
       )}
       <SensorMast x={SITE.centerX + 3} z={SITE.centerZ - 5} height={7} />
+      <AmbientRover loop={roverLoopById('helios')} />
     </group>
   );
 }

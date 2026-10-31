@@ -1,6 +1,10 @@
 import { WorldKit } from './WorldKit';
+import { useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useWorld } from '../../state';
+import { ambientStep } from '../ambient';
+import { telescopeSlewPose } from '../ambientLife';
 import { OBSERVATORY } from '../layout';
 import { terrainHeight } from '../terrain';
 import { Cylinder, Sign } from '../primitives';
@@ -27,9 +31,22 @@ function CedarFringe() {
   );
 }
 
+/** The telescope dwells on each target and slews between them; reduced motion parks it on the first. */
 function BrassTelescope() {
+  const mount = useRef<THREE.Group>(null);
+  const time = useRef(0);
+  const reduced = useWorld((state) => state.reducedMotion);
+  useFrame((_, delta) => {
+    time.current += ambientStep(delta, reduced, false);
+    if (mount.current) mount.current.rotation.y = telescopeSlewPose(time.current).yaw;
+  });
   return (
-    <group name="deep-sky-telescope" position={[-1.25, 0, -1.55]}>
+    <group
+      ref={mount}
+      name="deep-sky-telescope"
+      position={[-1.25, 0, -1.55]}
+      rotation={[0, telescopeSlewPose(0).yaw, 0]}
+    >
       <WorldKit module="telescope" />
     </group>
   );

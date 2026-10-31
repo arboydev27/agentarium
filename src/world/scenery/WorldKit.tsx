@@ -36,7 +36,7 @@ export type WorldKitModule =
   | 'pad-beacon';
 
 /** Cache-busting query changes whenever the kit is regenerated. */
-export const WORLD_KIT_URL = '/models/world-kit/colony-hardware.glb?v=colony-7';
+export const WORLD_KIT_URL = '/models/world-kit/colony-hardware.glb?v=colony-8';
 
 /** Cache-owned geometry and materials are shared across independently placed clones. */
 export function WorldKit({ module }: { module: WorldKitModule }) {

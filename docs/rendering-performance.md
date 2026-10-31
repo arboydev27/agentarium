@@ -68,6 +68,22 @@ A second run read the Horizon at 63 fps both ways with 1,934 draws each. Every p
 
 **Two Overview load states.** The Overview settles into one of two draw counts at page load and keeps it: about 1,810 to 1,845 draws at 64 to 68 fps, or about 2,000 to 2,040 draws at 55 to 58 fps. Six probe loads that alternated the two variants landed in both states with the proxies (1,829, 1,843 and 2,035 draws) and without them (1,999, 2,037 and 2,011, with 1,806 in an earlier run); the count never changed during thirty seconds of sampling, and no console error or scenery-status entry accompanied either state. The state is decided by something at load, not by this phase. The Phase 5 table's 1,973 draws is the heavy state; the T-1 table's 1,807 was the light one, in both of its variants, so its comparison holds but its absolute Overview number is the optimistic state. Until the cause is found, compare A/B readings only within the same state, which the draw count identifies. Finding what mounts those two hundred draws is a follow-up; the candidates are the scenic-region hysteresis during the first camera frames and groundcover chunk selection.
 
+## Designer feedback I-1: machines at work (October 31, 2026)
+
+Three rovers now drive terrain-following loops (the spaceport pad as before, the Helios solar field and the plains west of the northern trail), each trailing one dust sprite; the Comms Court roof dish tracks across the sky through a per-frame yaw on its instanced mesh; the Deep Sky telescope slews between four targets. All of it is per-frame transforms on existing modules (`src/world/ambientLife.ts`, `src/world/ambient/Rover.tsx`): the rover kit module is about five draws plus one sprite, present only where its region is mounted (the plains rover is always mounted, since the point of it is movement in the default shots), and the dish and telescope add nothing.
+
+**Harness.** The T-1 harness, with the machines behind a temporary `?machines=0` switch that was removed afterwards.
+
+| Preset         | Without machines fps | p95 ms | draws | With machines fps | p95 ms | draws |
+| -------------- | -------------------- | ------ | ----- | ----------------- | ------ | ----- |
+| Overview       | 62                   | 16.8   | 1,862 | 65                | 16.1   | 1,855 |
+| Comms Court    | 63                   | 17.9   | 1,477 | 64                | 16.9   | 1,478 |
+| Deep Sky Array | 105                  | 12.3   | 1,169 | 105               | 12.0   | 1,163 |
+| Helios         | 114                  | 13.6   | 724   | 114               | 13.3   | 729   |
+| Horizon        | 51                   | 20.7   | 2,134 | 52                | 19.9   | 2,081 |
+
+Every preset is within the harness noise. The Helios row shows the only honest difference: five draws for the rover and its puff, and 24 thousand more triangles. The Overview rows sit in the lighter of the two load states described above and the Horizon rows in a heavier one than the T-1 run (2,100 against 1,934 draws), which is the same load-state effect on another preset; neither is this phase, because both variants of each pair landed in the same state.
+
 ## What the numbers mean
 
 The overlay updates once per second from up to 120 frame intervals. It excludes nonpositive intervals, intervals above 250 ms, and hidden-document samples. It therefore does **not** report long stalls or loading performance. FPS is the reciprocal of mean frame interval; p95 shows the slower end of that sample window. These are browser frame intervals, not GPU execution timings. Draw and triangle counters are the renderer's most recent reported render; they are not a complete GPU-cost accounting of all passes. Geometry and texture values count resources, not bytes.

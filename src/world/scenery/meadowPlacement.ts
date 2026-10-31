@@ -14,6 +14,7 @@ import { clearOfAmberBluff } from './amberPlacement';
 import { clearOfWoodlandHollow, clearOfWoodlandShelter } from './woodlandPlacement';
 import { clearOfTurnouts } from './turnoutPlacement';
 import { clearOfNorthstarTrail, clearOfNorthstarStructure } from './northstarPlacement';
+import { clearOfRoverLoops } from '../ambientLife';
 
 export type MeadowPiece = { x: number; y: number; z: number; size: number; shade: number };
 export type MeadowPieces = {
@@ -59,6 +60,7 @@ export function clearOfMeadowRoutes(x: number, z: number, radius = 0) {
   if (!clearOfWoodlandHollow(x, z, radius + 0.8)) return false;
   if (!clearOfWoodlandShelter(x, z, radius + 0.8)) return false;
   if (!clearOfTurnouts(x, z, radius)) return false;
+  if (!clearOfRoverLoops(x, z, radius)) return false;
   if (!clearOfNorthstarTrail(x, z, radius + 0.8)) return false;
   if (!clearOfNorthstarStructure(x, z, radius + 0.8)) return false;
   if (!clearOfOrchard(x, z, radius) || !clearOfObservatory(x, z, radius)) return false;

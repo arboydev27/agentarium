@@ -9,6 +9,7 @@ import { NORTHSTAR_TOWER_XZ } from './northstarPlacement';
 import { KitInstances } from '../habitat/KitInstances';
 import type { Placement } from '../habitat/habitatLayout';
 import { launchDustWash, roverPatrolPose } from '../ambientLife';
+import { RoverDust } from '../ambient/Rover';
 
 export function ExpeditionRover() {
   return (
@@ -31,6 +32,7 @@ function RoverPatrol({
   const rover = useRef<THREE.Group>(null);
   const time = useRef(0);
   const reduced = useWorld((s) => s.reducedMotion);
+  const low = useWorld((s) => s.quality === 'low');
   useFrame((_, delta) => {
     if (!rover.current) return;
     if (!reduced) time.current += Math.min(delta, 0.05);
@@ -45,6 +47,7 @@ function RoverPatrol({
   return (
     <group ref={rover} name="rover-patrol">
       <ExpeditionRover />
+      {!low && <RoverDust time={time} />}
     </group>
   );
 }

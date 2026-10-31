@@ -11,14 +11,14 @@ Stable internal IDs preserve saved views, seating, and navigation while the disp
 | café          | Habitat Commons      | Open service spine, canopy, shared workstations                                    |
 | garden        | Resource Lab         | Processing tanks and sample equipment                                              |
 | studio        | Research Array       | Raised research deck and service wall                                              |
-| courtyard     | Comms Court          | Communications dish and illuminated paths                                          |
+| courtyard     | Comms Court          | Tracking communications dish and illuminated paths                                 |
 | lookout       | Survey Lookout       | Sensor masts, survey console and relay mast                                        |
 | orchard       | Expedition Base      | Blender-authored reference habitat, textured ground, solar equipment               |
-| observatory   | Deep Sky Array       | Telescope terrace and antenna fringe                                               |
+| observatory   | Deep Sky Array       | Slewing telescope on its terrace and antenna fringe                                |
 | northstar     | Northstar Spaceport  | Rocket, launchpad with beacons, gantry, control cabin, fuel farm, patrolling rover |
 | hollow        | Basalt Field Station | Outpost habitat and instrumentation                                                |
 | dawnlight     | Dawnlight Biolab     | Two outpost habitats north of the approach                                         |
-| windward      | Helios Power Field   | Habitat, solar racks, tall sensor mast                                             |
+| windward      | Helios Power Field   | Habitat, solar racks, tall sensor mast, inspection rover                           |
 | mere          | Southwind Crater     | Mineral basin and sampling station                                                 |
 | amber         | Amber Bluff          | Scenic stratified rock formation                                                   |
 
@@ -63,12 +63,12 @@ Low surface quality uses DPR 1, 1024-pixel shadows, no post-processing and no du
 
 ## Factual activity and decorative life
 
-Resident equipment and personalities persist across task states. Survey and sample-inspection gestures, travel, the spaceport's flight cycle, and satellite motion are decorative. They never fabricate task progress, launch provider jobs, or imply completion. Task briefs, attention, recap, and source-session actions continue to use actual session state. Unknown activity remains unknown.
+Resident equipment and personalities persist across task states. Survey and sample-inspection gestures, travel, the spaceport's flight cycle, the three rover loops, the roof dish's tracking, the telescope's slews and satellite motion are decorative. They never fabricate task progress, launch provider jobs, or imply completion. Task briefs, attention, recap, and source-session actions continue to use actual session state. Unknown activity remains unknown.
 
 Zooming away does not disconnect the bridge or remove sessions from the task list. The latest-eight/pinned seating policy remains independent of the world renderer.
 
 ## Extending and verifying
 
-Update layout and navigation before placing new structures. Preserve route clearance, terrain contact, arrival visibility, and simplified distant representations. Keep frame animation on mutable Three.js objects and dispose component-owned GPU resources. Profile draw calls, shadow cost, and memory before expanding further. This is a finite explorable world, not an infinite terrain generator.
+Update layout and navigation before placing new structures. Preserve route clearance, terrain contact, arrival visibility, and simplified distant representations. Rover loops live in `ROVER_LOOPS` (`src/world/ambientLife.ts`); a new loop must pass the clearance test there and is then kept free of rocks and groundcover automatically. Keep frame animation on mutable Three.js objects and dispose component-owned GPU resources. Profile draw calls, shadow cost, and memory before expanding further. This is a finite explorable world, not an infinite terrain generator.
 
 Run `npm test` and `npm run build`. Review surface presets, camera limits, high/low quality, evening light, reduced motion, narrow viewports, and scenic loading failure/retry. Track remaining reinvention work in [Mars reinvention](mars-reinvention.md).

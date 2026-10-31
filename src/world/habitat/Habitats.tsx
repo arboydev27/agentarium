@@ -32,6 +32,8 @@ import {
 } from './habitatLayout';
 import { KitInstances } from './KitInstances';
 import { revealAmount, sideFacesCamera } from './reveal';
+import { ambientStep } from '../ambient';
+import { dishTrackPose } from '../ambientLife';
 
 const scratch = new THREE.Vector3();
 const nameplate = { color: '#efe4d0', background: '#2f3540' };
@@ -91,7 +93,14 @@ function HabitatModule({ zone }: { zone: ZoneName }) {
   const night = useWorld((s) => s.night);
   const [cx, cy, cz] = ZONES[zone].center;
   const [w, d] = ZONES[zone].size;
+  // The roof dish tracks on its own clock; reduced motion parks it at the start of a sweep.
+  const dishTime = useRef(0);
+  const dishSpin = useRef(dishTrackPose(0).yaw);
   useFrame(({ camera }, delta) => {
+    if (zone === ROOF_DISH.zone) {
+      dishTime.current += ambientStep(delta, reduced, false);
+      dishSpin.current = dishTrackPose(dishTime.current).yaw;
+    }
     const distance = camera.position.distanceTo(scratch.set(cx, cy + 1.5, cz));
     const reveal = revealAmount(distance, forced);
     const k = reduced ? 1 : 1 - Math.exp(-5 * delta);
@@ -135,6 +144,7 @@ function HabitatModule({ zone }: { zone: ZoneName }) {
             },
           ]}
           fade={fades.roof}
+          spin={dishSpin}
         />
       )}
       {doors.map((door) => (

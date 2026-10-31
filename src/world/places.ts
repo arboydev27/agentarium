@@ -255,8 +255,8 @@ const SPECS: readonly PlaceSpec[] = [
     name: 'Helios Power Field',
     kind: 'landmark',
     view: 'windward',
-    role: 'A habitat beside six solar racks and the tallest mast in the colony.',
-    does: 'Residents walk the north-eastern branch to take in the view from the field.',
+    role: 'A habitat beside six solar racks, the tallest mast in the colony and a rover that inspects the field.',
+    does: 'Residents walk the north-eastern branch to take in the view from the field. The rover’s inspection loop is decorative.',
     shapes: [
       disc(WINDWARD_MILL.centerX, WINDWARD_MILL.centerZ, WINDWARD_MILL.focusRadius),
       {
@@ -301,7 +301,7 @@ const SPECS: readonly PlaceSpec[] = [
     kind: 'machine',
     view: 'courtyard',
     parent: 'courtyard',
-    role: 'The dish on the Comms Court roof.',
+    role: 'The dish on the Comms Court roof. It tracks slowly across the sky, swings back and re-acquires.',
     does: 'Decorative. Live telemetry reaches the colony through the local bridge, not through the dish.',
     shapes: [
       {
@@ -322,8 +322,8 @@ const SPECS: readonly PlaceSpec[] = [
     kind: 'machine',
     view: 'observatory',
     parent: 'observatory',
-    role: 'The brass telescope under its half-ring on the array terrace.',
-    does: 'Decorative. Residents survey the sky beside it; it tracks nothing.',
+    role: 'The brass telescope under its half-ring on the array terrace. It dwells on a target, then slews to the next.',
+    does: 'Decorative. Residents survey the sky beside it; its targets are a schedule, not data.',
     shapes: [disc(OBSERVATORY.x - 1.25, OBSERVATORY.z - 1.55, 2.7, 0.5, 3.6)],
     focus: { x: OBSERVATORY.x - 1.25, z: OBSERVATORY.z - 1.55 },
     tagHeight: 3.2,
