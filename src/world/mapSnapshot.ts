@@ -13,7 +13,12 @@ export type MapBounds = Readonly<{ minX: number; maxX: number; minZ: number; max
 export const MAP_OVERVIEW_BOUNDS: MapBounds = CAMERA_PAN_BOUNDS;
 export type MapResident = MapPoint & { id: string; name: string; seat: number };
 export type MapSnapshot = { camera: MapPoint | null; residents: MapResident[] };
-export type ResidentPosition = { point: MapPoint & { y: number }; seat: number };
+export type ResidentPosition = {
+  point: MapPoint & { y: number };
+  seat: number;
+  /** The character's visual activity, written each frame by the resident that owns the entry. */
+  activity?: string;
+};
 export type SeatedResident = { id: string; name: string; seat: number };
 export type MapResidentGroup = { key: string; point: MapPoint; residents: MapResident[] };
 export type MapLandmark = {

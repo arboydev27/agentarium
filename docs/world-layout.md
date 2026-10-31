@@ -47,6 +47,8 @@ Overview and the four colony presets use steep viewport-aware framing so the dol
 
 Map scouting moves the camera without moving residents. North is negative Z. Manual camera adjustment clears preset highlighting. Focus labels describe the current location independently of the selected preset. Basalt Flats, Iron Highlands, and Amber Foothills provide broader geographic context.
 
+Every module, landmark and major machine is also a place you can click (`src/world/places.ts`): a hover tag names it and a click opens a card with who is there and a **Fly here** control. The proxies are derived from `ZONES`, the placement modules and the destination nodes, so a new structure gets a place by adding one entry that references its own placement constants; `places.test.ts` checks that every preset but Overview and Horizon looks at a place, that only modules contain seats, and that every authored destination inside a place is listed as one of its rest spots.
+
 ## One scale: the surface
 
 The world has one scale. The surface Canvas is the only scene; zooming out stops at `SURFACE_MAX_DISTANCE` (`src/world/perspective.ts`) so the colony stays in view against its sky, horizon, and far landforms. The former Planet and Solar system views, their procedural planet textures, and the scale selector were removed so the product focuses on the surface world.

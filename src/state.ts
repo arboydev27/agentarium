@@ -128,6 +128,8 @@ type State = {
   changeSession: (key: string, action: 'pin' | 'unpin' | 'hide' | 'restore') => string | null;
   agents: Agent[];
   selected: string | null;
+  /** Open place card, by place id; residents and places are selected independently. */
+  place: string | null;
   events: Activity[];
   mode: 'demo' | 'live';
   playing: boolean;
@@ -154,6 +156,7 @@ type State = {
   discoveryProviders: DiscoveryProvider[];
   seen: Set<string>;
   select: (id: string | null) => void;
+  setPlace: (id: string | null) => void;
   set: (s: Partial<State>) => void;
   setStatus: (id: string, status: Status) => void;
   spawn: (parent?: string) => void;
@@ -219,6 +222,7 @@ export const useWorld = create<State>((set, get) => ({
   },
   agents: initialAgents(),
   selected: null,
+  place: null,
   events: [
     {
       id: 'welcome',
@@ -255,6 +259,7 @@ export const useWorld = create<State>((set, get) => ({
   seen: new Set(),
   set: (s) => set(s),
   select: (id) => set({ selected: id }),
+  setPlace: (place) => set({ place }),
   setStatus: (id, status) => {
     if (get().mode !== 'demo') return;
     const a = get().agents.find((a) => a.id === id);
@@ -326,6 +331,7 @@ export const useWorld = create<State>((set, get) => ({
       richContext: false,
       historySupported: false,
       selected: null,
+      place: null,
       events: [],
       mode: 'demo',
       followAgent: null,
@@ -435,6 +441,7 @@ export const useWorld = create<State>((set, get) => ({
       followAgent: null,
       agents: mode === 'demo' ? initialAgents() : [],
       selected: null,
+      place: null,
       events: [],
       bridgeError: null,
       receivedEvents: 0,

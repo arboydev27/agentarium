@@ -6,6 +6,7 @@ import { ResidentJourney } from './world/journey';
 import { NavigationTraffic } from './world/navigation';
 import { residentStyle } from './world/personality';
 import { RenderStats } from './world/RenderStats';
+import { PlaceProxies } from './world/PlaceProxies';
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, useGLTF, Line } from '@react-three/drei';
@@ -166,8 +167,8 @@ function Resident({
   const selectedRing = useRef<THREE.Mesh>(null);
   const selectedRingMaterial = useRef<THREE.MeshBasicMaterial>(null);
   const worldPosition = useMemo(() => new THREE.Vector3(), []);
-  const positionEntry = useMemo(
-    () => ({ point: worldPosition, seat: agent.seat }),
+  const positionEntry = useMemo<ResidentPosition>(
+    () => ({ point: worldPosition, seat: agent.seat, activity: 'Near desk' }),
     [worldPosition, agent.seat],
   );
   const exited = useRef(false);
@@ -201,6 +202,7 @@ function Resident({
     root.current.visible = motion.opacity > 0.15;
     root.current.position.fromArray(motion.position);
     root.current.rotation.y = motion.facing;
+    positionEntry.activity = motion.activity;
     if (!leaving && motion.opacity > 0.2) {
       worldPosition.copy(root.current.position);
       positions.set(agent.id, positionEntry);
@@ -243,6 +245,7 @@ function Resident({
     <group
       ref={root}
       position={motion.position}
+      userData={{ resident: agent.id }}
       onClick={(e) => {
         if (leaving || motion.opacity <= 0.15) return;
         e.stopPropagation();
@@ -753,7 +756,11 @@ export default function World() {
         gl.toneMapping = THREE.AgXToneMapping;
         gl.toneMappingExposure = 1;
       }}
-      onPointerMissed={() => useWorld.getState().select(null)}
+      onPointerMissed={() => {
+        const world = useWorld.getState();
+        world.select(null);
+        world.setPlace(null);
+      }}
     >
       <WakeRenderLoop />
       <Lighting />
@@ -762,6 +769,7 @@ export default function World() {
         <Residents key={mode} positions={positions} />
       </Suspense>
       <Camera positions={positions} />
+      <PlaceProxies positions={positions} />
       <PostProcessing />
       {new URLSearchParams(window.location.search).get('renderStats') === '1' && <RenderStats />}
     </Canvas>

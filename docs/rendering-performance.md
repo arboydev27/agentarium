@@ -50,6 +50,24 @@ Every preset is within two fps of the old shader. The first version of the chang
 
 **A note on the embedded pane.** During this work no window showed the session, so the embedded browser pane ran as a background page, and its Overview readings swung between 46 and 87 fps with an identical scene. Readings from the pane are only comparable while the pane is visible on screen; when it is not, use the harness above.
 
+## Designer feedback X-1: places you can click (October 31, 2026)
+
+The pick proxies in `src/world/PlaceProxies.tsx` are twenty plain meshes (boxes for the modules, cylinders for the landmarks and machines) on object layer 1. No camera has that layer, so the main render, the shadow pass and the post-processing passes skip them; `places.test.ts` checks that a default camera's layer test fails for every proxy and that a ray from each preset camera to its look point hits the right one. Only the raycaster is told to test the layer, and it already runs on every pointer move for the residents. The hover tag is one DOM element moved per frame while a place is hovered, and who-is-here is computed from the positions the map already reads, at most four times a second and only while a card is open.
+
+**Harness.** The T-1 harness above, with the proxies behind a temporary `?places=0` switch that was removed afterwards. The table is the first run, in which both Overview variants landed in the heavier of the two load states described below.
+
+| Preset          | Without proxies fps | p95 ms | draws | With proxies fps | p95 ms | draws |
+| --------------- | ------------------- | ------ | ----- | ---------------- | ------ | ----- |
+| Overview        | 53                  | 20.6   | 1,957 | 55               | 20.0   | 1,997 |
+| Habitat Commons | 89                  | 13.9   | 1,300 | 91               | 13.3   | 1,305 |
+| Northstar       | 116                 | 13.9   | 657   | 119              | 13.7   | 656   |
+| Deep Sky Array  | 106                 | 12.2   | 1,188 | 106              | 12.3   | 1,124 |
+| Horizon         | 59                  | 17.6   | 2,014 | 61               | 17.4   | 1,934 |
+
+A second run read the Horizon at 63 fps both ways with 1,934 draws each. Every preset is within the run-to-run noise of the harness, and the draw counts differ in both directions, which is what an unrendered layer should give.
+
+**Two Overview load states.** The Overview settles into one of two draw counts at page load and keeps it: about 1,810 to 1,845 draws at 64 to 68 fps, or about 2,000 to 2,040 draws at 55 to 58 fps. Six probe loads that alternated the two variants landed in both states with the proxies (1,829, 1,843 and 2,035 draws) and without them (1,999, 2,037 and 2,011, with 1,806 in an earlier run); the count never changed during thirty seconds of sampling, and no console error or scenery-status entry accompanied either state. The state is decided by something at load, not by this phase. The Phase 5 table's 1,973 draws is the heavy state; the T-1 table's 1,807 was the light one, in both of its variants, so its comparison holds but its absolute Overview number is the optimistic state. Until the cause is found, compare A/B readings only within the same state, which the draw count identifies. Finding what mounts those two hundred draws is a follow-up; the candidates are the scenic-region hysteresis during the first camera frames and groundcover chunk selection.
+
 ## What the numbers mean
 
 The overlay updates once per second from up to 120 frame intervals. It excludes nonpositive intervals, intervals above 250 ms, and hidden-document samples. It therefore does **not** report long stalls or loading performance. FPS is the reciprocal of mean frame interval; p95 shows the slower end of that sample window. These are browser frame intervals, not GPU execution timings. Draw and triangle counters are the renderer's most recent reported render; they are not a complete GPU-cost accounting of all passes. Geometry and texture values count resources, not bytes.
