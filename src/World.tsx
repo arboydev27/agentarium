@@ -1,5 +1,5 @@
 import { useSurfaceTextures } from './world/surfaceTextures';
-import { applySurfaceDetails } from './world/WorldSurfaceMaterial';
+import { applySurfaceDetails, surfaceFamilyDetails } from './world/surfaceShader';
 import { WorldKit } from './world/scenery/WorldKit';
 import { districtAt } from './world/hud';
 import { ResidentJourney } from './world/journey';
@@ -144,7 +144,11 @@ function Resident({
     const materials = dressColonist(copy, { color: agent.color, style });
     for (const material of materials)
       if (material.userData.role === 'suit' || material.userData.role === 'trim')
-        applySurfaceDetails(material, surfaceMaps, 1.6, true);
+        applySurfaceDetails(material, surfaceMaps, {
+          metres: 1.6,
+          local: true,
+          ...surfaceFamilyDetails('ceramic-paint'),
+        });
     return { copy, materials, faces: headMeshes(copy) };
   }, [scene, agent.color, style, surfaceMaps]);
   const model = dressed.copy;

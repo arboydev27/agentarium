@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { applySurfaceDetails } from '../WorldSurfaceMaterial';
+import { applySurfaceDetails, surfaceFamilyDetails } from '../surfaceShader';
 import { useSurfaceTextures, type SurfaceFamily } from '../surfaceTextures';
 import { WORLD_KIT_URL } from './WorldKit';
 
@@ -51,13 +51,12 @@ export function applyKitSurface(material: THREE.MeshStandardMaterial, maps: KitM
     material.roughnessMap = null;
     material.userData.kitSurface = surface.family;
   }
-  applySurfaceDetails(
-    material,
-    maps[surface.family],
-    surface.metres,
-    true,
-    surface.family === 'cast-foundation',
-  );
+  applySurfaceDetails(material, maps[surface.family], {
+    metres: surface.metres,
+    local: true,
+    foundation: surface.family === 'cast-foundation',
+    ...surfaceFamilyDetails(surface.family),
+  });
   material.needsUpdate = true;
   return material;
 }

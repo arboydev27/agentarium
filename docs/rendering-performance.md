@@ -32,6 +32,24 @@ The Overview, Dawnlight and Horizon carry the colony: eight skinned residents at
 
 **Overlay fix.** Before this phase the overlay read the renderer counters after the post-processing composer's final pass, so with post-processing on it reported one draw and one triangle. It now accumulates across the frame and resets once per frame, so draws and triangles include the shadow pass, the ambient-occlusion pass and the composer.
 
+## Designer feedback T-1: surface maps in the triplanar shader (October 31, 2026)
+
+`src/world/surfaceShader.ts` now samples all three maps of a surface family: the normal map through a derivative tangent frame per projection, the colour map in RGB relative to the family's authored base plus a macro lookup at 7.3 times the grain scale, and the roughness map as before. Projections whose blend weight falls under 2% are skipped, with explicit gradients so mip selection stays right inside the branches. See [Blender reference habitat](blender-habitat.md#material-and-terrain-contract) for what changed visually; this section records what it cost.
+
+**Harness.** Headless Chrome (Playwright `channel: 'chrome'`, `--use-angle=metal --ignore-gpu-blocklist --disable-gpu-vsync --disable-frame-rate-limit`) on the ANGLE Metal renderer of this Apple M4 Pro, 1024 × 768 at device scale 2 (the app caps DPR at 1.6), `?renderStats=1&lookdev=<view>` so the simulator is paused with eight residents at their desks, daylight, high quality. Each run waits for the loading placeholder to go and 12 s more, then takes the median of ten one-second overlay readings. The renderer string is checked in every run so a SwiftShader fallback cannot pass as a GPU measurement. The old shader was kept behind a temporary query switch for the comparison and removed afterwards. The old-shader readings land close to the Phase 5 table above (Overview 64 against 66, Horizon 63 against 65, Northstar 119 against 120), so the harness is a fair stand-in for the embedded browser.
+
+| Preset          | Old shader fps | p95 ms | New shader fps | p95 ms | draws |
+| --------------- | -------------- | ------ | -------------- | ------ | ----- |
+| Overview        | 64             | 16.5   | 66             | 15.9   | 1,807 |
+| Habitat Commons | 92             | 13.0   | 91             | 13.2   | 1,305 |
+| Expedition Base | 108            | 17.2   | 106            | 16.6   | 653   |
+| Northstar       | 119            | 12.9   | 119            | 13.4   | 657   |
+| Horizon         | 63             | 16.4   | 63             | 16.5   | 1,934 |
+
+Every preset is within two fps of the old shader. The first version of the change fetched all three projections of every map unconditionally and cost 6 fps at the Overview (65 to 59) and 8 at the Horizon (61 to 53) in the same harness; dropping the projections under 2% weight recovered all of it, because on a wall or a floor two of the three projections are at grazing angles where anisotropic filtering is most expensive and the blend weight is nearly zero anyway.
+
+**A note on the embedded pane.** During this work no window showed the session, so the embedded browser pane ran as a background page, and its Overview readings swung between 46 and 87 fps with an identical scene. Readings from the pane are only comparable while the pane is visible on screen; when it is not, use the harness above.
+
 ## What the numbers mean
 
 The overlay updates once per second from up to 120 frame intervals. It excludes nonpositive intervals, intervals above 250 ms, and hidden-document samples. It therefore does **not** report long stalls or loading performance. FPS is the reciprocal of mean frame interval; p95 shows the slower end of that sample window. These are browser frame intervals, not GPU execution timings. Draw and triangle counters are the renderer's most recent reported render; they are not a complete GPU-cost accounting of all passes. Geometry and texture values count resources, not bytes.

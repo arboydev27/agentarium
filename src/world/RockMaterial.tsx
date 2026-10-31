@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
-import { applySurfaceDetails } from './WorldSurfaceMaterial';
+import { applySurfaceDetails, textureMeanColor } from './surfaceShader';
 import { useTerrainTextures } from './terrainTextures';
 
 // Rocks share the terrain's baked basalt layer through the triplanar detail
@@ -15,7 +15,12 @@ export function RockMaterial({
   const { basalt } = useTerrainTextures();
   const material = useMemo(() => {
     const result = new THREE.MeshStandardMaterial({ color, roughness: 1, metalness: 0 });
-    applySurfaceDetails(result, [basalt.color, basalt.normal, basalt.roughness], metres);
+    applySurfaceDetails(result, [basalt.color, basalt.normal, basalt.roughness], {
+      metres,
+      base: textureMeanColor(basalt.color),
+      normalScale: 1,
+      contrast: 0.7,
+    });
     return result;
   }, [basalt, color, metres]);
   useEffect(() => () => material.dispose(), [material]);
