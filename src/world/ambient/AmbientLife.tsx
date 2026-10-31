@@ -13,17 +13,19 @@ import {
 } from '../ambientLife';
 import { useKitScene } from '../scenery/kitMaterials';
 import { AmbientRover } from './Rover';
+import { MaintenanceDrones } from './MaintenanceDrones';
 import { roverLoopById } from '../ambientLife';
 import { useDayness } from '../Sky';
 import { renderedTerrainHeight } from '../terrain';
 
-/** Blowing dust, dust devils, blinking beacons and the plains rover. All decorative; dust needs high quality. */
+/** Blowing dust, dust devils, blinking beacons, the plains rover and the maintenance drones. All decorative; dust needs high quality. */
 export function AmbientLife() {
   const low = useWorld((s) => s.quality === 'low');
   return (
     <group name="ambient-life">
       <KitBeacons />
       <AmbientRover loop={roverLoopById('plains')} phase={31} />
+      <MaintenanceDrones />
       {!low && <DustField />}
       {!low && <DustDevils />}
     </group>

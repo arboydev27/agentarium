@@ -63,7 +63,7 @@ Low surface quality uses DPR 1, 1024-pixel shadows, no post-processing and no du
 
 ## Factual activity and decorative life
 
-Resident equipment and personalities persist across task states. Survey and sample-inspection gestures, travel, the spaceport's flight cycle, the three rover loops, the roof dish's tracking, the telescope's slews and satellite motion are decorative. They never fabricate task progress, launch provider jobs, or imply completion. Task briefs, attention, recap, and source-session actions continue to use actual session state. Unknown activity remains unknown.
+Resident equipment and personalities persist across task states. Survey and sample-inspection gestures, travel, the spaceport's flight cycle, the three rover loops, the roof dish's tracking, the telescope's slews, the two maintenance drones and satellite motion are decorative. Drones are 0.6 m across, never carry a label or a selection ring, and cruise at least 3 m above every lane (`drones.test.ts`), so they cannot be read as a ninth resident. They never fabricate task progress, launch provider jobs, or imply completion. Task briefs, attention, recap, and source-session actions continue to use actual session state. Unknown activity remains unknown.
 
 Zooming away does not disconnect the bridge or remove sessions from the task list. The latest-eight/pinned seating policy remains independent of the world renderer.
 

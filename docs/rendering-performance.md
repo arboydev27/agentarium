@@ -84,6 +84,24 @@ Three rovers now drive terrain-following loops (the spaceport pad as before, the
 
 Every preset is within the harness noise. The Helios row shows the only honest difference: five draws for the rover and its puff, and 24 thousand more triangles. The Overview rows sit in the lighter of the two load states described above and the Horizon rows in a heavier one than the T-1 run (2,100 against 1,934 draws), which is the same load-state effect on another preset; neither is this phase, because both variants of each pair landed in the same state.
 
+## Designer feedback I-2: maintenance drones (October 31, 2026)
+
+Two drones built from primitives (`src/world/ambient/MaintenanceDrones.tsx`) fly the routes in `src/world/ambient/drones.ts` between two ground pads, the module roofs, the roof dish and the Survey Lookout relay platform. Each drone is five draws (body, two arm bars, one instanced rotor set, one emissive light) plus its body in the shadow pass; each pad is three (slab, ring, slab shadow). Eighteen draws in all, in every colony shot, and per-frame arithmetic only.
+
+**Harness.** The T-1 harness with the drones behind a temporary `?drones=0` switch, removed afterwards. This run happened while the machine was busy with other work (the desktop app and the kernel together held more than a core for the whole session, and nothing in the page explains it), so every absolute number below is roughly half of the I-1 table an hour earlier, in both variants alike. Only the comparison within a pair means anything here.
+
+| Preset          | Without drones fps | p95 ms | draws | With drones fps | p95 ms | draws |
+| --------------- | ------------------ | ------ | ----- | --------------- | ------ | ----- |
+| Overview        | 36                 | 31.4   | 2,002 | 34              | 32.0   | 2,058 |
+| Habitat Commons | 55                 | 25.8   | 1,312 | 53              | 26.2   | 1,324 |
+| Research Array  | 45                 | 31.4   | 1,367 | 46              | 31.5   | 1,374 |
+| Survey Lookout  | 70                 | 25.9   | 780   | 71              | 23.2   | 781   |
+| Horizon         | 36                 | 31.5   | 2,076 | 32              | 33.4   | 2,120 |
+
+The Commons row shows the honest cost: twelve more draws (the pads are out of that frame) and no change in frame time. A first run of the same five pairs read the same picture (34 against 35, 57 against 57, 45 against 50, 70 against 70, 34 against 30). The Horizon looked like a four-frame loss in both runs, with the drones measured second each time; measured first, the drones read 33 against 31 without, so that gap is drift within a run on the loaded machine, not the drones. The Overview and Horizon draw deltas are larger than eighteen because those presets land in different load states run to run (see the X-1 note).
+
+**What to do when the machine is loaded.** Watch `kernel_task` and the desktop app in `top` before measuring; when they hold a core between them the harness still orders variants correctly but its absolute numbers cannot be compared with another day's. Alternate the variant order or repeat the pair in reverse before reading a small difference as a cost.
+
 ## What the numbers mean
 
 The overlay updates once per second from up to 120 frame intervals. It excludes nonpositive intervals, intervals above 250 ms, and hidden-document samples. It therefore does **not** report long stalls or loading performance. FPS is the reciprocal of mean frame interval; p95 shows the slower end of that sample window. These are browser frame intervals, not GPU execution timings. Draw and triangle counters are the renderer's most recent reported render; they are not a complete GPU-cost accounting of all passes. Geometry and texture values count resources, not bytes.
