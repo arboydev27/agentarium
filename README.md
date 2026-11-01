@@ -165,6 +165,8 @@ Animation is illustrative, not a view into a model's reasoning. Tool labels come
 
 RobotExpressive: Tomás Laulhé (Quaternius), CC0 1.0; glTF modifications by Don McCurdy. Vendored from the official Three.js example. See `public/models/LICENSE.md`.
 
+Ground textures: Sandy Gravel 02 (Dario Barresi), Red Laterite Soil Stones (Amal Kumar) and Rock Boulder Dry (Dimitrios Savva, Rico Cilliers) from Poly Haven, CC0 1.0, re-encoded to KTX2 and re-based onto the Mars palette. See `public/textures/LICENSE.md`.
+
 Environment and application code were authored for Agent Grove. Icons: Lucide (ISC). Fonts: DM Sans and Manrope (Google Fonts, SIL Open Font License). Three.js: MIT. React: MIT.
 
 ### Manage your live world

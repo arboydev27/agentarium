@@ -61,6 +61,8 @@ export type SurfaceDetailOptions = {
   normalScale?: number;
   /** Fraction of the colour map's deviation from `base` that is applied. */
   contrast?: number;
+  /** Average brightness applied; defaults to `surfaceGain(base)`. Pass it when the map is a scan standing in for an authored colour. */
+  gain?: number;
 };
 
 /**
@@ -222,7 +224,7 @@ export function applySurfaceDetails(
     shader.uniforms.surfaceMetres = { value: metres };
     shader.uniforms.surfaceFoundation = { value: foundation ? 1 : 0 };
     shader.uniforms.surfaceNormalScale = { value: normalScale };
-    shader.uniforms.surfaceGain = { value: surfaceGain(base) };
+    shader.uniforms.surfaceGain = { value: options.gain ?? surfaceGain(base) };
     shader.uniforms.surfaceContrast = { value: contrast };
     shader.uniforms.surfaceBase = { value: base };
     shader.vertexShader = 'varying vec3 surfaceWorld;\n' + shader.vertexShader;

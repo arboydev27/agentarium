@@ -2,7 +2,7 @@
 
 > The frame-time and scene-counter measurements below describe historical Earth-world builds. They are not performance measurements of the Mars colony. Re-profile the current production build before treating them as a budget. Current rendering architecture is documented in [World layout](world-layout.md).
 
-The colony ships a shared hardware kit GLB of about 7.4 MB (geometry only; its surface textures are the shared KTX2 maps under `public/textures/habitat`, 1.6 MB for all fifteen), a 1.3 MB resident, and a separate reference habitat of about 6.8 MiB. The 10 MiB hardware test cap and per-module mesh limits are export guardrails, not benchmarks of network loading, GPU memory, or frame time. Material texture sampling and authored detail add rendering work; shared cached geometry/materials and per-material export merging limit duplication. No controlled performance benchmark was run for this rollout. See [World asset upgrade](world-asset-upgrade.md) for implementation and review scope.
+The colony ships a shared hardware kit GLB of about 7.4 MB (geometry only; its surface textures are the shared KTX2 maps under `public/textures/habitat`, 1.6 MB for all fifteen, and at high quality the ground adds the nine scanned maps under `public/textures/ground`, 5.0 MB), a 1.3 MB resident, and a separate reference habitat of about 6.8 MiB. The 10 MiB hardware test cap and per-module mesh limits are export guardrails, not benchmarks of network loading, GPU memory, or frame time. Material texture sampling and authored detail add rendering work; shared cached geometry/materials and per-material export merging limit duplication. No controlled performance benchmark was run for this rollout. See [World asset upgrade](world-asset-upgrade.md) for implementation and review scope.
 
 Append `?renderStats=1` to the local app URL, for example `http://127.0.0.1:5173/?renderStats=1`. A small overlay reports average interval FPS, the 95th-percentile frame interval, renderer draw calls and triangles, allocated geometry/texture counts, and the current number of full-detail terrain tiles. Remove the query parameter and reload to disable it. Nothing is transmitted or persisted.
 
@@ -101,6 +101,21 @@ Two drones built from primitives (`src/world/ambient/MaintenanceDrones.tsx`) fly
 The Commons row shows the honest cost: twelve more draws (the pads are out of that frame) and no change in frame time. A first run of the same five pairs read the same picture (34 against 35, 57 against 57, 45 against 50, 70 against 70, 34 against 30). The Horizon looked like a four-frame loss in both runs, with the drones measured second each time; measured first, the drones read 33 against 31 without, so that gap is drift within a run on the loaded machine, not the drones. The Overview and Horizon draw deltas are larger than eighteen because those presets land in different load states run to run (see the X-1 note).
 
 **What to do when the machine is loaded.** Watch `kernel_task` and the desktop app in `top` before measuring; when they hold a core between them the harness still orders variants correctly but its absolute numbers cannot be compared with another day's. Alternate the variant order or repeat the pair in reverse before reading a small difference as a cost.
+
+## Designer feedback T-2: scanned ground (October 31, 2026)
+
+At high quality the three terrain layers are scanned CC0 sets (`src/world/groundSets.ts`, nine 1K KTX2 maps under `public/textures/ground/`, 5,192,289 bytes) in place of the 512-pixel layers baked from noise at start-up; low quality keeps the bake and downloads nothing. The ground shader (`mars-ground-splat-v2`) does the same fetches as before: the ARM map's red channel supplies ambient occlusion from the fetch that already supplied roughness, and the per-layer gain, contrast and base are uniforms, exactly one and the layer's own colour for a baked layer. GPU memory per map is of the same order either way: a 512² RGBA8 bake with mips is about 1.3 MB, a 1K map transcoded to a 4 × 4 block format with mips about 1.3 MB.
+
+**Harness.** The T-1 harness with the scans behind a temporary `?scannedGround=0` switch, removed afterwards: four views, twelve one-second samples each after the scene settled, on an unloaded machine.
+
+| Preset               | Baked fps | p95 ms | draws | Scanned fps | p95 ms | draws |
+| -------------------- | --------- | ------ | ----- | ----------- | ------ | ----- |
+| Overview             | 53        | 20.2   | 2,087 | 66          | 16.0   | 1,835 |
+| Habitat Commons      | 88        | 13.9   | 1,329 | 90          | 13.7   | 1,328 |
+| Southwind Crater     | 112       | 13.2   | 654   | 115         | 12.6   | 652   |
+| Basalt Field Station | 114       | 14.0   | 641   | 119         | 13.0   | 645   |
+
+The three landmark rows are within the run-to-run noise, with the scans two to five fps ahead each time. The Overview pair landed in the two load states described under X-1 (heavy with the bake, light with the scans), so its thirteen-frame gap is that split and not the textures. Nothing in the frame depends on the source: the shader samples the same nine textures and the draws are the same objects. What changes is the download, 5.0 MB of KTX2 that high quality fetches once and low quality never requests, and the first paint, which now waits for nine transcodes through the shared Basis worker pool rather than three Web Worker bakes; load time was not measured here.
 
 ## What the numbers mean
 

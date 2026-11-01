@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
-import { useTerrainTextures } from './terrainTextures';
+import { GROUND_LAYER_BASE } from './groundSets';
+import { useTerrainTextures, type TerrainMaps } from './terrainTextures';
 
 // Worn-ground surface for authored routes: compacted sand that fades into the
 // surrounding regolith instead of a hard-edged grey ribbon. Geometry may carry
@@ -15,8 +16,19 @@ const TONES: Record<WornGroundTone, { tint: THREE.Color; ruts: number; scuff: nu
   pad: { tint: new THREE.Color('#bf8b67'), ruts: 0, scuff: 0.3 },
 };
 
+/**
+ * Divisor for the sampled sand grain, so it reads as variation around the map's
+ * own mean at the level the tones were tuned against: the baked sand's grain over
+ * its sRGB mean. A scanned sand is divided by its own mean scaled the same way.
+ */
+function wornBase(mean: THREE.Color) {
+  const [r, g, b] = GROUND_LAYER_BASE.sand;
+  const baked = new THREE.Color().setRGB(r, g, b, THREE.SRGBColorSpace);
+  return new THREE.Vector3((mean.r * r) / baked.r, (mean.g * g) / baked.g, (mean.b * b) / baked.b);
+}
+
 export function createWornGroundMaterial(
-  sand: { color: THREE.Texture; roughness: THREE.Texture },
+  sand: Pick<TerrainMaps, 'color' | 'roughness' | 'mean'>,
   tone: WornGroundTone,
   vertexColors: boolean,
 ) {
@@ -36,6 +48,7 @@ export function createWornGroundMaterial(
   material.onBeforeCompile = (shader) => {
     shader.uniforms.wornColor = { value: sand.color };
     shader.uniforms.wornRoughness = { value: sand.roughness };
+    shader.uniforms.wornBase = { value: wornBase(sand.mean) };
     shader.uniforms.wornRuts = { value: ruts };
     shader.uniforms.wornScuff = { value: scuff };
     shader.vertexShader =
@@ -56,6 +69,7 @@ export function createWornGroundMaterial(
       uniform sampler2D wornRoughness;
       uniform float wornRuts;
       uniform float wornScuff;
+      uniform vec3 wornBase;
       float wornHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       float wornNoise(vec2 p) {
         vec2 i = floor(p);
@@ -80,7 +94,7 @@ export function createWornGroundMaterial(
       float scuffs = 1.0 - wornScuff * smoothstep(0.55, 0.9, wornNoise(wornUv * 2.7));
       float rutMask = wornRuts * (1.0 - smoothstep(0.05, 0.14, abs(abs(vAcross) - 0.42)));
       compact *= 1.0 - rutMask * 0.22;
-      diffuseColor.rgb *= compact / vec3(0.73, 0.47, 0.31);
+      diffuseColor.rgb *= compact / wornBase;
       diffuseColor.a *= cover * (0.7 + 0.3 * scuffs);
       `,
     );
@@ -91,7 +105,7 @@ export function createWornGroundMaterial(
       `,
     );
   };
-  material.customProgramCacheKey = () => `worn-ground-v1-${tone}-${vertexColors ? 'vc' : 'flat'}`;
+  material.customProgramCacheKey = () => `worn-ground-v2-${tone}-${vertexColors ? 'vc' : 'flat'}`;
   return material;
 }
 

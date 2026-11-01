@@ -1,10 +1,11 @@
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
-import { applySurfaceDetails, textureMeanColor } from './surfaceShader';
+import { applySurfaceDetails, surfaceGain } from './surfaceShader';
 import { useTerrainTextures } from './terrainTextures';
 
-// Rocks share the terrain's baked basalt layer through the triplanar detail
-// path, so boulders and the slopes they sit on read as the same stone.
+// Rocks share the terrain's basalt layer (baked or scanned) through the
+// triplanar detail path, so boulders and the slopes they sit on read as the same
+// stone. The map is read around its own mean; the gain stays the authored layer's.
 export function RockMaterial({
   color = '#ffffff',
   metres = 1.3,
@@ -17,7 +18,8 @@ export function RockMaterial({
     const result = new THREE.MeshStandardMaterial({ color, roughness: 1, metalness: 0 });
     applySurfaceDetails(result, [basalt.color, basalt.normal, basalt.roughness], {
       metres,
-      base: textureMeanColor(basalt.color),
+      base: basalt.mean,
+      gain: surfaceGain(basalt.base),
       normalScale: 1,
       contrast: 0.7,
     });

@@ -8,7 +8,7 @@
 - `assets/blender/build_habitat.py`: deterministic authoring and export script, created for this project.
 - `public/models/habitat/expedition-habitat.glb`: browser-ready asset, approximately 6.8 MiB, nine material-group meshes.
 - `public/models/habitat/manifest.json`: coordinate convention, material names, source and generator paths.
-- `public/textures/habitat/`: original procedural color, roughness, and normal maps. No third-party texture licenses or runtime CDN are involved.
+- `public/textures/habitat/`: original procedural color, roughness, and normal maps. No third-party data or runtime CDN is involved in the habitat; the terrain's scanned ground sets live apart under `public/textures/ground/` with their CC0 record in `public/textures/LICENSE.md`.
 
 The kit contains the pressure hull, external ribs, airlock, access keypad, glazing, steps, handrails, radiator panels, service vents, coolant lines, oxygen tanks, equipment crates, fasteners, foundations, eroded rocks, and wind-deposited dust. The Blender file retains 131 separate authoring objects. Export copies are joined by material to reduce draw calls; joining does not flatten the source file.
 
@@ -24,7 +24,7 @@ Running the generator overwrites its generated `.blend`, `.glb`, manifest, and t
 
 ## Material and terrain contract
 
-Five textured material families cover worn ceramic paint, dusty alloy, cast foundation concrete, eroded ironstone, and regolith. Color maps use sRGB; roughness and tangent-space normal data remain non-color. The browser loads GPU-compressed KTX2 copies (`scripts/encode-textures.sh`: ETC1S for colour and roughness, UASTC for normals, full mip chains, 1.6 MB for all fifteen against 5.3 MB of PNG) through a self-hosted Basis transcoder under `public/basis`; the PNGs stay as the authored source. Blender's image color space is set **before** writing pixels, because changing it afterward can invalidate the generated buffer. Export checks reject blank color images.
+Five textured material families cover worn ceramic paint, dusty alloy, cast foundation concrete, eroded ironstone, and regolith. Color maps use sRGB; roughness and tangent-space normal data remain non-color. The browser loads GPU-compressed KTX2 copies (`scripts/encode-textures.sh`, which also encodes the ground sets given a source and an output directory: ETC1S for colour, roughness and ARM maps, UASTC for normals, full mip chains, 1.6 MB for all fifteen against 5.3 MB of PNG) through a self-hosted Basis transcoder under `public/basis`; the PNGs stay as the authored source. Blender's image color space is set **before** writing pixels, because changing it afterward can invalidate the generated buffer. Export checks reject blank color images.
 
 Textures use 512 × 512 images with mipmaps. The ground repeats at three world metres per tile; camera zoom does not change that scale. The reference ground patch follows authoritative rendered terrain heights, fades across a three-metre boundary, and remains below route ribbons. Across the wider world, terrain uses the same regolith family; procedural paths, decks, cliffs and crater surfaces use `WorldSurfaceMaterial`, and terrain-supported pads use `TerrainApron`. Twin wheel tracks use one instanced mesh. Terrain-height supports close gaps under the structural footings. Procedural monoliths are excluded from the reference area's foreground.
 
