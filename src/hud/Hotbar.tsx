@@ -19,7 +19,8 @@ import {
 import { WORLD_VIEWS, WORLD_VIEW_LABELS, type WorldView } from '../world/layout';
 import { HOTBAR_LABELS, hotbarKey } from './shell';
 
-const ICONS: Record<WorldView, typeof Focus> = {
+/** One icon per viewpoint, shared with the place cards. */
+export const VIEW_ICONS: Record<WorldView, typeof Focus> = {
   overview: Focus,
   café: Users,
   garden: FlaskConical,
@@ -37,15 +38,20 @@ const ICONS: Record<WorldView, typeof Focus> = {
   horizon: Eye,
 };
 
-/** Bottom hotbar of viewpoints. Number keys jump; arrows move focus inside the bar. */
+/**
+ * Bottom hotbar of viewpoints. Number keys and clicks jump; arrows move focus inside the
+ * bar; Enter on a focused slot flies there and opens its place card.
+ */
 export function Hotbar({
   camera,
   active,
   onChange,
+  onInspect,
 }: {
   camera: WorldView;
   active: boolean;
   onChange: (view: WorldView) => void;
+  onInspect: (view: WorldView) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -60,8 +66,15 @@ export function Hotbar({
       className="hud-hotbar hud-fades"
       role="group"
       tabIndex={0}
-      aria-label="Viewpoints. Press 1 to 9 or 0 to jump. Use Left and Right Arrow to move between views."
+      aria-label="Viewpoints. Press 1 to 9 or 0 to jump. Use Left and Right Arrow to move between views; Enter opens a view's place card."
       onKeyDown={(event) => {
+        if (event.key === 'Enter') {
+          const view = (event.target as HTMLElement).closest('button')?.dataset.view;
+          if (!view) return;
+          event.preventDefault();
+          onInspect(view as WorldView);
+          return;
+        }
         if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
         event.preventDefault();
         const buttons = Array.from(
@@ -82,12 +95,13 @@ export function Hotbar({
       }}
     >
       {WORLD_VIEWS.map((view, index) => {
-        const Icon = ICONS[view];
+        const Icon = VIEW_ICONS[view];
         const key = hotbarKey(index);
         const current = active && camera === view;
         return (
           <button
             key={view}
+            data-view={view}
             className={current ? 'active' : ''}
             aria-pressed={current}
             aria-label={`${WORLD_VIEW_LABELS[view]} view${key ? `, key ${key}` : ''}`}

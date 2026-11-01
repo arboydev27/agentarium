@@ -78,7 +78,9 @@ export function hudShortcut(event: {
 export const HUD_SHORTCUT_HELP: { keys: string; does: string }[] = [
   { keys: '1 – 9, 0', does: 'Jump to the first ten viewpoints' },
   { keys: '← →', does: 'Move between viewpoints while the hotbar has focus' },
+  { keys: 'Enter', does: 'Fly to the focused hotbar slot and open its place card' },
   { keys: 'Arrows', does: 'Pan the camera while the world has focus; Shift pans farther' },
+  { keys: 'Home', does: 'Return to the active viewpoint while the world has focus' },
   { keys: 'M', does: 'Open or close the map' },
   { keys: 'R', does: 'Open or close the resident list' },
   { keys: 'N', does: 'Switch between daylight and evening' },
@@ -86,7 +88,7 @@ export const HUD_SHORTCUT_HELP: { keys: string; does: string }[] = [
   { keys: 'Space', does: 'Pause or resume the simulation' },
   {
     keys: 'Esc',
-    does: 'Leave watch mode, stop following, clear the selection, then close the pane',
+    does: 'Leave watch mode, stop following, clear the selection, close the place card, then close the pane',
   },
   { keys: '?', does: 'Open this help' },
 ];
@@ -126,16 +128,21 @@ export function rosterCollapses(width: number) {
   return width <= ROSTER_COLLAPSE_WIDTH;
 }
 
-/** Escape unwinds one layer at a time, so closing a resident returns to the list beneath it. */
+/**
+ * Escape unwinds one layer at a time, so closing a resident returns to the place or list
+ * beneath it, and closing a place returns to the list.
+ */
 export function escapeTarget(state: {
   watchMode: boolean;
   following: boolean;
   selected: boolean;
+  place?: boolean;
   paneOpen: boolean;
-}): 'watch' | 'follow' | 'selection' | 'pane' | null {
+}): 'watch' | 'follow' | 'selection' | 'place' | 'pane' | null {
   if (state.watchMode) return 'watch';
   if (state.following) return 'follow';
   if (state.selected) return 'selection';
+  if (state.place) return 'place';
   if (state.paneOpen) return 'pane';
   return null;
 }

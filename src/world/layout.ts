@@ -42,6 +42,7 @@ export type WorldLocation =
   | 'western-woods'
   | 'northern-highlands'
   | 'amber-foothills'
+  | 'fabrication-bay'
   | 'open-landscape';
 export const WORLD_VIEW_LABELS: Record<WorldView, string> = {
   overview: 'Overview',
@@ -67,6 +68,7 @@ export const WORLD_LOCATION_LABELS: Record<WorldLocation, string> = {
   'western-woods': 'Basalt Flats',
   'northern-highlands': 'Iron Highlands',
   'amber-foothills': 'Amber Foothills',
+  'fabrication-bay': 'Fabrication Bay',
   'open-landscape': 'Open landscape',
 };
 export const SEATS: Point[] = [

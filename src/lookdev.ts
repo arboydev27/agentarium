@@ -4,7 +4,8 @@ import { WORLD_VIEWS, type WorldView } from './world/layout';
 /**
  * Look-development harness. `?lookdev=<view>` pins a camera preset, pauses the
  * simulated colony (`playing: false`), disables cinematic motion, and optionally sets night with
- * `&night=1`, so visual changes can be compared as screenshots of one frame.
+ * `&night=1` and low rendering quality with `&quality=low`, so visual changes can be compared as
+ * screenshots of one frame and measured at either quality.
  */
 export function applyLookdev(search = window.location.search) {
   const params = new URLSearchParams(search);
@@ -21,6 +22,7 @@ export function applyLookdev(search = window.location.search) {
     cinematic: false,
     playing: false,
     night: params.get('night') === '1',
+    ...(params.get('quality') === 'low' ? { quality: 'low' as const } : {}),
   });
   return true;
 }

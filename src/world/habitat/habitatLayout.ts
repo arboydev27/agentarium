@@ -16,6 +16,8 @@ export type Placement = {
   position: Point;
   rotationY: number;
   scale: [number, number, number];
+  /** Full Euler rotation in radians; when present it replaces `rotationY` (a tile lying on its back). */
+  rotation?: readonly [number, number, number];
 };
 export type ShellPart =
   'wall' | 'glass' | 'corner' | 'roof' | 'airlock' | 'radiator' | 'roof-radiator';

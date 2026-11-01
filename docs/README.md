@@ -36,6 +36,7 @@ For a first run, start with Getting started. For a new provider, read Agent life
 
 - [Agentarium real-work attention plan](real-work-plan.md): the next in-repository milestone—task briefs, attention, results, away recap, and integration diagnostics.
 - [Standalone desktop companion plan](companion-product-plan.md): a portable brief for a separate application and repository, with its own scope, architecture, and release gates.
+- [Designer feedback plan](designer-feedback-plan.md): proposed phases answering the October 2026 designer review (ambient activity, interactivity, textures), with frame and asset budgets and the decisions the owner must make.
 
 The Agentarium plan tracks an implementation in progress; its usage guide distinguishes shipped behavior from remaining work. The companion brief remains a separate future project.
 

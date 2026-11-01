@@ -179,21 +179,29 @@ def cabin():
 def dish():
     cyl('dish foundation',(0,0,.1),.6,.2,concrete)
     cyl('dish pedestal',(0,0,1.5),.13,2.8,metal)
-    # Lathed shallow parabolic reflector, with real rim and support struts.
+    pipe('receiver cable',[(0,.15,.2),(0,.15,2.8)],.025,black)
+    # Lathed shallow parabolic reflector, with real rim and support struts, on an
+    # inclined mount so the runtime azimuth tracking (KitInstances `spin`) reads.
+    before=set(bpy.data.objects)
     vertices=[];faces=[]
     for j in range(9):
         r=.02+j/8
         for i in range(40):
-            a=i*math.pi/20;vertices.append((r*math.cos(a),r*math.sin(a),3+.45*r*r))
+            a=i*math.pi/20;vertices.append((r*math.cos(a),r*math.sin(a),.1+.45*r*r))
     for j in range(8):
         for i in range(40):
             a=j*40+i;b=j*40+(i+1)%40;faces.append((a,b,b+40,a+40))
     m=bpy.data.meshes.new('parabolic reflector');m.from_pydata(vertices,[],faces);m.update()
     o=bpy.data.objects.new('parabolic reflector',m);bpy.context.collection.objects.link(o);finish(o,'parabolic reflector',shell)
     for i in range(4):
-        a=i*math.pi/2;pipe('feed support',[(math.cos(a),math.sin(a),3.45),(0,0,4)],.025,metal)
-    cyl('feed receiver',(0,0,4),.09,.22,metal)
-    pipe('receiver cable',[(0,.15,.2),(0,.15,2.7),(.4,.15,3)],.025,black)
+        a=i*math.pi/2;pipe('feed support',[(math.cos(a),math.sin(a),.55),(0,0,1.1)],.025,metal)
+    cyl('feed receiver',(0,0,1.1),.09,.22,metal)
+    cyl('elevation hinge',(0,0,0),.11,.3,metal)
+    pipe('reflector cable',[(0,.15,-.1),(.4,.15,.12)],.025,black)
+    pivot=bpy.data.objects.new('inclined reflector assembly',None);bpy.context.collection.objects.link(pivot)
+    for o in set(bpy.data.objects)-before:
+        if o!=pivot:o.parent=pivot
+    pivot.rotation_euler[1]=.6;pivot.location=(0,0,2.9)
 
 def workstation():
     # Blender -Y becomes glTF +Z. These contact heights match the resident rig.

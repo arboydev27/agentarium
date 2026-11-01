@@ -11,18 +11,18 @@ Stable internal IDs preserve saved views, seating, and navigation while the disp
 | café          | Habitat Commons      | Open service spine, canopy, shared workstations                                    |
 | garden        | Resource Lab         | Processing tanks and sample equipment                                              |
 | studio        | Research Array       | Raised research deck and service wall                                              |
-| courtyard     | Comms Court          | Communications dish and illuminated paths                                          |
+| courtyard     | Comms Court          | Tracking communications dish and illuminated paths                                 |
 | lookout       | Survey Lookout       | Sensor masts, survey console and relay mast                                        |
 | orchard       | Expedition Base      | Blender-authored reference habitat, textured ground, solar equipment               |
-| observatory   | Deep Sky Array       | Telescope terrace and antenna fringe                                               |
+| observatory   | Deep Sky Array       | Slewing telescope on its terrace and antenna fringe                                |
 | northstar     | Northstar Spaceport  | Rocket, launchpad with beacons, gantry, control cabin, fuel farm, patrolling rover |
 | hollow        | Basalt Field Station | Outpost habitat and instrumentation                                                |
 | dawnlight     | Dawnlight Biolab     | Two outpost habitats north of the approach                                         |
-| windward      | Helios Power Field   | Habitat, solar racks, tall sensor mast                                             |
+| windward      | Helios Power Field   | Habitat, solar racks, tall sensor mast, inspection rover                           |
 | mere          | Southwind Crater     | Mineral basin and sampling station                                                 |
 | amber         | Amber Bluff          | Scenic stratified rock formation                                                   |
 
-Slate Reach and Amber Bluff are scenic formations, not resident destinations. Authored trails connect the other outer destinations and two trail rests. Procedural rocks fill the wilderness while respecting route exclusions. Residents do not freely traverse every terrain triangle.
+Slate Reach and Amber Bluff are scenic formations, not resident destinations. The Fabrication Bay east of the Research Array is a construction site worked by a decorative crew, not a destination either; no route leads into it. Authored trails connect the other outer destinations and two trail rests. Procedural rocks fill the wilderness while respecting route exclusions. Residents do not freely traverse every terrain triangle.
 
 ## Layout contract
 
@@ -43,9 +43,11 @@ Seats anchor desks, laptops, chairs, and reversible local routes. Residents join
 
 ## Surface exploration
 
-Overview and the four colony presets use steep viewport-aware framing so the dollhouse interiors read. The nine landmark presets are composed shots (`shot()` in `src/world/layout.ts`): the camera sits on the preset's bearing at a 14 to 16 degree pitch, so foreground ground, the landmark and the horizon share the frame. Horizon is a fixed perspective placement. Drag/orbit, keyboard arrows, map scouting, resident following, and watch mode provide different ways to explore. Shift increases keyboard pan distance. Camera focus stays within X/Z ±210, well inside the finite terrain boundary.
+Overview and the four colony presets use steep viewport-aware framing so the dollhouse interiors read. The nine landmark presets are composed shots (`shot()` in `src/world/layout.ts`): the camera sits on the preset's bearing at a 14 to 16 degree pitch, so foreground ground, the landmark and the horizon share the frame. Horizon is a fixed perspective placement. Drag/orbit, keyboard arrows, double-click travel, map scouting, resident following, and watch mode provide different ways to explore. Shift increases keyboard pan distance; Home returns to the active viewpoint. The eye stays at least 1.2 m above the ground wherever the orbit, a travel or a follow puts it (`src/world/exploreCamera.ts`, `exploreCamera.test.ts` sweeps every preset's descent and the travel area), so the orbit can come down to 2.5 m and head height. Camera focus stays within X/Z ±210, well inside the finite terrain boundary, and double-click travel is clamped to the same bounds.
 
 Map scouting moves the camera without moving residents. North is negative Z. Manual camera adjustment clears preset highlighting. Focus labels describe the current location independently of the selected preset. Basalt Flats, Iron Highlands, and Amber Foothills provide broader geographic context.
+
+Every module, landmark and major machine is also a place you can click (`src/world/places.ts`): a hover tag names it and a click opens a card with who is there and a **Fly here** control. The proxies are derived from `ZONES`, the placement modules and the destination nodes, so a new structure gets a place by adding one entry that references its own placement constants; `places.test.ts` checks that every preset but Overview and Horizon looks at a place, that only modules contain seats, and that every authored destination inside a place is listed as one of its rest spots. The Fabrication Bay is such a place; it has no preset, so **Fly here** travels to its raft.
 
 ## One scale: the surface
 
@@ -61,12 +63,12 @@ Low surface quality uses DPR 1, 1024-pixel shadows, no post-processing and no du
 
 ## Factual activity and decorative life
 
-Resident equipment and personalities persist across task states. Survey and sample-inspection gestures, travel, the spaceport's flight cycle, and satellite motion are decorative. They never fabricate task progress, launch provider jobs, or imply completion. Task briefs, attention, recap, and source-session actions continue to use actual session state. Unknown activity remains unknown.
+Resident equipment and personalities persist across task states. Survey and sample-inspection gestures, travel, the spaceport's flight cycle, the three rover loops, the roof dish's tracking, the telescope's slews, the two maintenance drones and satellite motion are decorative. Drones are 0.6 m across, never carry a label or a selection ring, and cruise at least 3 m above every lane (`drones.test.ts`), so they cannot be read as a ninth resident. The Fabrication Bay crew are nine tenths of a resident's height in work suits with no accessory, never carry a label, a ring or a click, and never enter the roster, the map or the shared position map (`crew.test.ts`), so they cannot be read as residents either. They never fabricate task progress, launch provider jobs, or imply completion. Task briefs, attention, recap, and source-session actions continue to use actual session state. Unknown activity remains unknown.
 
 Zooming away does not disconnect the bridge or remove sessions from the task list. The latest-eight/pinned seating policy remains independent of the world renderer.
 
 ## Extending and verifying
 
-Update layout and navigation before placing new structures. Preserve route clearance, terrain contact, arrival visibility, and simplified distant representations. Keep frame animation on mutable Three.js objects and dispose component-owned GPU resources. Profile draw calls, shadow cost, and memory before expanding further. This is a finite explorable world, not an infinite terrain generator.
+Update layout and navigation before placing new structures. Preserve route clearance, terrain contact, arrival visibility, and simplified distant representations. Rover loops live in `ROVER_LOOPS` (`src/world/ambientLife.ts`); a new loop must pass the clearance test there and is then kept free of rocks and groundcover automatically. The construction site's numbers live in `src/world/scenery/constructionPlacement.ts`; its fence follows the Helios branch at `TRAIL_SETBACK`, and `crew.test.ts` fails if the site or a crew loop comes within a body radius and half a metre of any lane. Keep frame animation on mutable Three.js objects and dispose component-owned GPU resources. Profile draw calls, shadow cost, and memory before expanding further. This is a finite explorable world, not an infinite terrain generator.
 
 Run `npm test` and `npm run build`. Review surface presets, camera limits, high/low quality, evening light, reduced motion, narrow viewports, and scenic loading failure/retry. Track remaining reinvention work in [Mars reinvention](mars-reinvention.md).

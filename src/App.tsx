@@ -21,6 +21,7 @@ import { SystemBar, type SystemDialog } from './hud/SystemBar';
 import { AttentionBanner } from './hud/AttentionBanner';
 import { Drawer, type PaneKind } from './hud/Drawer';
 import { ResidentPane } from './hud/ResidentPane';
+import { PlacePane } from './hud/PlacePane';
 import { ListPane } from './hud/ListPane';
 import { useHudIdle } from './hud/useIdle';
 import {
@@ -31,6 +32,7 @@ import {
   rosterCollapses,
 } from './hud/shell';
 import type { WorldView } from './world/layout';
+import { cameraAtPlace, placeById, placeForView, type Place } from './world/places';
 const World = lazy(() => import('./World'));
 
 class SceneBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
@@ -98,6 +100,7 @@ export default function App() {
   useEffect(registerWorldTools, []);
   const agents = useWorld((s) => s.agents),
     selected = useWorld((s) => s.selected),
+    place = useWorld((s) => s.place),
     events = useWorld((s) => s.events),
     mode = useWorld((s) => s.mode),
     speed = useWorld((s) => s.speed),
@@ -184,11 +187,12 @@ export default function App() {
           )
       : filterResidents(agents, [], sessionView);
   const chosen = agents.find((a) => a.id === selected);
+  const openPlace = placeById(place);
   const attention = agents.filter((a) => attentionFor(a)).length;
   const idleResidents = agents.filter(
     (a) => a.status === 'idle' || a.status === 'completed',
   ).length;
-  const paneKind: PaneKind | null = chosen ? 'resident' : pane;
+  const paneKind: PaneKind | null = chosen ? 'resident' : openPlace ? 'place' : pane;
   const idle = useHudIdle();
   const dimmed = hudDims({ idle, paneOpen: paneKind !== null, dialogOpen: dialog !== null });
 
@@ -216,11 +220,13 @@ export default function App() {
           watchMode: world.watchMode,
           following: !!world.followAgent,
           selected: !!world.selected,
+          place: !!placeById(world.place),
           paneOpen: paneRef.current !== null,
         });
         if (layer === 'watch') world.set({ watchMode: false });
         else if (layer === 'follow') world.set({ followAgent: null });
         else if (layer === 'selection') world.select(null);
+        else if (layer === 'place') world.setPlace(null);
         else if (layer === 'pane') setPane(null);
         return;
       }
@@ -247,6 +253,7 @@ export default function App() {
           document.getElementById('landmark-toggle')?.click();
           return;
         case 'roster':
+          world.setPlace(null);
           setPane((current) => (current === 'list' ? null : 'list'));
           return;
         case 'night':
@@ -316,6 +323,27 @@ export default function App() {
       followAgent: null,
       cinematic: false,
     });
+  // Fly to a viewpoint and open the card of the place it frames (Overview and Horizon frame none).
+  const inspectPlace = (view: WorldView) => {
+    changeCamera(view);
+    useWorld.getState().select(null);
+    useWorld.getState().setPlace(placeForView(view)?.id ?? null);
+  };
+  const flyToPlace = (target: Place) => {
+    if (target.view) {
+      changeCamera(target.view);
+      return;
+    }
+    set({
+      cameraJump: {
+        ...target.focus,
+        sequence: (useWorld.getState().cameraJump?.sequence ?? 0) + 1,
+      },
+      cameraCustomized: true,
+      followAgent: null,
+      cinematic: false,
+    });
+  };
   const spawn = () => {
     if (idleResidents === 0) {
       setToast('Everyone is busy. Complete a task to free a resident.');
@@ -325,6 +353,7 @@ export default function App() {
   };
   const openFilter = (view: SessionView) => {
     set({ watchMode: false });
+    useWorld.getState().setPlace(null);
     setPane('list');
     setSessionView(view);
     setSessionFilter('');
@@ -334,6 +363,7 @@ export default function App() {
   const selectResident = (id: string) => useWorld.getState().select(selected === id ? null : id);
   const closePane = () => {
     if (chosen) useWorld.getState().select(null);
+    else if (openPlace) useWorld.getState().setPlace(null);
     else setPane(null);
   };
   const paneTabs: { kind: PaneKind; label: string }[] = [
@@ -407,7 +437,10 @@ export default function App() {
             live={mode === 'live'}
             attention={attention}
             onSelect={selectResident}
-            onOpen={setPane}
+            onOpen={(kind) => {
+              useWorld.getState().setPlace(null);
+              setPane(kind);
+            }}
           />
         </div>
       </div>
@@ -431,11 +464,13 @@ export default function App() {
                 });
               }}
               navigate={changeCamera}
+              inspect={inspectPlace}
               onOpen={() => {
                 // On phones the map and the pane share the bottom edge; show one at a time.
                 if (rosterCollapses(window.innerWidth)) {
                   setPane(null);
                   useWorld.getState().select(null);
+                  useWorld.getState().setPlace(null);
                 }
               }}
             />
@@ -448,6 +483,7 @@ export default function App() {
           camera={camera}
           active={!followAgent && !cameraCustomized}
           onChange={changeCamera}
+          onInspect={inspectPlace}
         />
         <Transport notify={setToast} spawn={spawn} />
       </div>
@@ -457,20 +493,33 @@ export default function App() {
           title={
             paneKind === 'resident'
               ? 'Resident'
-              : paneKind === 'activity'
-                ? 'Activity'
-                : paneKind === 'recap'
-                  ? 'Since you were away'
-                  : 'Residents'
+              : paneKind === 'place'
+                ? 'Place'
+                : paneKind === 'activity'
+                  ? 'Activity'
+                  : paneKind === 'recap'
+                    ? 'Since you were away'
+                    : 'Residents'
           }
-          tabs={paneKind === 'resident' ? [] : paneTabs}
+          tabs={paneKind === 'resident' || paneKind === 'place' ? [] : paneTabs}
           onTab={(kind) => {
-            if (kind !== 'resident') setPane(kind);
+            if (kind !== 'resident' && kind !== 'place') setPane(kind);
           }}
           onClose={closePane}
         >
           {paneKind === 'resident' && chosen ? (
             <ResidentPane agent={chosen} notify={setToast} />
+          ) : paneKind === 'place' && openPlace ? (
+            <PlacePane
+              place={openPlace}
+              cameraHere={cameraAtPlace(openPlace, {
+                view: camera,
+                customized: cameraCustomized,
+                following: !!followAgent,
+              })}
+              onFly={() => flyToPlace(openPlace)}
+              onResident={(id) => useWorld.getState().select(id)}
+            />
           ) : paneKind === 'recap' && mode === 'live' ? (
             <Recap key={bridgeId || 'legacy'} />
           ) : paneKind === 'activity' ? (
@@ -584,7 +633,8 @@ export default function App() {
               <p>
                 Drag to orbit. Scroll or pinch to zoom. Click the world or Tab to it, then use arrow
                 keys to pan; hold Shift for larger steps. The hotbar and the map jump between
-                places.
+                places. Click a module, landmark or machine to learn what it is, who is there, and
+                fly to it.
               </p>
             </div>
             <div>

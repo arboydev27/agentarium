@@ -12,3 +12,6 @@ bridge/data/
 
 # Local visual-review captures and diagnostics
 .impeccable/review/
+
+# Scanned ground sources fetched by scripts/ground-textures.sh (KTX2 is committed)
+assets/textures/ground/

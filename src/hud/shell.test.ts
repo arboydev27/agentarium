@@ -56,7 +56,7 @@ describe('keyboard shortcuts', () => {
   });
   it('documents every shortcut the HUD handles', () => {
     const text = HUD_SHORTCUT_HELP.map((entry) => entry.keys).join(' ');
-    for (const key of ['1', '0', 'M', 'R', 'N', 'W', 'Space', 'Esc', '?', 'Arrows'])
+    for (const key of ['1', '0', 'M', 'R', 'N', 'W', 'Space', 'Esc', '?', 'Arrows', 'Enter'])
       expect(text).toContain(key);
   });
 });
@@ -105,10 +105,20 @@ describe('layout and dismissal', () => {
     expect(rosterCollapses(1440)).toBe(false);
   });
   it('unwinds Escape one layer at a time', () => {
-    const all = { watchMode: true, following: true, selected: true, paneOpen: true };
+    const all = { watchMode: true, following: true, selected: true, place: true, paneOpen: true };
     expect(escapeTarget(all)).toBe('watch');
     expect(escapeTarget({ ...all, watchMode: false })).toBe('follow');
     expect(escapeTarget({ ...all, watchMode: false, following: false })).toBe('selection');
+    // A resident opened from a place card closes back to the card, and the card to the list.
+    expect(
+      escapeTarget({
+        watchMode: false,
+        following: false,
+        selected: false,
+        place: true,
+        paneOpen: true,
+      }),
+    ).toBe('place');
     expect(
       escapeTarget({ watchMode: false, following: false, selected: false, paneOpen: true }),
     ).toBe('pane');

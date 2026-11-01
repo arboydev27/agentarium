@@ -1,7 +1,7 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 
-export type PaneKind = 'resident' | 'list' | 'activity' | 'recap';
+export type PaneKind = 'resident' | 'place' | 'list' | 'activity' | 'recap';
 
 /** Edge pane that slides in from the right (a bottom sheet on phones). */
 export function Drawer({

@@ -1,3 +1,4 @@
+import { clearOfRoverLoops } from '../ambientLife';
 import { clearOfMeadowRoutes } from './meadowPlacement';
 import { clearOfNorthstarStructure, clearOfNorthstarTrail } from './northstarPlacement';
 
@@ -53,6 +54,7 @@ const CLUSTERS: readonly Cluster[] = [
 
 function clearOfWork(x: number, z: number, radius: number, biome: FringeBiome) {
   if (Math.max(Math.abs(x), Math.abs(z)) > 315 || Math.hypot(x, z) < 53) return false;
+  if (!clearOfRoverLoops(x, z, radius)) return false;
   // The meadow groundcover policy intentionally excludes the entire far-north
   // strip. Here a narrower check allows scenery *behind* Northstar, while
   // preserving the exact walkable spur, tower, and arrival clearing.

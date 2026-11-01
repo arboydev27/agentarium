@@ -16,11 +16,15 @@ export const WINDWARD_MILL = {
 
 export const WINDWARD_DAWNLIGHT_BRANCH_INDEX = 6;
 type GroundPoint = readonly [number, number];
-const CONTROLS: readonly GroundPoint[] = [
-  EAST_TRAIL_XZ[WINDWARD_DAWNLIGHT_BRANCH_INDEX],
+/** The branch's first bends after it leaves the Dawnlight trail; the Fabrication Bay keeps back from them. */
+export const WINDWARD_BRANCH_BENDS: readonly [GroundPoint, GroundPoint, GroundPoint] = [
   [16, 7],
   [24, 0],
   [36, -5],
+];
+const CONTROLS: readonly GroundPoint[] = [
+  EAST_TRAIL_XZ[WINDWARD_DAWNLIGHT_BRANCH_INDEX],
+  ...WINDWARD_BRANCH_BENDS,
   [49, -10],
   [60, -13],
   [68, -13],

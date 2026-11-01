@@ -2,7 +2,7 @@
 
 > The frame-time and scene-counter measurements below describe historical Earth-world builds. They are not performance measurements of the Mars colony. Re-profile the current production build before treating them as a budget. Current rendering architecture is documented in [World layout](world-layout.md).
 
-The colony ships a shared hardware kit GLB of about 7.4 MB (geometry only; its surface textures are the shared KTX2 maps under `public/textures/habitat`, 1.6 MB for all fifteen), a 1.3 MB resident, and a separate reference habitat of about 6.8 MiB. The 10 MiB hardware test cap and per-module mesh limits are export guardrails, not benchmarks of network loading, GPU memory, or frame time. Material texture sampling and authored detail add rendering work; shared cached geometry/materials and per-material export merging limit duplication. No controlled performance benchmark was run for this rollout. See [World asset upgrade](world-asset-upgrade.md) for implementation and review scope.
+The colony ships a shared hardware kit GLB of about 7.4 MB (geometry only; its surface textures are the shared KTX2 maps under `public/textures/habitat`, 1.6 MB for all fifteen, and at high quality the ground adds the nine scanned maps under `public/textures/ground`, 5.0 MB), a 1.3 MB resident, and a separate reference habitat of about 6.8 MiB. The 10 MiB hardware test cap and per-module mesh limits are export guardrails, not benchmarks of network loading, GPU memory, or frame time. Material texture sampling and authored detail add rendering work; shared cached geometry/materials and per-material export merging limit duplication. No controlled performance benchmark was run for this rollout. See [World asset upgrade](world-asset-upgrade.md) for implementation and review scope.
 
 Append `?renderStats=1` to the local app URL, for example `http://127.0.0.1:5173/?renderStats=1`. A small overlay reports average interval FPS, the 95th-percentile frame interval, renderer draw calls and triangles, allocated geometry/texture counts, and the current number of full-detail terrain tiles. Remove the query parameter and reload to disable it. Nothing is transmitted or persisted.
 
@@ -31,6 +31,117 @@ The Overview, Dawnlight and Horizon carry the colony: eight skinned residents at
 **KTX2 textures.** An A/B in the same session (PNG against KTX2 via a temporary query switch, Expedition Base and Survey Lookout) read the same p95 for both (17.9 ms and about 16 ms) with mean fps inside this browser's run-to-run noise, so compressed textures change download size (5.3 MB to 1.6 MB) and GPU memory, not frame time.
 
 **Overlay fix.** Before this phase the overlay read the renderer counters after the post-processing composer's final pass, so with post-processing on it reported one draw and one triangle. It now accumulates across the frame and resets once per frame, so draws and triangles include the shadow pass, the ambient-occlusion pass and the composer.
+
+## Designer feedback T-1: surface maps in the triplanar shader (October 31, 2026)
+
+`src/world/surfaceShader.ts` now samples all three maps of a surface family: the normal map through a derivative tangent frame per projection, the colour map in RGB relative to the family's authored base plus a macro lookup at 7.3 times the grain scale, and the roughness map as before. Projections whose blend weight falls under 2% are skipped, with explicit gradients so mip selection stays right inside the branches. See [Blender reference habitat](blender-habitat.md#material-and-terrain-contract) for what changed visually; this section records what it cost.
+
+**Harness.** Headless Chrome (Playwright `channel: 'chrome'`, `--use-angle=metal --ignore-gpu-blocklist --disable-gpu-vsync --disable-frame-rate-limit`) on the ANGLE Metal renderer of this Apple M4 Pro, 1024 × 768 at device scale 2 (the app caps DPR at 1.6), `?renderStats=1&lookdev=<view>` so the simulator is paused with eight residents at their desks, daylight, high quality. Each run waits for the loading placeholder to go and 12 s more, then takes the median of ten one-second overlay readings. The renderer string is checked in every run so a SwiftShader fallback cannot pass as a GPU measurement. The old shader was kept behind a temporary query switch for the comparison and removed afterwards. The old-shader readings land close to the Phase 5 table above (Overview 64 against 66, Horizon 63 against 65, Northstar 119 against 120), so the harness is a fair stand-in for the embedded browser.
+
+| Preset          | Old shader fps | p95 ms | New shader fps | p95 ms | draws |
+| --------------- | -------------- | ------ | -------------- | ------ | ----- |
+| Overview        | 64             | 16.5   | 66             | 15.9   | 1,807 |
+| Habitat Commons | 92             | 13.0   | 91             | 13.2   | 1,305 |
+| Expedition Base | 108            | 17.2   | 106            | 16.6   | 653   |
+| Northstar       | 119            | 12.9   | 119            | 13.4   | 657   |
+| Horizon         | 63             | 16.4   | 63             | 16.5   | 1,934 |
+
+Every preset is within two fps of the old shader. The first version of the change fetched all three projections of every map unconditionally and cost 6 fps at the Overview (65 to 59) and 8 at the Horizon (61 to 53) in the same harness; dropping the projections under 2% weight recovered all of it, because on a wall or a floor two of the three projections are at grazing angles where anisotropic filtering is most expensive and the blend weight is nearly zero anyway.
+
+**A note on the embedded pane.** During this work no window showed the session, so the embedded browser pane ran as a background page, and its Overview readings swung between 46 and 87 fps with an identical scene. Readings from the pane are only comparable while the pane is visible on screen; when it is not, use the harness above.
+
+## Designer feedback X-1: places you can click (October 31, 2026)
+
+The pick proxies in `src/world/PlaceProxies.tsx` are twenty plain meshes (boxes for the modules, cylinders for the landmarks and machines) on object layer 1. No camera has that layer, so the main render, the shadow pass and the post-processing passes skip them; `places.test.ts` checks that a default camera's layer test fails for every proxy and that a ray from each preset camera to its look point hits the right one. Only the raycaster is told to test the layer, and it already runs on every pointer move for the residents. The hover tag is one DOM element moved per frame while a place is hovered, and who-is-here is computed from the positions the map already reads, at most four times a second and only while a card is open.
+
+**Harness.** The T-1 harness above, with the proxies behind a temporary `?places=0` switch that was removed afterwards. The table is the first run, in which both Overview variants landed in the heavier of the two load states described below.
+
+| Preset          | Without proxies fps | p95 ms | draws | With proxies fps | p95 ms | draws |
+| --------------- | ------------------- | ------ | ----- | ---------------- | ------ | ----- |
+| Overview        | 53                  | 20.6   | 1,957 | 55               | 20.0   | 1,997 |
+| Habitat Commons | 89                  | 13.9   | 1,300 | 91               | 13.3   | 1,305 |
+| Northstar       | 116                 | 13.9   | 657   | 119              | 13.7   | 656   |
+| Deep Sky Array  | 106                 | 12.2   | 1,188 | 106              | 12.3   | 1,124 |
+| Horizon         | 59                  | 17.6   | 2,014 | 61               | 17.4   | 1,934 |
+
+A second run read the Horizon at 63 fps both ways with 1,934 draws each. Every preset is within the run-to-run noise of the harness, and the draw counts differ in both directions, which is what an unrendered layer should give.
+
+**Two Overview load states.** The Overview settles into one of two draw counts at page load and keeps it: about 1,810 to 1,845 draws at 64 to 68 fps, or about 2,000 to 2,040 draws at 55 to 58 fps. Six probe loads that alternated the two variants landed in both states with the proxies (1,829, 1,843 and 2,035 draws) and without them (1,999, 2,037 and 2,011, with 1,806 in an earlier run); the count never changed during thirty seconds of sampling, and no console error or scenery-status entry accompanied either state. The state is decided by something at load, not by this phase. The Phase 5 table's 1,973 draws is the heavy state; the T-1 table's 1,807 was the light one, in both of its variants, so its comparison holds but its absolute Overview number is the optimistic state. Until the cause is found, compare A/B readings only within the same state, which the draw count identifies. Finding what mounts those two hundred draws is a follow-up; the candidates are the scenic-region hysteresis during the first camera frames and groundcover chunk selection.
+
+## Designer feedback I-1: machines at work (October 31, 2026)
+
+Three rovers now drive terrain-following loops (the spaceport pad as before, the Helios solar field and the plains west of the northern trail), each trailing one dust sprite; the Comms Court roof dish tracks across the sky through a per-frame yaw on its instanced mesh; the Deep Sky telescope slews between four targets. All of it is per-frame transforms on existing modules (`src/world/ambientLife.ts`, `src/world/ambient/Rover.tsx`): the rover kit module is about five draws plus one sprite, present only where its region is mounted (the plains rover is always mounted, since the point of it is movement in the default shots), and the dish and telescope add nothing.
+
+**Harness.** The T-1 harness, with the machines behind a temporary `?machines=0` switch that was removed afterwards.
+
+| Preset         | Without machines fps | p95 ms | draws | With machines fps | p95 ms | draws |
+| -------------- | -------------------- | ------ | ----- | ----------------- | ------ | ----- |
+| Overview       | 62                   | 16.8   | 1,862 | 65                | 16.1   | 1,855 |
+| Comms Court    | 63                   | 17.9   | 1,477 | 64                | 16.9   | 1,478 |
+| Deep Sky Array | 105                  | 12.3   | 1,169 | 105               | 12.0   | 1,163 |
+| Helios         | 114                  | 13.6   | 724   | 114               | 13.3   | 729   |
+| Horizon        | 51                   | 20.7   | 2,134 | 52                | 19.9   | 2,081 |
+
+Every preset is within the harness noise. The Helios row shows the only honest difference: five draws for the rover and its puff, and 24 thousand more triangles. The Overview rows sit in the lighter of the two load states described above and the Horizon rows in a heavier one than the T-1 run (2,100 against 1,934 draws), which is the same load-state effect on another preset; neither is this phase, because both variants of each pair landed in the same state.
+
+## Designer feedback I-2: maintenance drones (October 31, 2026)
+
+Two drones built from primitives (`src/world/ambient/MaintenanceDrones.tsx`) fly the routes in `src/world/ambient/drones.ts` between two ground pads, the module roofs, the roof dish and the Survey Lookout relay platform. Each drone is five draws (body, two arm bars, one instanced rotor set, one emissive light) plus its body in the shadow pass; each pad is three (slab, ring, slab shadow). Eighteen draws in all, in every colony shot, and per-frame arithmetic only.
+
+**Harness.** The T-1 harness with the drones behind a temporary `?drones=0` switch, removed afterwards. This run happened while the machine was busy with other work (the desktop app and the kernel together held more than a core for the whole session, and nothing in the page explains it), so every absolute number below is roughly half of the I-1 table an hour earlier, in both variants alike. Only the comparison within a pair means anything here.
+
+| Preset          | Without drones fps | p95 ms | draws | With drones fps | p95 ms | draws |
+| --------------- | ------------------ | ------ | ----- | --------------- | ------ | ----- |
+| Overview        | 36                 | 31.4   | 2,002 | 34              | 32.0   | 2,058 |
+| Habitat Commons | 55                 | 25.8   | 1,312 | 53              | 26.2   | 1,324 |
+| Research Array  | 45                 | 31.4   | 1,367 | 46              | 31.5   | 1,374 |
+| Survey Lookout  | 70                 | 25.9   | 780   | 71              | 23.2   | 781   |
+| Horizon         | 36                 | 31.5   | 2,076 | 32              | 33.4   | 2,120 |
+
+The Commons row shows the honest cost: twelve more draws (the pads are out of that frame) and no change in frame time. A first run of the same five pairs read the same picture (34 against 35, 57 against 57, 45 against 50, 70 against 70, 34 against 30). The Horizon looked like a four-frame loss in both runs, with the drones measured second each time; measured first, the drones read 33 against 31 without, so that gap is drift within a run on the loaded machine, not the drones. The Overview and Horizon draw deltas are larger than eighteen because those presets land in different load states run to run (see the X-1 note).
+
+**What to do when the machine is loaded.** Watch `kernel_task` and the desktop app in `top` before measuring; when they hold a core between them the harness still orders variants correctly but its absolute numbers cannot be compared with another day's. Alternate the variant order or repeat the pair in reverse before reading a small difference as a cost.
+
+## Designer feedback T-2: scanned ground (October 31, 2026)
+
+At high quality the three terrain layers are scanned CC0 sets (`src/world/groundSets.ts`, nine 1K KTX2 maps under `public/textures/ground/`, 5,192,289 bytes) in place of the 512-pixel layers baked from noise at start-up; low quality keeps the bake and downloads nothing. The ground shader (`mars-ground-splat-v2`) does the same fetches as before: the ARM map's red channel supplies ambient occlusion from the fetch that already supplied roughness, and the per-layer gain, contrast and base are uniforms, exactly one and the layer's own colour for a baked layer. GPU memory per map is of the same order either way: a 512² RGBA8 bake with mips is about 1.3 MB, a 1K map transcoded to a 4 × 4 block format with mips about 1.3 MB.
+
+**Harness.** The T-1 harness with the scans behind a temporary `?scannedGround=0` switch, removed afterwards: four views, twelve one-second samples each after the scene settled, on an unloaded machine.
+
+| Preset               | Baked fps | p95 ms | draws | Scanned fps | p95 ms | draws |
+| -------------------- | --------- | ------ | ----- | ----------- | ------ | ----- |
+| Overview             | 53        | 20.2   | 2,087 | 66          | 16.0   | 1,835 |
+| Habitat Commons      | 88        | 13.9   | 1,329 | 90          | 13.7   | 1,328 |
+| Southwind Crater     | 112       | 13.2   | 654   | 115         | 12.6   | 652   |
+| Basalt Field Station | 114       | 14.0   | 641   | 119         | 13.0   | 645   |
+
+The three landmark rows are within the run-to-run noise, with the scans two to five fps ahead each time. The Overview pair landed in the two load states described under X-1 (heavy with the bake, light with the scans), so its thirteen-frame gap is that split and not the textures. Nothing in the frame depends on the source: the shader samples the same nine textures and the draws are the same objects. What changes is the download, 5.0 MB of KTX2 that high quality fetches once and low quality never requests, and the first paint, which now waits for nine transcodes through the shared Basis worker pool rather than three Web Worker bakes; load time was not measured here.
+
+## Designer feedback I-3: construction site and crew (November 1, 2026)
+
+The Fabrication Bay (`src/world/scenery/ConstructionSite.tsx`: raft, ramp plate, four instanced kit groups, mast, boom, cable and cargo box, one instanced mesh of posts and one of tape runs, one of heaps, a sign; about two dozen meshes) and its crew of three (`src/world/ConstructionCrew.tsx`: colonist clones at nine tenths scale on the loops in `crew.ts`, ten skinned meshes each). A rigged figure is drawn in every pass the frame makes, so the first build read about 170 more draws for the crew alone on the Research Array. Four changes brought that down: the crew's skinned meshes no longer cast shadows (a capsule per figure casts instead, one shadow draw in place of ten), the crew mount only while the camera is within 70 m of the raft and unmount beyond 85 m, each crew mesh keeps a generous bounding sphere so the frustum culls figures the camera is not looking at, and their materials are opaque so the ambient-occlusion pass's transparency renders skip them. The site lost a second kit clone of the wall tile (now an instance with a full rotation), a kit crate on the hook (a box), a tank and the hoist's base plate, and its heaps became one instanced mesh.
+
+**Harness.** The T-1 harness with the site and the crew behind temporary `?site=0` and `?crew=0` switches, removed afterwards, plus a `?quality=low` lookdev switch that stays. Draw counts are deterministic for a given load state and are the reliable measure in this section. Frame rates on this machine during this session were not: a live video wallpaper and the window server held a steady share of the GPU, single runs of the same page drifted by four to eight frames, and at low quality the same page without the phase read 142 fps in one run and 94 in the next. Every frame-rate pair below therefore comes from interleaved rounds, compared only within a round and, for the Overview, within a load state.
+
+| Preset                     | Quality | Without draws | With draws  | Added      | Note                                                       |
+| -------------------------- | ------- | ------------- | ----------- | ---------- | ---------------------------------------------------------- |
+| Overview, light load state | high    | 1,833–1,857   | 1,917–1,941 | +85 to 110 | site about 70 to 90, crew about 40; nothing culled         |
+| Overview, heavy load state | high    | 2,029         | 2,099–2,139 | +70 to 110 | site only or crew only                                     |
+| Research Array             | high    | 1,379–1,385   | 1,407–1,419 | +26 to 38  | crew to the right of the frame, mostly culled              |
+| Resource Lab               | high    | 1,699         | 1,732       | +33        |                                                            |
+| Survey Lookout             | high    | 776           | 846         | +70        | before the trim; crew mounted, looking away                |
+| Southwind Crater           | high    | 652           | 652         | 0          | beyond the mount distance                                  |
+| Overview                   | low     | 1,444         | 1,534–1,582 | +90 to 138 | no post pass; the low-quality Overview also has two states |
+
+Frame rates from the interleaved rounds, with against without: Research Array 74, 82 and 82 against 76, 77 and 77 fps (p95 15.6, 14.6, 14.5 against 15.7, 15.6, 15.5 ms); Resource Lab 66 against 66; Overview in its light state 65, 57 and 57 against 67 and 68 (p95 16.0, 18.1 and 18.0 against 15.4 and 15.3 ms), where the two 57 readings and the 65 reading had the same draw count (1,941 against 1,917), which puts the floor of this measurement at about eight frames; Survey Lookout 117 against 118; Southwind Crater 120 against 120; low-quality Overview, in the one run where the machine held one state throughout, 91 against 94, with the site alone at 95 and the crew alone at 93.
+
+The two Overview load states are the same scene graph: a dump of every visible mesh and triangle per top-level group, with the phase on and off, in the light and the heavy state, differs only in the site and the crew. The heavy state is therefore a per-frame difference in what the same objects cost (culling, passes or sorting), not something extra mounted; it occurs with and without this phase and remains unexplained.
+
+Against the plan's guardrail this phase is over the draw line (about 5% on the Overview against the 3% written there; a kit wall tile is six draws per pass and a rigged figure at least ten, so no site built from the kit with a rigged crew fits in sixty) and at the frame line (57 to 65 against the 60 fps / 18 ms rule, inside this harness's eight-frame floor); every landmark shot is within three frames of its table value and low quality stays far above 60. The knobs are `CREW` in `crew.ts` (fewer members cost proportionally less), `CREW_MOUNT_DISTANCE`, and the kit groups in `constructionPlacements()` (the corners and the beacons are five meshes).
+
+## Designer feedback X-2: explore camera (November 1, 2026)
+
+The explore camera (`src/world/exploreCamera.ts`) adds one height sample per frame (the two height fields at the eye's ground position, a few noise evaluations) and a second for a scripted destination while one is in flight, a bisected ray march of up to 420 height samples once per double-click, and nothing to the scene: no objects, no draws. There is nothing to put behind a switch. For the record, a single run after the change read the Research Array at 67 fps and 1,435 draws (p95 15.7 ms) and the Overview at 49 fps and 2,160 draws (its heavy load state, on the slow side of this machine's drift described under I-3); draw counts at the colony presets now wander by a few dozen between readings because the crew walk in and out of a frame's edge and the frustum culls them.
 
 ## What the numbers mean
 

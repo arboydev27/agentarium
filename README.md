@@ -12,8 +12,8 @@ Visit **Expedition Base** to inspect the approved Blender reference, then explor
 
 - A 29.25 × 22.2 colony inside a continuous 1,200 × 1,200 desert landscape, with habitats, research facilities, mineral formations, craters, and distant mountains.
 - Eight expressive residents with alien equipment, stable identities, different walking preferences, and skeletal work/rest animations.
-- Authored journeys to colony facilities and exploration sites, including a spaceport with a decorative rocket cycle and rover.
-- A game-style HUD over the fullscreen world: a resident roster, a viewpoint hotbar with number keys, an attention banner, map scouting, resident following, watch mode, reduced motion, and rendering-quality controls.
+- Authored journeys to colony facilities and exploration sites, including a spaceport with a decorative rocket cycle, three survey rovers on terrain-following loops, a tracking roof dish, a slewing telescope, two maintenance drones and a construction site where a three-strong crew raises the colony's fifth module.
+- A game-style HUD over the fullscreen world: a resident roster, a viewpoint hotbar with number keys, an attention banner, map scouting, double-click travel with a camera that never goes under the ground, clickable places with cards that say who is there, resident following, watch mode, reduced motion, and rendering-quality controls.
 - A clearly labeled simulator with tasks, delegation, waiting, completion, failure, pause, speed, reset, an activity feed, and a resident pane.
 - Opt-in local session discovery for Codex, Claude Code CLI, and Gemini CLI; up to eight sessions occupy stable seats, with pinned sessions first.
 - Guided local connection setup, fresh-event diagnostics, and a session filter for live residents.
@@ -164,6 +164,8 @@ Animation is illustrative, not a view into a model's reasoning. Tool labels come
 ## Credits
 
 RobotExpressive: Tomás Laulhé (Quaternius), CC0 1.0; glTF modifications by Don McCurdy. Vendored from the official Three.js example. See `public/models/LICENSE.md`.
+
+Ground textures: Sandy Gravel 02 (Dario Barresi), Red Laterite Soil Stones (Amal Kumar) and Rock Boulder Dry (Dimitrios Savva, Rico Cilliers) from Poly Haven, CC0 1.0, re-encoded to KTX2 and re-based onto the Mars palette. See `public/textures/LICENSE.md`.
 
 Environment and application code were authored for Agent Grove. Icons: Lucide (ISC). Fonts: DM Sans and Manrope (Google Fonts, SIL Open Font License). Three.js: MIT. React: MIT.
 

@@ -2611,3 +2611,82 @@ kbd {
   animation: none !important;
   transition: none !important;
 }
+
+/* -------------------------------------------------------- places */
+.place-tag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 19;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 9px;
+  border: 1px solid var(--cyan-line);
+  border-radius: 4px;
+  background: rgba(22, 13, 12, 0.82);
+  color: var(--ink);
+  font-family: var(--display);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+  backdrop-filter: blur(6px);
+}
+.place-tag small {
+  font-family: var(--body);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-dim);
+}
+.place-hero {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.place-hero h3 {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 16px;
+  font-weight: 800;
+}
+.place-icon {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--cyan-line);
+  border-radius: 8px;
+  background: var(--cyan-dim);
+  color: var(--cyan);
+}
+.place-role {
+  margin: 12px 0 0;
+}
+.place-section {
+  margin-top: 14px;
+}
+.place-section h4 {
+  margin: 0 0 6px;
+  font-family: var(--display);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.place-section p {
+  margin: 0 0 6px;
+}
+.place-section .resident-name > span {
+  font-size: 10px;
+  color: var(--ink-dim);
+}
+.place-pane .parent-note {
+  margin-top: 14px;
+}

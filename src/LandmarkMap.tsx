@@ -190,6 +190,7 @@ export function LandmarkMap({
   following,
   customized,
   navigate,
+  inspect,
   onScout,
   onOpen,
   onClose,
@@ -198,6 +199,8 @@ export function LandmarkMap({
   following: boolean;
   customized: boolean;
   navigate: (view: WorldView) => void;
+  /** Named pins fly to the place and open its card; viewpoint shortcuts only fly. */
+  inspect: (view: WorldView) => void;
   onScout: (point: MapPoint) => void;
   onOpen?: () => void;
   onClose?: () => void;
@@ -455,15 +458,15 @@ export function LandmarkMap({
                     data-label-align={
                       position.left < 30 ? 'start' : position.left > 70 ? 'end' : 'center'
                     }
-                    aria-label={`${landmark.label}: ${landmark.scenicOnly ? 'scenic only, no resident route; ' : ''}${landmark.view ? 'open viewpoint' : 'move camera to trail rest'}`}
+                    aria-label={`${landmark.label}: ${landmark.scenicOnly ? 'scenic only, no resident route; ' : ''}${landmark.view ? 'fly there and open its place card' : 'move camera to trail rest'}`}
                     aria-pressed={
                       landmark.view
                         ? !following && !customized && view === landmark.view
                         : undefined
                     }
-                    title={`${landmark.label} — ${landmark.scenicOnly ? 'scenic only, no resident route; ' : ''}${landmark.view ? 'open viewpoint' : 'move camera here'}`}
+                    title={`${landmark.label} — ${landmark.scenicOnly ? 'scenic only, no resident route; ' : ''}${landmark.view ? 'fly there and open its place card' : 'move camera here'}`}
                     onClick={() => {
-                      if (landmark.view) navigate(landmark.view);
+                      if (landmark.view) inspect(landmark.view);
                       else onScout(landmark.point);
                       close();
                     }}
@@ -539,9 +542,9 @@ export function LandmarkMap({
             ))}
           </div>
           <p>
-            Detail zooms around the camera or selected point. Named pins open a viewpoint or move
-            the camera to a trail rest. Scenic terrain may not be walkable. Other chats remain in
-            Residents.
+            Detail zooms around the camera or selected point. Named pins fly to a place and open its
+            card, or move the camera to a trail rest. Scenic terrain may not be walkable. Other
+            chats remain in Residents.
           </p>
         </div>
       )}

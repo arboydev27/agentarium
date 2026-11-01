@@ -51,6 +51,7 @@ export function KitInstances({
   placements,
   fade,
   floor = 0,
+  spin,
 }: {
   module: WorldKitModule;
   placements: readonly Placement[];
@@ -58,6 +59,8 @@ export function KitInstances({
   fade?: RefObject<number>;
   /** Fraction of opacity kept when fully revealed, so walls remain as ghost outlines. */
   floor?: number;
+  /** Extra yaw in radians applied to every placement, read every frame (the roof dish tracks). */
+  spin?: RefObject<number>;
 }) {
   const { scene, maps } = useKitScene();
   const parts = useMemo(() => {
@@ -89,7 +92,14 @@ export function KitInstances({
   return (
     <>
       {parts.map((part, index) => (
-        <Instances key={index} part={part} placements={placements} fade={fade} floor={floor} />
+        <Instances
+          key={index}
+          part={part}
+          placements={placements}
+          fade={fade}
+          floor={floor}
+          spin={spin}
+        />
       ))}
     </>
   );
@@ -100,23 +110,36 @@ function Instances({
   placements,
   fade,
   floor,
+  spin,
 }: {
   part: Part;
   placements: readonly Placement[];
   fade?: RefObject<number>;
   floor: number;
+  spin?: RefObject<number>;
 }) {
   const mesh = useRef<THREE.InstancedMesh>(null);
   const applied = useRef(-1);
-  useLayoutEffect(() => {
+  const appliedSpin = useRef(0);
+  const scratch = useMemo(
+    () => ({
+      matrix: new THREE.Matrix4(),
+      rotation: new THREE.Quaternion(),
+      euler: new THREE.Euler(),
+      position: new THREE.Vector3(),
+      scale: new THREE.Vector3(),
+    }),
+    [],
+  );
+  const write = (yaw: number) => {
     const instanced = mesh.current;
     if (!instanced) return;
-    const matrix = new THREE.Matrix4();
-    const rotation = new THREE.Quaternion();
-    const position = new THREE.Vector3();
-    const scale = new THREE.Vector3();
+    const { matrix, rotation, euler, position, scale } = scratch;
     placements.forEach((placement, i) => {
-      rotation.setFromAxisAngle(Y_AXIS, placement.rotationY);
+      if (placement.rotation) {
+        const [x, y, z] = placement.rotation;
+        rotation.setFromEuler(euler.set(x, y + yaw, z));
+      } else rotation.setFromAxisAngle(Y_AXIS, placement.rotationY + yaw);
       matrix
         .compose(position.fromArray(placement.position), rotation, scale.fromArray(placement.scale))
         .multiply(part.local);
@@ -124,10 +147,19 @@ function Instances({
     });
     instanced.instanceMatrix.needsUpdate = true;
     instanced.computeBoundingSphere();
+    appliedSpin.current = yaw;
+  };
+  useLayoutEffect(() => {
+    write(spin?.current ?? 0);
+    // Placements and parts are the only inputs that change the baked matrices.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [placements, part]);
   useFrame(() => {
     const instanced = mesh.current;
-    if (!instanced || !fade) return;
+    if (!instanced) return;
+    if (spin && Math.abs((spin.current ?? 0) - appliedSpin.current) > 0.0005)
+      write(spin.current ?? 0);
+    if (!fade) return;
     const amount = fade.current ?? 0;
     if (Math.abs(amount - applied.current) < 0.002) return;
     applied.current = amount;

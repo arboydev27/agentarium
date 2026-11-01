@@ -1,12 +1,32 @@
 import * as THREE from 'three';
-import type { TerrainTextureSet } from './terrainTextures';
+import { GROUND_DETAIL_METRES } from './groundSets';
+import type { TerrainMaps, TerrainTextureSet } from './terrainTextures';
 
-// Splat-mapped Mars ground. Three baked layers (sand on flats, gravel on
-// gentle ground, basalt on steep slopes) blend by slope and noise; every layer
-// is sampled at two scales with a rotated second lookup to break tiling, a
-// 170 m macro tint and a 23 m mid tint vary the colour, and a close detail
-// normal fades in within ten metres of the camera. Vertex colours carry the
-// authored biome tint rather than the whole albedo.
+// Splat-mapped Mars ground. Three layers (sand on flats, gravel on gentle
+// ground, basalt on steep slopes) blend by slope and noise; every layer is
+// sampled at two scales with a rotated second lookup to break tiling, a 170 m
+// macro tint and a 23 m mid tint vary the colour, and a close detail normal
+// fades in within ten metres of the camera. Vertex colours carry the authored
+// biome tint rather than the whole albedo. The layers are baked from noise or
+// scanned sets (terrainTextures.ts): a scanned layer is read relative to its
+// own mean colour and re-based onto the baked layer's mean, so the palette
+// holds and the scan contributes structure. Tile size, normal strength, colour
+// gain, contrast and ambient-occlusion strength are per-layer uniforms.
+
+export const TERRAIN_SHADER_VERSION = 'mars-ground-splat-v2';
+
+/**
+ * Linear gain that moves a layer's own mean colour, after its occlusion term,
+ * onto its authored base; exactly one for a baked layer.
+ */
+export function layerGain({ base, mean, ao, aoMean }: TerrainMaps) {
+  const occluded = 1 + (aoMean - 1) * ao;
+  return new THREE.Vector3(
+    base.r / (mean.r * occluded),
+    base.g / (mean.g * occluded),
+    base.b / (mean.b * occluded),
+  );
+}
 
 const NOISE_GLSL = /* glsl */ `
   float terrainHash(vec2 p) {
@@ -76,6 +96,30 @@ export function createTerrainMaterial(maps: TerrainTextureSet, quality: 'high' |
     shader.uniforms.basaltColor = { value: maps.basalt.color };
     shader.uniforms.basaltNormal = { value: maps.basalt.normal };
     shader.uniforms.basaltRoughness = { value: maps.basalt.roughness };
+    // Per-layer tile size, normal strength and ambient-occlusion strength: sand, gravel, basalt.
+    shader.uniforms.terrainMetres = {
+      value: new THREE.Vector3(maps.sand.metres, maps.gravel.metres, maps.basalt.metres),
+    };
+    shader.uniforms.terrainNormalScales = {
+      value: new THREE.Vector3(
+        maps.sand.normalScale,
+        maps.gravel.normalScale,
+        maps.basalt.normalScale,
+      ),
+    };
+    shader.uniforms.terrainAo = {
+      value: new THREE.Vector3(maps.sand.ao, maps.gravel.ao, maps.basalt.ao),
+    };
+    shader.uniforms.terrainContrast = {
+      value: new THREE.Vector3(maps.sand.contrast, maps.gravel.contrast, maps.basalt.contrast),
+    };
+    shader.uniforms.terrainDetailMetres = { value: GROUND_DETAIL_METRES };
+    shader.uniforms.sandGain = { value: layerGain(maps.sand) };
+    shader.uniforms.gravelGain = { value: layerGain(maps.gravel) };
+    shader.uniforms.basaltGain = { value: layerGain(maps.basalt) };
+    shader.uniforms.sandBase = { value: maps.sand.base };
+    shader.uniforms.gravelBase = { value: maps.gravel.base };
+    shader.uniforms.basaltBase = { value: maps.basalt.base };
     if (quality === 'low') shader.defines = { ...shader.defines, TERRAIN_LOW: 1 };
 
     shader.vertexShader =
@@ -102,17 +146,40 @@ export function createTerrainMaterial(maps: TerrainTextureSet, quality: 'high' |
       uniform sampler2D basaltColor;
       uniform sampler2D basaltNormal;
       uniform sampler2D basaltRoughness;
+      uniform vec3 terrainMetres;
+      uniform vec3 terrainNormalScales;
+      uniform vec3 terrainAo;
+      uniform vec3 terrainContrast;
+      uniform float terrainDetailMetres;
+      uniform vec3 sandGain;
+      uniform vec3 gravelGain;
+      uniform vec3 basaltGain;
+      uniform vec3 sandBase;
+      uniform vec3 gravelBase;
+      uniform vec3 basaltBase;
       ${NOISE_GLSL}
       ` + shader.fragmentShader;
 
-    // Albedo: layered colour, macro and mid variation, authored biome tint.
+    // Albedo: layered colour re-based onto the authored palette, ambient
+    // occlusion from scanned sets, macro and mid variation, authored biome tint.
     shader.fragmentShader = shader.fragmentShader.replace(
       '#include <map_fragment>',
       `
       ${WEIGHTS_GLSL}
-      vec3 sandAlbedo = terrainLayer(sandColor, terrainUv, 2.3, terrainBreak, terrainRot).rgb;
-      vec3 gravelAlbedo = terrainLayer(gravelColor, terrainUv, 3.1, terrainBreak, terrainRot).rgb;
-      vec3 basaltAlbedo = terrainLayer(basaltColor, terrainUv, 4.6, terrainBreak, terrainRot).rgb;
+      vec3 sandAlbedo = terrainLayer(sandColor, terrainUv, terrainMetres.x, terrainBreak, terrainRot).rgb * sandGain;
+      vec3 gravelAlbedo = terrainLayer(gravelColor, terrainUv, terrainMetres.y, terrainBreak, terrainRot).rgb * gravelGain;
+      vec3 basaltAlbedo = terrainLayer(basaltColor, terrainUv, terrainMetres.z, terrainBreak, terrainRot).rgb * basaltGain;
+      // One fetch per layer serves occlusion (red) here and roughness (green) below.
+      vec4 sandArm = terrainLayer(sandRoughness, terrainUv, terrainMetres.x, terrainBreak, terrainRot);
+      vec4 gravelArm = terrainLayer(gravelRoughness, terrainUv, terrainMetres.y, terrainBreak, terrainRot);
+      vec4 basaltArm = terrainLayer(basaltRoughness, terrainUv, terrainMetres.z, terrainBreak, terrainRot);
+      sandAlbedo *= mix(1.0, sandArm.r, terrainAo.x);
+      gravelAlbedo *= mix(1.0, gravelArm.r, terrainAo.y);
+      basaltAlbedo *= mix(1.0, basaltArm.r, terrainAo.z);
+      // Contrast about the authored colour, which is each layer's mean after gain and occlusion.
+      sandAlbedo = mix(sandBase, sandAlbedo, terrainContrast.x);
+      gravelAlbedo = mix(gravelBase, gravelAlbedo, terrainContrast.y);
+      basaltAlbedo = mix(basaltBase, basaltAlbedo, terrainContrast.z);
       vec3 terrainAlbedo = sandAlbedo * sandWeight + gravelAlbedo * gravelWeight + basaltAlbedo * rockWeight;
       vec3 warmTint = vec3(1.08, 0.98, 0.88);
       vec3 coolTint = vec3(0.86, 0.9, 1.0);
@@ -135,10 +202,7 @@ export function createTerrainMaterial(maps: TerrainTextureSet, quality: 'high' |
       '#include <roughnessmap_fragment>',
       `
       float roughnessFactor = roughness;
-      float sandRough = terrainLayer(sandRoughness, terrainUv, 2.3, terrainBreak, terrainRot).g;
-      float gravelRough = terrainLayer(gravelRoughness, terrainUv, 3.1, terrainBreak, terrainRot).g;
-      float basaltRough = terrainLayer(basaltRoughness, terrainUv, 4.6, terrainBreak, terrainRot).g;
-      roughnessFactor *= sandRough * sandWeight + gravelRough * gravelWeight + basaltRough * rockWeight;
+      roughnessFactor *= sandArm.g * sandWeight + gravelArm.g * gravelWeight + basaltArm.g * rockWeight;
       roughnessFactor = clamp(roughnessFactor, 0.55, 1.0);
       `,
     );
@@ -146,17 +210,17 @@ export function createTerrainMaterial(maps: TerrainTextureSet, quality: 'high' |
     shader.fragmentShader = shader.fragmentShader.replace(
       '#include <normal_fragment_maps>',
       `
-      vec3 sandN = terrainLayerNormal(sandNormal, terrainUv, 2.3, terrainBreak, terrainRot);
-      vec3 gravelN = terrainLayerNormal(gravelNormal, terrainUv, 3.1, terrainBreak, terrainRot);
-      vec3 basaltN = terrainLayerNormal(basaltNormal, terrainUv, 4.6, terrainBreak, terrainRot);
-      sandN.xy *= 0.7;
-      gravelN.xy *= 1.0;
-      basaltN.xy *= 1.25;
+      vec3 sandN = terrainLayerNormal(sandNormal, terrainUv, terrainMetres.x, terrainBreak, terrainRot);
+      vec3 gravelN = terrainLayerNormal(gravelNormal, terrainUv, terrainMetres.y, terrainBreak, terrainRot);
+      vec3 basaltN = terrainLayerNormal(basaltNormal, terrainUv, terrainMetres.z, terrainBreak, terrainRot);
+      sandN.xy *= terrainNormalScales.x;
+      gravelN.xy *= terrainNormalScales.y;
+      basaltN.xy *= terrainNormalScales.z;
       vec3 mapN = normalize(sandN * sandWeight + gravelN * gravelWeight + basaltN * rockWeight);
       #ifndef TERRAIN_LOW
-        // Close detail: fine sand grain within ten metres of the camera.
+        // Close detail: the sand grain again, fine, within ten metres of the camera.
         float detailFade = 1.0 - smoothstep(5.0, 13.0, length(vViewPosition));
-        vec3 detailN = texture2D(sandNormal, terrainUv / 0.42).xyz * 2.0 - 1.0;
+        vec3 detailN = texture2D(sandNormal, terrainUv / terrainDetailMetres).xyz * 2.0 - 1.0;
         mapN = normalize(vec3(mapN.xy + detailN.xy * 0.45 * detailFade, mapN.z));
       #endif
       mapN.xy *= normalScale;
@@ -164,6 +228,6 @@ export function createTerrainMaterial(maps: TerrainTextureSet, quality: 'high' |
       `,
     );
   };
-  material.customProgramCacheKey = () => `mars-ground-splat-v1-${quality}`;
+  material.customProgramCacheKey = () => `${TERRAIN_SHADER_VERSION}-${quality}`;
   return material;
 }
