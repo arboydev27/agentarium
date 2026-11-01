@@ -125,6 +125,7 @@ function Instances({
     () => ({
       matrix: new THREE.Matrix4(),
       rotation: new THREE.Quaternion(),
+      euler: new THREE.Euler(),
       position: new THREE.Vector3(),
       scale: new THREE.Vector3(),
     }),
@@ -133,9 +134,12 @@ function Instances({
   const write = (yaw: number) => {
     const instanced = mesh.current;
     if (!instanced) return;
-    const { matrix, rotation, position, scale } = scratch;
+    const { matrix, rotation, euler, position, scale } = scratch;
     placements.forEach((placement, i) => {
-      rotation.setFromAxisAngle(Y_AXIS, placement.rotationY + yaw);
+      if (placement.rotation) {
+        const [x, y, z] = placement.rotation;
+        rotation.setFromEuler(euler.set(x, y + yaw, z));
+      } else rotation.setFromAxisAngle(Y_AXIS, placement.rotationY + yaw);
       matrix
         .compose(position.fromArray(placement.position), rotation, scale.fromArray(placement.scale))
         .multiply(part.local);

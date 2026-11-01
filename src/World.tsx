@@ -7,6 +7,7 @@ import { NavigationTraffic } from './world/navigation';
 import { residentStyle } from './world/personality';
 import { RenderStats } from './world/RenderStats';
 import { PlaceProxies } from './world/PlaceProxies';
+import { ConstructionCrew } from './world/ConstructionCrew';
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, useGLTF, Line } from '@react-three/drei';
@@ -767,6 +768,7 @@ export default function World() {
       <Environment />
       <Suspense fallback={null}>
         <Residents key={mode} positions={positions} />
+        <ConstructionCrew />
       </Suspense>
       <Camera positions={positions} />
       <PlaceProxies positions={positions} />

@@ -12,6 +12,7 @@ import type { ResidentPosition } from './mapSnapshot';
 import type { Point } from './motion';
 import { DESTINATIONS, NODES } from './navigation';
 import { AMBER_BLUFF } from './scenery/amberPlacement';
+import { FABRICATION_BAY, fenceBoxes } from './scenery/constructionPlacement';
 import { BIOLAB_HABITATS, DAWNLIGHT_GLASSHOUSE } from './scenery/dawnlightPlacement';
 import { SOUTHWIND_MERE } from './scenery/merePlacement';
 import { NORTHSTAR_OUTPOST, NORTHSTAR_TOWER_XZ } from './scenery/northstarPlacement';
@@ -128,6 +129,11 @@ function module(zone: ZoneName, name: string, role: string, does: string): Place
     seats: ZONES[zone].seats,
   };
 }
+
+const bayFocus = {
+  x: (FABRICATION_BAY.slab.minX + FABRICATION_BAY.slab.maxX) / 2,
+  z: (FABRICATION_BAY.slab.minZ + FABRICATION_BAY.slab.maxZ) / 2,
+};
 
 const SPECS: readonly PlaceSpec[] = [
   module(
@@ -282,6 +288,22 @@ const SPECS: readonly PlaceSpec[] = [
     shapes: [disc(AMBER_BLUFF.x, AMBER_BLUFF.z, AMBER_BLUFF.footprintRadius, 6, 18)],
     focus: { x: AMBER_BLUFF.x, z: AMBER_BLUFF.z },
     tagHeight: 12,
+  },
+  {
+    id: FABRICATION_BAY.id,
+    name: FABRICATION_BAY.label,
+    kind: 'landmark',
+    role: 'The colony’s fifth module going up east of the Research Array: a foundation raft, the first wall tiles, crates in the yard, a keep-out line and a hoist.',
+    does: 'A crew of three works the site in loops: hauling crates up the ramp, fitting the north wall, rigging the hoist. They are decorative, not residents, and never appear in the roster, on the map or on this card.',
+    // The fence follows the Helios branch on its south-east side; boxes step down that diagonal.
+    shapes: fenceBoxes().map((box) => ({
+      kind: 'box' as const,
+      ...box,
+      y: terrainHeight(bayFocus.x, bayFocus.z) - 4,
+      height: 4 + FABRICATION_BAY.hoist.mast + 2,
+    })),
+    focus: bayFocus,
+    tagHeight: FABRICATION_BAY.hoist.mast + 1.2,
   },
   {
     id: 'northstar:rocket',

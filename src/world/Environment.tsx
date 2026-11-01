@@ -3,6 +3,7 @@ import { ScenicFallback } from './scenery/ScenicFallback';
 import { DesertGeology } from './DesertGeology';
 import { MeadowChunks } from './scenery/MeadowChunks';
 import { Colony } from './Colony';
+import { ConstructionSite } from './scenery/ConstructionSite';
 import { AmbientLife } from './ambient/AmbientLife';
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
@@ -212,6 +213,7 @@ export const Environment = memo(function Environment() {
     <group>
       <Landscape />
       <Colony />
+      <ConstructionSite />
       <AmbientLife />
     </group>
   );

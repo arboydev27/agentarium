@@ -105,6 +105,8 @@ function setMorph(model: THREE.Object3D, name: string, value: number) {
 export type ResidentLook = {
   color: string;
   style: ReturnType<typeof residentStyle>;
+  /** Hide every head accessory; the construction crew wear none. */
+  bare?: boolean;
 };
 
 /**
@@ -144,7 +146,7 @@ export function dressColonist(model: THREE.Object3D, look: ResidentLook) {
     }
     o.material = mat;
   });
-  const wanted = accessoryName(look.style.accessory);
+  const wanted = look.bare ? null : accessoryName(look.style.accessory);
   model.traverse((o) => {
     if (o.name.startsWith('accessory-')) o.visible = o.name === wanted;
   });

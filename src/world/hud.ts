@@ -12,6 +12,7 @@ import {
   type ZoneName,
 } from './layout';
 import { AMBER_BLUFF } from './scenery/amberPlacement';
+import { insideFabricationBay } from './scenery/constructionPlacement';
 import { DAWNLIGHT_GLASSHOUSE } from './scenery/dawnlightPlacement';
 import { SOUTHWIND_SHORE } from './scenery/southwindTrailPlacement';
 import { TRAIL_TURNOUTS, turnoutPoint } from './scenery/turnoutPlacement';
@@ -46,6 +47,7 @@ export function districtAt(x: number, z: number): WorldLocation {
     )
       return name;
   }
+  if (insideFabricationBay(x, z)) return 'fabrication-bay';
   if (Math.hypot(x - LOOKOUT.x, z - LOOKOUT.z) <= LOOKOUT.focusRadius) return 'lookout';
   if (
     Math.hypot(x - ORCHARD.x, z - ORCHARD.z) <= ORCHARD.focusRadius ||
