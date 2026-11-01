@@ -80,6 +80,7 @@ export const HUD_SHORTCUT_HELP: { keys: string; does: string }[] = [
   { keys: '← →', does: 'Move between viewpoints while the hotbar has focus' },
   { keys: 'Enter', does: 'Fly to the focused hotbar slot and open its place card' },
   { keys: 'Arrows', does: 'Pan the camera while the world has focus; Shift pans farther' },
+  { keys: 'Home', does: 'Return to the active viewpoint while the world has focus' },
   { keys: 'M', does: 'Open or close the map' },
   { keys: 'R', does: 'Open or close the resident list' },
   { keys: 'N', does: 'Switch between daylight and evening' },

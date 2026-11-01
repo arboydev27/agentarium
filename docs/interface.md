@@ -29,6 +29,7 @@ The four habitat modules, the ten landmarks (the Fabrication Bay construction si
 | `←` `→`      | Move between viewpoints while the hotbar has focus                                               |
 | Enter        | Fly to the focused hotbar slot and open its place card                                           |
 | Arrows       | Pan the camera while the world has focus; Shift pans farther                                     |
+| Home         | Return to the active viewpoint while the world has focus                                         |
 | `M`          | Open or close the map                                                                            |
 | `R`          | Open or close the resident list                                                                  |
 | `N`          | Switch between daylight and evening                                                              |
@@ -37,7 +38,7 @@ The four habitat modules, the ten landmarks (the Fabrication Bay construction si
 | Esc          | Leave watch mode, stop following, clear the selection, close the place card, then close the pane |
 | `?`          | Open the help dialog, which lists this table                                                     |
 
-Letters and digits are ignored while an input, select, or textarea has focus, and inside dialogs. Browser chords with Ctrl, Alt, or Cmd pass through. Inside the map, arrows move the scout target and Enter commits it.
+Letters and digits are ignored while an input, select, or textarea has focus, and inside dialogs. Browser chords with Ctrl, Alt, or Cmd pass through. Inside the map, arrows move the scout target and Enter commits it. With the pointer, dragging orbits, the wheel zooms down to 2.5 m, and a double-click on the ground travels the camera there; the eye never goes under the terrain.
 
 ## Motion and idle
 

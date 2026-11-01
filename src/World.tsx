@@ -32,6 +32,14 @@ import { Environment } from './world/Environment';
 import { CAMERA_VIEWS } from './world/layout';
 import { CAMERA_PAN_BOUNDS, clampPanDelta, isPanKey, keyboardPanDelta } from './world/cameraPan';
 import {
+  clampCameraPosition,
+  EXPLORE_MAX_POLAR,
+  EXPLORE_MIN_DISTANCE,
+  groundHit,
+  screenRay,
+  travelDestination,
+} from './world/exploreCamera';
+import {
   fitDistance,
   presetPosition,
   SURFACE_FAR,
@@ -470,6 +478,7 @@ function Camera({ positions }: { positions: Positions }) {
   const lastJump = useRef(0);
   useEffect(() => {
     presetPosition(view, aspect, SURFACE_FOV, targetPos.current);
+    clampCameraPosition(targetPos.current);
     targetLook.current.fromArray(CAMERA_VIEWS[view].look);
     moving.current = true;
     keyboardPanning.current = false;
@@ -479,6 +488,7 @@ function Camera({ positions }: { positions: Positions }) {
   useEffect(() => {
     if (useWorld.getState().cameraCustomized || useWorld.getState().followAgent) return;
     presetPosition(view, aspect, SURFACE_FOV, targetPos.current);
+    clampCameraPosition(targetPos.current);
     moving.current = true;
   }, [view, aspect]);
   useEffect(() => {
@@ -487,25 +497,55 @@ function Camera({ positions }: { positions: Positions }) {
     const { x, z } = cameraJump;
     const y = renderedTerrainHeight(x, z) + 1;
     const destination = new THREE.Vector3(x, y, z);
-    // Translate the whole orbit so its pitch and distance are preserved.
+    // Translate the whole orbit so its pitch and distance are preserved; the
+    // eye still rises over any ground that is higher at the destination.
     const offset = destination.clone().sub(controls.current.target);
     targetPos.current.copy(camera.position).add(offset);
+    clampCameraPosition(targetPos.current);
     targetLook.current.copy(destination);
     moving.current = true;
     keyboardPanning.current = false;
   }, [cameraJump, camera]);
+  // Double-clicking the ground travels the orbit there: a march against the
+  // height field, no mesh raycast, bounded like every other camera move.
+  useEffect(() => {
+    const element = gl.domElement;
+    const travel = (event: MouseEvent) => {
+      if (event.button !== 0 || event.altKey || event.ctrlKey || event.metaKey) return;
+      const rect = element.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      const ndcX = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      const ndcY = 1 - ((event.clientY - rect.top) / rect.height) * 2;
+      const hit = groundHit(camera.position, screenRay(camera, ndcX, ndcY));
+      if (!hit) return;
+      const { x, z } = travelDestination(hit);
+      useWorld.setState({
+        followAgent: null,
+        cinematic: false,
+        cameraCustomized: true,
+        cameraJump: { x, z, sequence: (useWorld.getState().cameraJump?.sequence ?? 0) + 1 },
+      });
+    };
+    element.addEventListener('dblclick', travel);
+    return () => element.removeEventListener('dblclick', travel);
+  }, [camera, gl]);
   useEffect(() => {
     const world = gl.domElement.closest('.world-canvas') as HTMLElement | null;
     if (!world) return;
     const pan = (event: KeyboardEvent) => {
-      if (
-        event.target !== world ||
-        !isPanKey(event.key) ||
-        event.altKey ||
-        event.ctrlKey ||
-        event.metaKey
-      )
+      if (event.target !== world || event.altKey || event.ctrlKey || event.metaKey) return;
+      if (event.key === 'Home') {
+        // Back to the active viewpoint as authored, wherever exploring took the orbit.
+        event.preventDefault();
+        useWorld.setState({
+          cameraCustomized: false,
+          followAgent: null,
+          cinematic: false,
+          cameraVersion: useWorld.getState().cameraVersion + 1,
+        });
         return;
+      }
+      if (!isPanKey(event.key)) return;
       event.preventDefault();
       const control = controls.current;
       if (!control) return;
@@ -546,6 +586,8 @@ function Camera({ positions }: { positions: Positions }) {
       moving.current = true;
     }
     if (moving.current && controls.current) {
+      // Following recomputes the destination every frame; keep it above the ground too.
+      clampCameraPosition(targetPos.current);
       const alpha = reduced ? 1 : 1 - Math.exp(-4 * d);
       camera.position.lerp(targetPos.current, alpha);
       controls.current.target.lerp(targetLook.current, alpha);
@@ -575,6 +617,8 @@ function Camera({ positions }: { positions: Positions }) {
         }
         controls.current.update();
       }
+      // The eye never goes under the ground, whatever the orbit or the travel did.
+      if (clampCameraPosition(camera.position) > 0) controls.current.update();
       const location = districtAt(controls.current.target.x, controls.current.target.z);
       if (useWorld.getState().worldLocation !== location)
         useWorld.setState({ worldLocation: location });
@@ -598,9 +642,9 @@ function Camera({ positions }: { positions: Positions }) {
       makeDefault
       enableDamping
       dampingFactor={0.07}
-      maxPolarAngle={Math.PI / 2 - 0.05}
+      maxPolarAngle={EXPLORE_MAX_POLAR}
       minPolarAngle={0.15}
-      minDistance={4}
+      minDistance={EXPLORE_MIN_DISTANCE}
       maxDistance={SURFACE_MAX_DISTANCE}
       autoRotate={cinematic && !reduced && !follow}
       autoRotateSpeed={0.35}
